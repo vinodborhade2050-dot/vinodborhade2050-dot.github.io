@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Monthly Savings Tracker</title>
+  <title>Monthly Investment Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
@@ -11,7 +11,7 @@
       padding: 20px;
     }
     .card {
-      max-width: 400px;
+      max-width: 450px;
       margin: auto;
       background: #ffffff;
       padding: 20px;
@@ -22,7 +22,7 @@
       text-align: center;
       color: #2c3e50;
     }
-    input {
+    select, input {
       width: 100%;
       padding: 12px;
       margin-top: 10px;
@@ -38,70 +38,37 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-    }
-    .save {
-      background: #1e88e5;
       color: #fff;
     }
-    .delete {
-      background: #e53935;
-      color: #fff;
-    }
-    .saved {
-      margin-top: 15px;
-      text-align: center;
-      color: green;
-      font-weight: bold;
+    .save { background: #1e88e5; }
+    .delete { background: #e53935; }
+
+    .entry {
+      background: #f1f3f4;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h2>Monthly Savings</h2>
+<div class="card">
+  <h2>Investment Tracker</h2>
 
-    <label>Enter Monthly Saving Amount (₹)</label>
-    <input type="number" id="savingAmount" placeholder="e.g. 10000">
+  <select id="month">
+    <option value="">Select Month</option>
+    <option>January</option><option>February</option><option>March</option>
+    <option>April</option><option>May</option><option>June</option>
+    <option>July</option><option>August</option><option>September</option>
+    <option>October</option><option>November</option><option>December</option>
+  </select>
 
-    <button class="save" onclick="saveAmount()">Save / Update</button>
-    <button class="delete" onclick="deleteAmount()">Delete</button>
+  <select id="year"></select>
 
-    <div class="saved" id="savedMsg"></div>
-  </div>
+  <input type="number" id="amount" placeholder="Investment Amount (₹)">
 
-  <script>
-    // Load saved value
-    window.onload = function () {
-      let savedAmount = localStorage.getItem("monthlySaving");
-      if (savedAmount) {
-        document.getElementById("savingAmount").value = savedAmount;
-        document.getElementById("savedMsg").innerText =
-          "Saved Amount: ₹" + savedAmount;
-      }
-    };
-
-    function saveAmount() {
-      let amount = document.getElementById("savingAmount").value;
-
-      if (amount === "" || amount <= 0) {
-        alert("Please enter a valid amount");
-        return;
-      }
-
-      localStorage.setItem("monthlySaving", amount);
-      document.getElementById("savedMsg").innerText =
-        "Saved Amount Updated: ₹" + amount;
-    }
-
-    function deleteAmount() {
-      if (confirm("Are you sure you want to delete the saved amount?")) {
-        localStorage.removeItem("monthlySaving");
-        document.getElementById("savingAmount").value = "";
-        document.getElementById("savedMsg").innerText =
-          "Saved amount deleted";
-      }
-    }
-  </script>
-
-</body>
-</html>
+  <button class="save" onclick="saveInvestment()">Save
