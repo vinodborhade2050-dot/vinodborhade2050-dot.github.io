@@ -72,3 +72,70 @@
   <input type="number" id="amount" placeholder="Investment Amount (₹)">
 
   <button class="save" onclick="saveInvestment()">Save
+<script>
+  window.onload = function () {
+
+    const yearSelect = document.getElementById("year");
+    const currentYear = new Date().getFullYear();
+
+    yearSelect.innerHTML = '<option value="">Select Year</option>';
+
+    for (let y = currentYear - 5; y <= currentYear + 5; y++) {
+      const option = document.createElement("option");
+      option.value = y;
+      option.text = y;
+      yearSelect.appendChild(option);
+    }
+
+    loadList();
+  };
+
+  function getData() {
+    return JSON.parse(localStorage.getItem("investments")) || {};
+  }
+
+  function saveData(data) {
+    localStorage.setItem("investments", JSON.stringify(data));
+  }
+
+  function saveInvestment() {
+    const month = document.getElementById("month").value;
+    const year = document.getElementById("year").value;
+    const amount = document.getElementById("amount").value;
+
+    if (!month || !year || amount <= 0) {
+      alert("Please select month, year and valid amount");
+      return;
+    }
+
+    const key = `${month}-${year}`;
+    const data = getData();
+    data[key] = amount;
+    saveData(data);
+
+    document.getElementById("amount").value = "";
+    loadList();
+  }
+
+  function deleteInvestment(key) {
+    const data = getData();
+    delete data[key];
+    saveData(data);
+    loadList();
+  }
+
+  function loadList() {
+    const data = getData();
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    for (let key in data) {
+      list.innerHTML += `
+        <div class="entry">
+          <div>${key} : ₹${data[key]}</div>
+          <button class="delete" onclick="deleteInvestment('${key}')">X</button>
+        </div>
+      `;
+    }
+  }
+</script>
