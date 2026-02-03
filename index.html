@@ -1,131 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>GPay Transaction Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      padding: 15px;
-    }
-    .card {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-    }
-    button {
-      cursor: pointer;
-    }
-    .success { background: #4CAF50; color: white; }
-    .fail { background: #f44336; color: white; }
-    .return { background: #ff9800; color: white; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
+<meta charset="UTF-8">
+<title>GPay Transaction Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<h2>Send Money via GPay</h2>
-
-<div class="card">
-  <input type="text" id="upi" placeholder="Receiver UPI ID (e.g. abc@okhdfc)">
-  <input type="number" id="amount" placeholder="Amount">
-  <button onclick="pay()">Pay with GPay</button>
-</div>
-
-<div class="card" id="statusCard" style="display:none;">
-  <p><b>Confirm Transaction Status</b></p>
-  <button class="success" onclick="saveStatus('SUCCESS')">Success</button>
-  <button class="fail" onclick="saveStatus('FAILED')">Failed</button>
-  <button class="return" onclick="saveStatus('RETURNED')">Returned</button>
-</div>
-
-<div class="card">
-  <h3>Transaction History</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>UPI</th>
-        <th>Amount</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="history"></tbody>
-  </table>
-</div>
-
-<script>
-let currentTxn = null;
-
-function pay() {
-  const upi = document.getElementById('upi').value;
-  const amount = document.getElementById('amount').value;
-
-  if (!upi || !amount) {
-    alert("Please enter UPI ID and amount");
-    return;
-  }
-
-  currentTxn = {
-    date: new Date().toLocaleString(),
-    upi,
-    amount,
-    status: "PENDING"
-  };
-
-  const gpayUrl = `upi://pay?pa=${upi}&pn=Receiver&am=${amount}&cu=INR`;
-
-  window.location.href = gpayUrl;
-
-  document.getElementById('statusCard').style.display = "block";
+<style>
+* {
+  box-sizing: border-box;
 }
 
-function saveStatus(status) {
-  currentTxn.status = status;
-
-  const txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-  txns.push(currentTxn);
-  localStorage.setItem("transactions", JSON.stringify(txns));
-
-  document.getElementById('statusCard').style.display = "none";
-  loadHistory();
+body {
+  margin: 0;
+  padding: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+  background: #f2f4f7;
 }
 
-function loadHistory() {
-  const txns = JSON.parse(localStorage.getItem("transactions") || "[]");
-  const tbody = document.getElementById('history');
-  tbody.innerHTML = "";
-
-  txns.forEach(t => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${t.date}</td>
-        <td>${t.upi}</td>
-        <td>₹${t.amount}</td>
-        <td>${t.status}</td>
-      </tr>`;
-  });
+h2, h3 {
+  margin-bottom: 12px;
 }
 
-loadHistory();
-</script>
-
-</body>
-</html>
+.card {
+  background: #ffffff;
+  padding: 16px;
+  bor
