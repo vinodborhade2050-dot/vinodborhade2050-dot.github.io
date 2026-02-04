@@ -4,71 +4,24 @@
 <meta charset="UTF-8">
 <title>Canfin Loan Schedule with Yearly Prepayment</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  padding: 15px;
-}
-.box {
-  background: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  max-width: 1200px;
-  margin: auto;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-h2 { text-align: center; }
-label { font-weight: bold; display: block; margin-top: 10px; }
-input, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  font-size: 16px;
-}
-button {
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  margin-top: 15px;
-}
-.summary {
-  background: #eef5ff;
-  padding: 10px;
-  border-radius: 6px;
-  margin-top: 15px;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  font-size: 14px;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 6px;
-  text-align: right;
-}
-th {
-  background: #007bff;
-  color: #fff;
-}
-td:first-child, th:first-child {
-  text-align: center;
-}
-.prepay {
-  color: green;
-  font-weight: bold;
-}
+body{font-family:Arial;background:#f4f6f8;padding:15px}
+.box{background:#fff;padding:15px;border-radius:8px;max-width:1200px;margin:auto}
+label{font-weight:bold;display:block;margin-top:10px}
+input,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
+button{background:#007bff;color:#fff;border:none;border-radius:6px;margin-top:15px}
+.summary{background:#eef5ff;padding:10px;border-radius:6px;margin-top:15px}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
+th,td{border:1px solid #ccc;padding:6px;text-align:right}
+th{background:#007bff;color:#fff}
+td:first-child,th:first-child{text-align:center}
+.prepay{color:green;font-weight:bold}
 </style>
 </head>
 
 <body>
-
 <div class="box">
-<h2>Canfin Bank EMI Schedule (Yearly Jan Prepayment)</h2>
+<h2>Canfin Bank EMI Schedule (Jan Prepayment)</h2>
 
 <label>Outstanding Amount (₹)</label>
 <input type="number" id="outstanding">
@@ -82,8 +35,8 @@ td:first-child, th:first-child {
 <label>First EMI Date</label>
 <input type="date" id="startDate">
 
-<label>Yearly Prepayment Amount (every 1st Jan)</label>
-<input type="number" id="yearlyPrepay" placeholder="e.g. 25000">
+<label>Yearly Prepayment (Every 1st Jan)</label>
+<input type="number" id="yearlyPrepay">
 
 <button onclick="generateSchedule()">Generate Schedule</button>
 
@@ -92,97 +45,75 @@ td:first-child, th:first-child {
 </div>
 
 <script>
-function daysBetween(d1, d2) {
-  return (d2 - d1) / (1000 * 60 * 60 * 24);
+function daysBetween(d1,d2){
+  return (d2-d1)/(1000*60*60*24);
 }
 
-function generateSchedule() {
+function generateSchedule(){
+  let balance=+outstanding.value;
+  let annualRate=+rate.value/100;
+  let emi=+emi.value;
+  let yearlyPrepay=+yearlyPrepayInput?.value || +document.getElementById("yearlyPrepay").value || 0;
+  let emiDate=new Date(startDate.value);
 
-  let balance = parseFloat(document.getElementById("outstanding").value);
-  let annualRate = parseFloat(document.getElementById("rate").value) / 100;
-  let emi = parseFloat(document.getElementById("emi").value);
-  let yearlyPrepay = parseFloat(document.getElementById("yearlyPrepay").value) || 0;
+  if(!balance||!annualRate||!emi||isNaN(emiDate)){alert("Fill all fields");return;}
 
-  let emiDate = new Date(document.getElementById("startDate").value);
-  if (!balance || !annualRate || !emi || isNaN(emiDate)) {
-    alert("Please fill all required fields");
-    return;
-  }
+  let prevDate=new Date(emiDate);
+  prevDate.setMonth(prevDate.getMonth()-1);
 
-  let prevDate = new Date(emiDate);
-  prevDate.setMonth(prevDate.getMonth() - 1);
+  let totalInterest=0,totalPrincipal=0,month=1;
 
-  let totalInterest = 0;
-  let totalPrincipal = 0;
-  let month = 1;
+  let table=`<table><tr>
+  <th>Month</th><th>Date</th><th>Days</th><th>EMI</th>
+  <th>Interest</th><th>Principal</th><th>Prepay</th><th>Balance</th>
+  </tr>`;
 
-  let table = `
-  <table>
-    <tr>
-      <th>Month</th>
-      <th>Date</th>
-      <th>Days</th>
-      <th>EMI</th>
-      <th>Interest</th>
-      <th>Principal</th>
-      <th>Prepayment</th>
-      <th>Balance</th>
-    </tr>`;
+  while(balance>0 && month<=600){
+    let days=daysBetween(prevDate,emiDate)+0.3;
+    let interest=Math.round(balance*annualRate*days/365);
+    let principal=emi-interest;
 
-  while (balance > 0 && month <= 600) {
+    if(principal>balance){principal=balance;emi=interest+principal;}
+    balance-=principal;
+    totalInterest+=interest;
+    totalPrincipal+=principal;
 
-    let days = daysBetween(prevDate, emiDate) + 0.3; // 10 AM logic
-    let interest = Math.round(balance * annualRate * days / 365);
-    let principal = emi - interest;
+    let prepayApplied=0;
+    let jan1=new Date(emiDate.getFullYear(),0,1);
 
-    if (principal > balance) {
-      principal = balance;
-      emi = interest + principal;
+    if(yearlyPrepay>0 && jan1>prevDate && jan1<=emiDate){
+      prepayApplied=Math.min(yearlyPrepay,balance);
+      balance-=prepayApplied;
+      totalPrincipal+=prepayApplied;
     }
 
-    balance -= principal;
-    totalInterest += interest;
-    totalPrincipal += principal;
-
-    let prepayApplied = 0;
-
-    // Apply yearly prepayment on 1st January
-    if (emiDate.getMonth() === 0 && emiDate.getDate() === 1 && yearlyPrepay > 0) {
-      prepayApplied = Math.min(yearlyPrepay, balance);
-      balance -= prepayApplied;
-      totalPrincipal += prepayApplied;
-    }
-
-    table += `
-    <tr>
+    table+=`<tr>
       <td>${month}</td>
       <td>${emiDate.toLocaleDateString()}</td>
       <td>${days.toFixed(1)}</td>
       <td>${emi}</td>
       <td>${interest}</td>
       <td>${principal}</td>
-      <td class="prepay">${prepayApplied > 0 ? prepayApplied : "-"}</td>
+      <td class="prepay">${prepayApplied||"-"}</td>
       <td>${Math.round(balance)}</td>
     </tr>`;
 
-    prevDate = new Date(emiDate);
-    emiDate.setMonth(emiDate.getMonth() + 1);
+    prevDate=new Date(emiDate);
+    emiDate.setMonth(emiDate.getMonth()+1);
     month++;
   }
 
-  table += `</table>`;
+  table+=`</table>`;
 
-  document.getElementById("summary").innerHTML = `
-    <div class="summary">
-      <b>Total Months Pending:</b> ${month - 1}<br>
-      <b>Total Principal Paid:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
-      <b>Total Interest Paid:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
-      <b>Total Amount Paid:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
-    </div>`;
+  summary.innerHTML=`
+  <div class="summary">
+    <b>Months Pending:</b> ${month-1}<br>
+    <b>Total Principal Paid:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
+    <b>Total Interest Paid:</b> ₹${Math.round(totalInterest).toLocaleString()}
+  </div>`;
 
-  document.getElementById("result").innerHTML = table;
+  result.innerHTML=table;
 }
 </script>
-
 </body>
 </html>
