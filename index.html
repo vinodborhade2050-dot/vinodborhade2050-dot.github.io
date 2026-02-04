@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Canfin Loan Schedule (Fixed)</title>
+<title>Canfin Loan Schedule (Monthly Prepayment)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{font-family:Arial;background:#f4f6f8;padding:15px}
 .box{background:#fff;padding:15px;border-radius:8px;max-width:1200px;margin:auto}
+h2{text-align:center}
 label{font-weight:bold;display:block;margin-top:10px}
 input,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
 button{background:#007bff;color:#fff;border:none;border-radius:6px;margin-top:15px}
@@ -22,7 +23,7 @@ td:first-child,th:first-child{text-align:center}
 
 <body>
 <div class="box">
-<h2>Canfin Bank EMI Schedule (Daily Interest + Jan Prepay)</h2>
+<h2>Canfin Bank EMI Schedule (Daily Interest + Monthly Prepayment)</h2>
 
 <label>Outstanding Amount (₹)</label>
 <input type="number" id="outstanding">
@@ -36,8 +37,8 @@ td:first-child,th:first-child{text-align:center}
 <label>First EMI Date</label>
 <input type="date" id="startDate">
 
-<label>Yearly Prepayment (Every 1st Jan)</label>
-<input type="number" id="yearlyPrepay">
+<label>Monthly Prepayment Amount</label>
+<input type="number" id="monthlyPrepay" placeholder="e.g. 2000">
 
 <button onclick="generateSchedule()">Generate Schedule</button>
 
@@ -46,16 +47,16 @@ td:first-child,th:first-child{text-align:center}
 </div>
 
 <script>
-function daysBetween(d1,d2){
-  return (d2-d1)/(1000*60*60*24);
+function daysBetween(d1, d2) {
+  return (d2 - d1) / (1000 * 60 * 60 * 24);
 }
 
-function generateSchedule(){
+function generateSchedule() {
 
   let balance = parseFloat(document.getElementById("outstanding").value);
   let annualRate = parseFloat(document.getElementById("rate").value) / 100;
   let emi = parseFloat(document.getElementById("emi").value);
-  let yearlyPrepay = parseFloat(document.getElementById("yearlyPrepay").value) || 0;
+  let monthlyPrepay = parseFloat(document.getElementById("monthlyPrepay").value) || 0;
   let emiDate = new Date(document.getElementById("startDate").value);
 
   if (!balance || !annualRate || !emi || isNaN(emiDate)) {
@@ -78,13 +79,14 @@ function generateSchedule(){
     <th>EMI</th>
     <th>Interest</th>
     <th>Principal</th>
-    <th>Prepayment</th>
+    <th>Monthly Prepay</th>
     <th>Balance</th>
   </tr>`;
 
   while (balance > 0 && month <= 600) {
 
-    let days = daysBetween(prevDate, emiDate) + 0.3; // 10 AM logic
+    // Daily interest till EMI (10 AM)
+    let days = daysBetween(prevDate, emiDate) + 0.3;
     let interest = Math.round(balance * annualRate * days / 365);
     let principal = emi - interest;
 
@@ -97,11 +99,10 @@ function generateSchedule(){
     totalInterest += interest;
     totalPrincipal += principal;
 
+    // Apply monthly prepayment
     let prepayApplied = 0;
-    let jan1 = new Date(emiDate.getFullYear(), 0, 1);
-
-    if (yearlyPrepay > 0 && jan1 > prevDate && jan1 <= emiDate) {
-      prepayApplied = Math.min(yearlyPrepay, balance);
+    if (monthlyPrepay > 0 && balance > 0) {
+      prepayApplied = Math.min(monthlyPrepay, balance);
       balance -= prepayApplied;
       totalPrincipal += prepayApplied;
     }
@@ -113,7 +114,7 @@ function generateSchedule(){
       <td>${emi}</td>
       <td>${interest}</td>
       <td>${principal}</td>
-      <td class="prepay">${prepayApplied ? prepayApplied : "-"}</td>
+      <td class="prepay">${prepayApplied || "-"}</td>
       <td>${Math.round(balance)}</td>
     </tr>`;
 
@@ -128,11 +129,13 @@ function generateSchedule(){
     <div class="summary">
       <b>Total Months Pending:</b> ${month - 1}<br>
       <b>Total Principal Paid:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
-      <b>Total Interest Paid:</b> ₹${Math.round(totalInterest).toLocaleString()}
+      <b>Total Interest Paid:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
+      <b>Total Amount Paid:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
     </div>`;
 
   document.getElementById("result").innerHTML = table;
 }
 </script>
+
 </body>
 </html>
