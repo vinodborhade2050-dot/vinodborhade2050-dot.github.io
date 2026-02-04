@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Loan Repayment Schedule</title>
+<title>Canfin Bank Loan Schedule</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -19,13 +19,13 @@
     padding: 15px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    max-width: 1000px;
+    max-width: 1100px;
     margin: auto;
   }
   label {
     font-weight: bold;
-    display: block;
     margin-top: 10px;
+    display: block;
   }
   input, button {
     width: 100%;
@@ -35,17 +35,16 @@
   }
   button {
     background: #007bff;
-    color: #fff;
+    color: white;
     border: none;
     border-radius: 6px;
     margin-top: 15px;
   }
   .summary {
-    margin-top: 20px;
     background: #eef5ff;
     padding: 10px;
+    margin-top: 15px;
     border-radius: 6px;
-    font-size: 15px;
   }
   table {
     width: 100%;
@@ -60,7 +59,7 @@
   }
   th {
     background: #007bff;
-    color: white;
+    color: #fff;
   }
   td:first-child, th:first-child {
     text-align: center;
@@ -71,18 +70,18 @@
 <body>
 
 <div class="box">
-<h2>Loan Repayment Schedule</h2>
+<h2>Canfin Bank EMI Schedule (Daily Interest)</h2>
 
 <label>Outstanding Amount (₹)</label>
-<input type="number" id="outstanding" placeholder="e.g. 994658">
+<input type="number" id="outstanding" placeholder="e.g. 1051960">
 
-<label>Interest Rate (% per annum)</label>
+<label>Interest Rate (% p.a.)</label>
 <input type="number" step="0.01" id="rate" placeholder="e.g. 7.65">
 
 <label>EMI Amount (₹)</label>
 <input type="number" id="emi" placeholder="e.g. 18000">
 
-<label>Start Date</label>
+<label>First EMI Date</label>
 <input type="date" id="startDate">
 
 <button onclick="generateSchedule()">Generate Schedule</button>
@@ -92,17 +91,25 @@
 </div>
 
 <script>
+function daysBetween(d1, d2) {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  return (d2 - d1) / msPerDay;
+}
+
 function generateSchedule() {
 
   let balance = parseFloat(document.getElementById("outstanding").value);
-  let rate = parseFloat(document.getElementById("rate").value) / 12 / 100;
+  let annualRate = parseFloat(document.getElementById("rate").value) / 100;
   let emi = parseFloat(document.getElementById("emi").value);
-  let date = new Date(document.getElementById("startDate").value);
+  let emiDate = new Date(document.getElementById("startDate").value);
 
-  if (!balance || !rate || !emi || isNaN(date)) {
+  if (!balance || !annualRate || !emi || isNaN(emiDate)) {
     alert("Please fill all fields");
     return;
   }
+
+  let prevEmiDate = new Date(emiDate);
+  prevEmiDate.setMonth(prevEmiDate.getMonth() - 1);
 
   let totalInterest = 0;
   let totalPrincipal = 0;
@@ -112,7 +119,8 @@ function generateSchedule() {
   <table>
     <tr>
       <th>Month</th>
-      <th>Date</th>
+      <th>EMI Date</th>
+      <th>Days</th>
       <th>EMI (₹)</th>
       <th>Interest (₹)</th>
       <th>Principal (₹)</th>
@@ -121,7 +129,10 @@ function generateSchedule() {
 
   while (balance > 0 && month <= 500) {
 
-    let interest = Math.round(balance * rate);
+    // Days between EMIs + partial EMI day (10 AM ≈ 0.3 day)
+    let days = daysBetween(prevEmiDate, emiDate) + 0.3;
+
+    let interest = Math.round(balance * annualRate * days / 365);
     let principal = emi - interest;
 
     if (principal > balance) {
@@ -137,26 +148,28 @@ function generateSchedule() {
     table += `
     <tr>
       <td>${month}</td>
-      <td>${date.toLocaleDateString()}</td>
+      <td>${emiDate.toLocaleDateString()}</td>
+      <td>${days.toFixed(1)}</td>
       <td>${emi}</td>
       <td>${interest}</td>
       <td>${principal}</td>
       <td>${Math.round(balance)}</td>
     </tr>`;
 
-    date.setMonth(date.getMonth() + 1);
+    prevEmiDate = new Date(emiDate);
+    emiDate.setMonth(emiDate.getMonth() + 1);
     month++;
   }
 
   table += `</table>`;
 
   document.getElementById("summary").innerHTML = `
-  <div class="summary">
-    <b>Total Months Pending:</b> ${month - 1}<br>
-    <b>Total Principal Payable:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
-    <b>Total Interest Payable:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
-    <b>Total Amount Payable:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
-  </div>`;
+    <div class="summary">
+      <b>Total Months Pending:</b> ${month - 1}<br>
+      <b>Total Principal Payable:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
+      <b>Total Interest Payable:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
+      <b>Total Amount Payable:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
+    </div>`;
 
   document.getElementById("result").innerHTML = table;
 }
