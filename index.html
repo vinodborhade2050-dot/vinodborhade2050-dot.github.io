@@ -2,87 +2,88 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Canfin Bank Loan Schedule</title>
+<title>Canfin Loan Schedule with Yearly Prepayment</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    padding: 15px;
-  }
-  h2 {
-    text-align: center;
-  }
-  .box {
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    max-width: 1100px;
-    margin: auto;
-  }
-  label {
-    font-weight: bold;
-    margin-top: 10px;
-    display: block;
-  }
-  input, button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    font-size: 16px;
-  }
-  button {
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    margin-top: 15px;
-  }
-  .summary {
-    background: #eef5ff;
-    padding: 10px;
-    margin-top: 15px;
-    border-radius: 6px;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    font-size: 14px;
-  }
-  th, td {
-    border: 1px solid #ccc;
-    padding: 6px;
-    text-align: right;
-  }
-  th {
-    background: #007bff;
-    color: #fff;
-  }
-  td:first-child, th:first-child {
-    text-align: center;
-  }
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  padding: 15px;
+}
+.box {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 1200px;
+  margin: auto;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+h2 { text-align: center; }
+label { font-weight: bold; display: block; margin-top: 10px; }
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  font-size: 16px;
+}
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+.summary {
+  background: #eef5ff;
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 15px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 14px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 6px;
+  text-align: right;
+}
+th {
+  background: #007bff;
+  color: #fff;
+}
+td:first-child, th:first-child {
+  text-align: center;
+}
+.prepay {
+  color: green;
+  font-weight: bold;
+}
 </style>
 </head>
 
 <body>
 
 <div class="box">
-<h2>Canfin Bank EMI Schedule (Daily Interest)</h2>
+<h2>Canfin Bank EMI Schedule (Yearly Jan Prepayment)</h2>
 
 <label>Outstanding Amount (₹)</label>
-<input type="number" id="outstanding" placeholder="e.g. 1051960">
+<input type="number" id="outstanding">
 
 <label>Interest Rate (% p.a.)</label>
-<input type="number" step="0.01" id="rate" placeholder="e.g. 7.65">
+<input type="number" step="0.01" id="rate">
 
 <label>EMI Amount (₹)</label>
-<input type="number" id="emi" placeholder="e.g. 18000">
+<input type="number" id="emi">
 
 <label>First EMI Date</label>
 <input type="date" id="startDate">
+
+<label>Yearly Prepayment Amount (every 1st Jan)</label>
+<input type="number" id="yearlyPrepay" placeholder="e.g. 25000">
 
 <button onclick="generateSchedule()">Generate Schedule</button>
 
@@ -92,8 +93,7 @@
 
 <script>
 function daysBetween(d1, d2) {
-  const msPerDay = 1000 * 60 * 60 * 24;
-  return (d2 - d1) / msPerDay;
+  return (d2 - d1) / (1000 * 60 * 60 * 24);
 }
 
 function generateSchedule() {
@@ -101,15 +101,16 @@ function generateSchedule() {
   let balance = parseFloat(document.getElementById("outstanding").value);
   let annualRate = parseFloat(document.getElementById("rate").value) / 100;
   let emi = parseFloat(document.getElementById("emi").value);
-  let emiDate = new Date(document.getElementById("startDate").value);
+  let yearlyPrepay = parseFloat(document.getElementById("yearlyPrepay").value) || 0;
 
+  let emiDate = new Date(document.getElementById("startDate").value);
   if (!balance || !annualRate || !emi || isNaN(emiDate)) {
-    alert("Please fill all fields");
+    alert("Please fill all required fields");
     return;
   }
 
-  let prevEmiDate = new Date(emiDate);
-  prevEmiDate.setMonth(prevEmiDate.getMonth() - 1);
+  let prevDate = new Date(emiDate);
+  prevDate.setMonth(prevDate.getMonth() - 1);
 
   let totalInterest = 0;
   let totalPrincipal = 0;
@@ -119,19 +120,18 @@ function generateSchedule() {
   <table>
     <tr>
       <th>Month</th>
-      <th>EMI Date</th>
+      <th>Date</th>
       <th>Days</th>
-      <th>EMI (₹)</th>
-      <th>Interest (₹)</th>
-      <th>Principal (₹)</th>
-      <th>Balance (₹)</th>
+      <th>EMI</th>
+      <th>Interest</th>
+      <th>Principal</th>
+      <th>Prepayment</th>
+      <th>Balance</th>
     </tr>`;
 
-  while (balance > 0 && month <= 500) {
+  while (balance > 0 && month <= 600) {
 
-    // Days between EMIs + partial EMI day (10 AM ≈ 0.3 day)
-    let days = daysBetween(prevEmiDate, emiDate) + 0.3;
-
+    let days = daysBetween(prevDate, emiDate) + 0.3; // 10 AM logic
     let interest = Math.round(balance * annualRate * days / 365);
     let principal = emi - interest;
 
@@ -141,9 +141,17 @@ function generateSchedule() {
     }
 
     balance -= principal;
-
     totalInterest += interest;
     totalPrincipal += principal;
+
+    let prepayApplied = 0;
+
+    // Apply yearly prepayment on 1st January
+    if (emiDate.getMonth() === 0 && emiDate.getDate() === 1 && yearlyPrepay > 0) {
+      prepayApplied = Math.min(yearlyPrepay, balance);
+      balance -= prepayApplied;
+      totalPrincipal += prepayApplied;
+    }
 
     table += `
     <tr>
@@ -153,10 +161,11 @@ function generateSchedule() {
       <td>${emi}</td>
       <td>${interest}</td>
       <td>${principal}</td>
+      <td class="prepay">${prepayApplied > 0 ? prepayApplied : "-"}</td>
       <td>${Math.round(balance)}</td>
     </tr>`;
 
-    prevEmiDate = new Date(emiDate);
+    prevDate = new Date(emiDate);
     emiDate.setMonth(emiDate.getMonth() + 1);
     month++;
   }
@@ -166,9 +175,9 @@ function generateSchedule() {
   document.getElementById("summary").innerHTML = `
     <div class="summary">
       <b>Total Months Pending:</b> ${month - 1}<br>
-      <b>Total Principal Payable:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
-      <b>Total Interest Payable:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
-      <b>Total Amount Payable:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
+      <b>Total Principal Paid:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
+      <b>Total Interest Paid:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
+      <b>Total Amount Paid:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
     </div>`;
 
   document.getElementById("result").innerHTML = table;
