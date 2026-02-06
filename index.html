@@ -2,111 +2,151 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Daily Reducing Loan Calculator</title>
+<title>Loan Repayment Schedule – Daily Reducing</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
-body { font-family: Arial; padding: 20px; }
-input, button { padding: 6px; margin: 5px; }
-table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-th, td { border: 1px solid #ccc; padding: 6px; text-align: right; }
-th { background: #f0f0f0; }
+body {
+  font-family: system-ui, Arial;
+  background: #f5f7fa;
+  padding: 15px;
+}
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+}
+h2 {
+  text-align: center;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+input, button {
+  padding: 8px;
+  width: 100%;
+}
+button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 13px;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: right;
+}
+th {
+  background: #e5e7eb;
+}
+@media (max-width: 600px) {
+  table { font-size: 11px; }
+}
 </style>
 </head>
 
 <body>
+<div class="container">
+<h2>Daily Reducing Loan Calculator</h2>
 
-<h2>Daily Reducing Loan Repayment Calculator</h2>
+<div class="form-grid">
+  <input type="number" id="principal" placeholder="Outstanding Principal">
+  <input type="number" step="0.01" id="rate" placeholder="Annual Interest %">
+  <input type="number" id="emi" placeholder="EMI Amount">
+  <input type="number" id="emiDate" placeholder="EMI Date (1–28)">
+  <input type="date" id="startDate">
+</div>
 
-<label>Outstanding Principal:</label>
-<input type="number" id="principal"><br>
-
-<label>Annual Interest Rate (%):</label>
-<input type="number" step="0.01" id="rate"><br>
-
-<label>EMI Amount:</label>
-<input type="number" id="emi"><br>
-
-<label>EMI Date (1–28):</label>
-<input type="number" id="emiDate"><br>
-
-<label>Start Date:</label>
-<input type="date" id="startDate"><br>
-
-<label>Tenure (months to simulate):</label>
-<input type="number" id="months"><br>
-
-<button onclick="generateSchedule()">Generate Schedule</button>
+<br>
+<button onclick="generate()">Generate Schedule</button>
 <button onclick="downloadExcel()">Download Excel</button>
 
-<table id="resultTable">
+<table>
 <thead>
 <tr>
 <th>Month</th>
-<th>Opening Balance</th>
+<th>Opening</th>
 <th>Interest</th>
-<th>Principal Paid</th>
+<th>Principal</th>
 <th>EMI</th>
-<th>Closing Balance</th>
+<th>Closing</th>
 <th>Remaining Months</th>
 <th>Remaining Years</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="tbody"></tbody>
 </table>
+</div>
 
 <script>
-let scheduleData = [];
+let excelData = [];
 
-function daysInMonth(year, month) {
-  return new Date(year, month + 1, 0).getDate();
+function daysInMonth(y, m) {
+  return new Date(y, m + 1, 0).getDate();
 }
 
-function generateSchedule() {
-  scheduleData = [];
-  document.querySelector("#resultTable tbody").innerHTML = "";
+function calculateRemainingTenure(balance, rate, emi, emiDay) {
+  let months = 0;
+  let date = new Date();
+  let r = rate / 100;
 
-  let principal = parseFloat(document.getElementById("principal").value);
-  let rate = parseFloat(document.getElementById("rate").value) / 100;
-  let emi = parseFloat(document.getElementById("emi").value);
-  let emiDay = parseInt(document.getElementById("emiDate").value);
-  let start = new Date(document.getElementById("startDate").value);
-  let months = parseInt(document.getElementById("months").value);
-
-  let avgPrincipalReduction = emi * 0.6; // rolling average estimate
-
-  for (let m = 0; m < months && principal > 0; m++) {
-    let year = start.getFullYear();
-    let month = start.getMonth();
-    let totalDays = daysInMonth(year, month);
-
+  while (balance > 0 && months < 600) {
+    let days = daysInMonth(date.getFullYear(), date.getMonth());
     let interest = 0;
-    let dailyRate = rate / 365;
+
+    for (let d = 1; d <= days; d++) {
+      interest += balance * r / 365;
+      if (d === emiDay) {
+        balance -= (emi - interest);
+        if (balance < 0) balance = 0;
+      }
+    }
+    months++;
+    date.setMonth(date.getMonth() + 1);
+  }
+  return months;
+}
+
+function generate() {
+  excelData = [];
+  document.getElementById("tbody").innerHTML = "";
+
+  let principal = +principal.value;
+  let rate = +rate.value;
+  let emi = +emi.value;
+  let emiDay = +emiDate.value;
+  let date = new Date(startDate.value);
+
+  for (let i = 0; i < 360 && principal > 0; i++) {
     let opening = principal;
+    let interest = 0;
+    let days = daysInMonth(date.getFullYear(), date.getMonth());
 
-    for (let d = 1; d <= totalDays; d++) {
-      interest += principal * dailyRate;
-
-      if (d === emiDay && principal > 0) {
-        let principalPaid = emi - interest;
-        if (principalPaid < 0) principalPaid = 0;
-        principal -= principalPaid;
+    for (let d = 1; d <= days; d++) {
+      interest += principal * (rate / 100) / 365;
+      if (d === emiDay) {
+        principal -= (emi - interest);
         if (principal < 0) principal = 0;
       }
     }
 
     let principalPaid = emi - interest;
-    if (principalPaid < 0) principalPaid = 0;
-
-    avgPrincipalReduction = (avgPrincipalReduction + principalPaid) / 2;
-
-    let remainingMonths = principal > 0
-      ? Math.ceil(principal / avgPrincipalReduction)
-      : 0;
-
+    let remainingMonths = calculateRemainingTenure(principal, rate, emi, emiDay);
     let remainingYears = (remainingMonths / 12).toFixed(2);
 
-    scheduleData.push({
-      Month: start.toLocaleString('default', { month: 'short', year: 'numeric' }),
+    let row = {
+      Month: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
       Opening: opening.toFixed(2),
       Interest: interest.toFixed(2),
       Principal: principalPaid.toFixed(2),
@@ -114,31 +154,33 @@ function generateSchedule() {
       Closing: principal.toFixed(2),
       Remaining_Months: remainingMonths,
       Remaining_Years: remainingYears
-    });
+    };
 
-    let row = `<tr>
-      <td>${scheduleData[m].Month}</td>
-      <td>${scheduleData[m].Opening}</td>
-      <td>${scheduleData[m].Interest}</td>
-      <td>${scheduleData[m].Principal}</td>
-      <td>${scheduleData[m].EMI}</td>
-      <td>${scheduleData[m].Closing}</td>
-      <td>${remainingMonths}</td>
-      <td>${remainingYears}</td>
-    </tr>`;
+    excelData.push(row);
 
-    document.querySelector("#resultTable tbody").innerHTML += row;
-    start.setMonth(start.getMonth() + 1);
+    document.getElementById("tbody").innerHTML += `
+      <tr>
+        <td>${row.Month}</td>
+        <td>${row.Opening}</td>
+        <td>${row.Interest}</td>
+        <td>${row.Principal}</td>
+        <td>${row.EMI}</td>
+        <td>${row.Closing}</td>
+        <td>${remainingMonths}</td>
+        <td>${remainingYears}</td>
+      </tr>
+    `;
+
+    date.setMonth(date.getMonth() + 1);
   }
 }
 
 function downloadExcel() {
-  let ws = XLSX.utils.json_to_sheet(scheduleData);
+  let ws = XLSX.utils.json_to_sheet(excelData);
   let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Repayment Schedule");
-  XLSX.writeFile(wb, "Loan_Repayment_Schedule.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Loan Schedule");
+  XLSX.writeFile(wb, "Loan_Schedule.xlsx");
 }
 </script>
-
 </body>
 </html>
