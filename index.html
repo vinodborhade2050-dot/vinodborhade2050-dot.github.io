@@ -60,13 +60,14 @@ th { background: #e5e7eb; }
 
 <body>
 <div class="container">
-<h2>Daily Reducing Loan Calculator</h2>
+
+<h2>Daily Reducing Loan Calculator (Bank Accurate)</h2>
 
 <div class="form-grid">
   <input id="principal" type="number" value="1056418" placeholder="Outstanding">
   <input id="rate" type="number" step="0.01" value="7.65" placeholder="Interest %">
   <input id="emi" type="number" value="18000" placeholder="EMI">
-  <input id="emiDate" type="number" value="15" placeholder="EMI Date">
+  <input id="emiDate" type="number" value="15" placeholder="EMI Date (1–28)">
   <input id="startDate" type="date" value="2025-05-15">
 </div>
 
@@ -89,6 +90,7 @@ th { background: #e5e7eb; }
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+
 </div>
 
 <script>
@@ -98,22 +100,30 @@ function daysInMonth(y, m) {
   return new Date(y, m + 1, 0).getDate();
 }
 
+// 🔥 BANK-STYLE TENURE CALCULATION
 function calculateRemainingTenure(balance, rate, emi, emiDay, refDate) {
   let months = 0;
   let date = new Date(refDate);
-  let r = rate / 100;
+  let dailyRate = (rate / 100) / 365;
 
   while (balance > 0 && months < 600) {
     let days = daysInMonth(date.getFullYear(), date.getMonth());
     let interest = 0;
 
-    for (let d = 1; d <= days; d++) {
-      interest += balance * r / 365;
-      if (d === emiDay) {
-        balance -= (emi - interest);
-        if (balance < 0) balance = 0;
-      }
+    // before EMI
+    for (let d = 1; d <= emiDay; d++) {
+      interest += Math.round(balance * dailyRate * 100) / 100;
     }
+
+    // apply EMI
+    balance -= (emi - interest);
+    if (balance < 0) balance = 0;
+
+    // after EMI
+    for (let d = emiDay + 1; d <= days; d++) {
+      interest += Math.round(balance * dailyRate * 100) / 100;
+    }
+
     months++;
     date.setMonth(date.getMonth() + 1);
   }
@@ -128,29 +138,31 @@ function generate() {
   let rate = Number(document.getElementById("rate").value);
   let emi = Number(document.getElementById("emi").value);
   let emiDay = Number(document.getElementById("emiDate").value);
-  let startDateInput = document.getElementById("startDate").value;
+  let date = new Date(document.getElementById("startDate").value);
 
-  if (!principal || !rate || !emi || !emiDay) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  let date = startDateInput ? new Date(startDateInput) : new Date();
+  let dailyRate = (rate / 100) / 365;
 
   for (let i = 0; i < 360 && principal > 0; i++) {
+
     let opening = principal;
     let interest = 0;
     let days = daysInMonth(date.getFullYear(), date.getMonth());
 
-    for (let d = 1; d <= days; d++) {
-      interest += principal * (rate / 100) / 365;
-      if (d === emiDay) {
-        principal -= (emi - interest);
-        if (principal < 0) principal = 0;
-      }
+    // 1️⃣ Interest till EMI date (daily rounded)
+    for (let d = 1; d <= emiDay; d++) {
+      interest += Math.round(principal * dailyRate * 100) / 100;
     }
 
+    // 2️⃣ EMI applied
     let principalPaid = emi - interest;
+    principal -= principalPaid;
+    if (principal < 0) principal = 0;
+
+    // 3️⃣ Interest after EMI date
+    for (let d = emiDay + 1; d <= days; d++) {
+      interest += Math.round(principal * dailyRate * 100) / 100;
+    }
+
     let remainingMonths = calculateRemainingTenure(principal, rate, emi, emiDay, date);
     let remainingYears = (remainingMonths / 12).toFixed(2);
 
@@ -185,7 +197,7 @@ function generate() {
 }
 
 function downloadExcel() {
-  if (excelData.length === 0) {
+  if (!excelData.length) {
     alert("Generate schedule first");
     return;
   }
@@ -195,5 +207,6 @@ function downloadExcel() {
   XLSX.writeFile(wb, "Loan_Schedule.xlsx");
 }
 </script>
+
 </body>
 </html>
