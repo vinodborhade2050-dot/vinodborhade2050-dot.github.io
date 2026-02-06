@@ -6,69 +6,28 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-body {
-  font-family: system-ui, Arial;
-  background: #f4f6f8;
-  padding: 15px;
-}
-.container {
-  max-width: 1100px;
-  margin: auto;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-}
-h2 { text-align: center; }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-
-input, button {
-  padding: 8px;
-  width: 100%;
-}
-
-button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  font-size: 13px;
-}
-th, td {
-  border: 1px solid #ddd;
-  padding: 6px;
-  text-align: right;
-}
-th { background: #e5e7eb; }
-
-@media(max-width:600px){
-  table { font-size: 11px; }
-}
+body { font-family: system-ui, Arial; background:#f4f6f8; padding:15px; }
+.container { max-width:1100px; margin:auto; background:#fff; padding:20px; border-radius:10px; }
+h2 { text-align:center; }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+input,button { padding:8px; width:100%; }
+button { background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; }
+table { width:100%; border-collapse:collapse; margin-top:20px; font-size:13px; }
+th,td { border:1px solid #ddd; padding:6px; text-align:right; }
+th { background:#e5e7eb; }
 </style>
 </head>
 
 <body>
 <div class="container">
-
-<h2>Daily Reducing Loan Calculator (Bank Accurate)</h2>
+<h2>Daily Reducing Loan Calculator (Bank Exact)</h2>
 
 <div class="form-grid">
-  <input id="principal" type="number" value="1056418" placeholder="Outstanding">
-  <input id="rate" type="number" step="0.01" value="7.65" placeholder="Interest %">
-  <input id="emi" type="number" value="18000" placeholder="EMI">
-  <input id="emiDate" type="number" value="15" placeholder="EMI Date (1–28)">
-  <input id="startDate" type="date" value="2025-05-15">
+  <input id="principal" type="number" value="1056418">
+  <input id="rate" type="number" step="0.01" value="7.65">
+  <input id="emi" type="number" value="18000">
+  <input id="emiDate" type="number" value="15">
+  <input id="startMonth" type="month" value="2025-05">
 </div>
 
 <br>
@@ -84,129 +43,90 @@ th { background: #e5e7eb; }
 <th>Principal</th>
 <th>EMI</th>
 <th>Closing</th>
-<th>Remaining Months</th>
-<th>Remaining Years</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
-
 </div>
 
 <script>
 let excelData = [];
 
-function daysInMonth(y, m) {
-  return new Date(y, m + 1, 0).getDate();
-}
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
 
-// 🔥 BANK-STYLE TENURE CALCULATION
-function calculateRemainingTenure(balance, rate, emi, emiDay, refDate) {
-  let months = 0;
-  let date = new Date(refDate);
-  let dailyRate = (rate / 100) / 365;
+function generate(){
+  excelData=[];
+  tbody.innerHTML="";
 
-  while (balance > 0 && months < 600) {
-    let days = daysInMonth(date.getFullYear(), date.getMonth());
-    let interest = 0;
+  let principal=+principalInput.value;
+  let rate=+rateInput.value/100;
+  let emi=+emiInput.value;
+  let emiDay=+emiDateInput.value;
 
-    // before EMI
-    for (let d = 1; d <= emiDay; d++) {
-      interest += Math.round(balance * dailyRate * 100) / 100;
+  let [year,month]=startMonth.value.split("-").map(Number);
+  month--; // JS month
+
+  let dailyRate=rate/365;
+
+  for(let i=0;i<360 && principal>0;i++){
+    let opening=principal;
+    let interest=0;
+    let totalDays=daysInMonth(year,month);
+
+    // 🔥 BEFORE EMI (1 → EMI-1)
+    for(let d=1; d<emiDay; d++){
+      interest+=Math.round(principal*dailyRate*100)/100;
     }
 
-    // apply EMI
-    balance -= (emi - interest);
-    if (balance < 0) balance = 0;
+    // EMI DAY INTEREST
+    interest+=Math.round(principal*dailyRate*100)/100;
 
-    // after EMI
-    for (let d = emiDay + 1; d <= days; d++) {
-      interest += Math.round(balance * dailyRate * 100) / 100;
+    // EMI APPLIED
+    let principalPaid=emi-interest;
+    principal-=principalPaid;
+    if(principal<0) principal=0;
+
+    // 🔥 AFTER EMI (EMI+1 → month end)
+    for(let d=emiDay+1; d<=totalDays; d++){
+      interest+=Math.round(principal*dailyRate*100)/100;
     }
 
-    months++;
-    date.setMonth(date.getMonth() + 1);
-  }
-  return months;
-}
+    excelData.push({
+      Month:new Date(year,month).toLocaleString("default",{month:"short",year:"numeric"}),
+      Opening:opening.toFixed(2),
+      Interest:interest.toFixed(2),
+      Principal:principalPaid.toFixed(2),
+      EMI:emi.toFixed(2),
+      Closing:principal.toFixed(2)
+    });
 
-function generate() {
-  excelData = [];
-  document.getElementById("tbody").innerHTML = "";
-
-  let principal = Number(document.getElementById("principal").value);
-  let rate = Number(document.getElementById("rate").value);
-  let emi = Number(document.getElementById("emi").value);
-  let emiDay = Number(document.getElementById("emiDate").value);
-  let date = new Date(document.getElementById("startDate").value);
-
-  let dailyRate = (rate / 100) / 365;
-
-  for (let i = 0; i < 360 && principal > 0; i++) {
-
-    let opening = principal;
-    let interest = 0;
-    let days = daysInMonth(date.getFullYear(), date.getMonth());
-
-    // 1️⃣ Interest till EMI date (daily rounded)
-    for (let d = 1; d <= emiDay; d++) {
-      interest += Math.round(principal * dailyRate * 100) / 100;
-    }
-
-    // 2️⃣ EMI applied
-    let principalPaid = emi - interest;
-    principal -= principalPaid;
-    if (principal < 0) principal = 0;
-
-    // 3️⃣ Interest after EMI date
-    for (let d = emiDay + 1; d <= days; d++) {
-      interest += Math.round(principal * dailyRate * 100) / 100;
-    }
-
-    let remainingMonths = calculateRemainingTenure(principal, rate, emi, emiDay, date);
-    let remainingYears = (remainingMonths / 12).toFixed(2);
-
-    let row = {
-      Month: date.toLocaleString('default', { month: 'short', year: 'numeric' }),
-      Opening: opening.toFixed(2),
-      Interest: interest.toFixed(2),
-      Principal: principalPaid.toFixed(2),
-      EMI: emi.toFixed(2),
-      Closing: principal.toFixed(2),
-      Remaining_Months: remainingMonths,
-      Remaining_Years: remainingYears
-    };
-
-    excelData.push(row);
-
-    document.getElementById("tbody").innerHTML += `
+    tbody.innerHTML+=`
       <tr>
-        <td>${row.Month}</td>
-        <td>${row.Opening}</td>
-        <td>${row.Interest}</td>
-        <td>${row.Principal}</td>
-        <td>${row.EMI}</td>
-        <td>${row.Closing}</td>
-        <td>${remainingMonths}</td>
-        <td>${remainingYears}</td>
-      </tr>
-    `;
+        <td>${excelData.at(-1).Month}</td>
+        <td>${opening.toFixed(2)}</td>
+        <td>${interest.toFixed(2)}</td>
+        <td>${principalPaid.toFixed(2)}</td>
+        <td>${emi.toFixed(2)}</td>
+        <td>${principal.toFixed(2)}</td>
+      </tr>`;
 
-    date.setMonth(date.getMonth() + 1);
+    month++;
+    if(month>11){ month=0; year++; }
   }
 }
 
-function downloadExcel() {
-  if (!excelData.length) {
-    alert("Generate schedule first");
-    return;
-  }
-  let ws = XLSX.utils.json_to_sheet(excelData);
-  let wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Loan Schedule");
-  XLSX.writeFile(wb, "Loan_Schedule.xlsx");
+const principalInput=principal;
+const rateInput=rate;
+const emiInput=emi;
+const emiDateInput=emiDate;
+const startMonth=document.getElementById("startMonth");
+
+function downloadExcel(){
+  let ws=XLSX.utils.json_to_sheet(excelData);
+  let wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Loan");
+  XLSX.writeFile(wb,"Loan_Schedule.xlsx");
 }
 </script>
-
 </body>
 </html>
