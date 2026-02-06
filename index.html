@@ -2,138 +2,141 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Canfin Loan Schedule (Monthly Prepayment)</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<title>Daily Reducing Loan Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-body{font-family:Arial;background:#f4f6f8;padding:15px}
-.box{background:#fff;padding:15px;border-radius:8px;max-width:1200px;margin:auto}
-h2{text-align:center}
-label{font-weight:bold;display:block;margin-top:10px}
-input,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
-button{background:#007bff;color:#fff;border:none;border-radius:6px;margin-top:15px}
-.summary{background:#eef5ff;padding:10px;border-radius:6px;margin-top:15px}
-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:14px}
-th,td{border:1px solid #ccc;padding:6px;text-align:right}
-th{background:#007bff;color:#fff}
-td:first-child,th:first-child{text-align:center}
-.prepay{color:green;font-weight:bold}
+body { font-family: Arial; padding: 20px; }
+input, button { padding: 6px; margin: 5px; }
+table { border-collapse: collapse; margin-top: 20px; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align: right; }
+th { background: #f0f0f0; }
 </style>
 </head>
 
 <body>
-<div class="box">
-<h2>Canfin Bank EMI Schedule (Daily Interest + Monthly Prepayment)</h2>
 
-<label>Outstanding Amount (₹)</label>
-<input type="number" id="outstanding">
+<h2>Daily Reducing Loan Repayment Calculator</h2>
 
-<label>Interest Rate (% p.a.)</label>
-<input type="number" step="0.01" id="rate">
+<label>Outstanding Principal:</label>
+<input type="number" id="principal"><br>
 
-<label>EMI Amount (₹)</label>
-<input type="number" id="emi">
+<label>Annual Interest Rate (%):</label>
+<input type="number" step="0.01" id="rate"><br>
 
-<label>First EMI Date</label>
-<input type="date" id="startDate">
+<label>EMI Amount:</label>
+<input type="number" id="emi"><br>
 
-<label>Monthly Prepayment Amount</label>
-<input type="number" id="monthlyPrepay" placeholder="e.g. 2000">
+<label>EMI Date (1–28):</label>
+<input type="number" id="emiDate"><br>
+
+<label>Start Date:</label>
+<input type="date" id="startDate"><br>
+
+<label>Tenure (months to simulate):</label>
+<input type="number" id="months"><br>
 
 <button onclick="generateSchedule()">Generate Schedule</button>
+<button onclick="downloadExcel()">Download Excel</button>
 
-<div id="summary"></div>
-<div id="result"></div>
-</div>
+<table id="resultTable">
+<thead>
+<tr>
+<th>Month</th>
+<th>Opening Balance</th>
+<th>Interest</th>
+<th>Principal Paid</th>
+<th>EMI</th>
+<th>Closing Balance</th>
+<th>Remaining Months</th>
+<th>Remaining Years</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
 <script>
-function daysBetween(d1, d2) {
-  return (d2 - d1) / (1000 * 60 * 60 * 24);
+let scheduleData = [];
+
+function daysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
 }
 
 function generateSchedule() {
+  scheduleData = [];
+  document.querySelector("#resultTable tbody").innerHTML = "";
 
-  let balance = parseFloat(document.getElementById("outstanding").value);
-  let annualRate = parseFloat(document.getElementById("rate").value) / 100;
+  let principal = parseFloat(document.getElementById("principal").value);
+  let rate = parseFloat(document.getElementById("rate").value) / 100;
   let emi = parseFloat(document.getElementById("emi").value);
-  let monthlyPrepay = parseFloat(document.getElementById("monthlyPrepay").value) || 0;
-  let emiDate = new Date(document.getElementById("startDate").value);
+  let emiDay = parseInt(document.getElementById("emiDate").value);
+  let start = new Date(document.getElementById("startDate").value);
+  let months = parseInt(document.getElementById("months").value);
 
-  if (!balance || !annualRate || !emi || isNaN(emiDate)) {
-    alert("Please fill all required fields");
-    return;
-  }
+  let avgPrincipalReduction = emi * 0.6; // rolling average estimate
 
-  let prevDate = new Date(emiDate);
-  prevDate.setMonth(prevDate.getMonth() - 1);
+  for (let m = 0; m < months && principal > 0; m++) {
+    let year = start.getFullYear();
+    let month = start.getMonth();
+    let totalDays = daysInMonth(year, month);
 
-  let totalInterest = 0;
-  let totalPrincipal = 0;
-  let month = 1;
+    let interest = 0;
+    let dailyRate = rate / 365;
+    let opening = principal;
 
-  let table = `<table>
-  <tr>
-    <th>Month</th>
-    <th>Date</th>
-    <th>Days</th>
-    <th>EMI</th>
-    <th>Interest</th>
-    <th>Principal</th>
-    <th>Monthly Prepay</th>
-    <th>Balance</th>
-  </tr>`;
+    for (let d = 1; d <= totalDays; d++) {
+      interest += principal * dailyRate;
 
-  while (balance > 0 && month <= 600) {
-
-    // Daily interest till EMI (10 AM)
-    let days = daysBetween(prevDate, emiDate) + 0.3;
-    let interest = Math.round(balance * annualRate * days / 365);
-    let principal = emi - interest;
-
-    if (principal > balance) {
-      principal = balance;
-      emi = interest + principal;
+      if (d === emiDay && principal > 0) {
+        let principalPaid = emi - interest;
+        if (principalPaid < 0) principalPaid = 0;
+        principal -= principalPaid;
+        if (principal < 0) principal = 0;
+      }
     }
 
-    balance -= principal;
-    totalInterest += interest;
-    totalPrincipal += principal;
+    let principalPaid = emi - interest;
+    if (principalPaid < 0) principalPaid = 0;
 
-    // Apply monthly prepayment
-    let prepayApplied = 0;
-    if (monthlyPrepay > 0 && balance > 0) {
-      prepayApplied = Math.min(monthlyPrepay, balance);
-      balance -= prepayApplied;
-      totalPrincipal += prepayApplied;
-    }
+    avgPrincipalReduction = (avgPrincipalReduction + principalPaid) / 2;
 
-    table += `<tr>
-      <td>${month}</td>
-      <td>${emiDate.toLocaleDateString()}</td>
-      <td>${days.toFixed(1)}</td>
-      <td>${emi}</td>
-      <td>${interest}</td>
-      <td>${principal}</td>
-      <td class="prepay">${prepayApplied || "-"}</td>
-      <td>${Math.round(balance)}</td>
+    let remainingMonths = principal > 0
+      ? Math.ceil(principal / avgPrincipalReduction)
+      : 0;
+
+    let remainingYears = (remainingMonths / 12).toFixed(2);
+
+    scheduleData.push({
+      Month: start.toLocaleString('default', { month: 'short', year: 'numeric' }),
+      Opening: opening.toFixed(2),
+      Interest: interest.toFixed(2),
+      Principal: principalPaid.toFixed(2),
+      EMI: emi.toFixed(2),
+      Closing: principal.toFixed(2),
+      Remaining_Months: remainingMonths,
+      Remaining_Years: remainingYears
+    });
+
+    let row = `<tr>
+      <td>${scheduleData[m].Month}</td>
+      <td>${scheduleData[m].Opening}</td>
+      <td>${scheduleData[m].Interest}</td>
+      <td>${scheduleData[m].Principal}</td>
+      <td>${scheduleData[m].EMI}</td>
+      <td>${scheduleData[m].Closing}</td>
+      <td>${remainingMonths}</td>
+      <td>${remainingYears}</td>
     </tr>`;
 
-    prevDate = new Date(emiDate);
-    emiDate.setMonth(emiDate.getMonth() + 1);
-    month++;
+    document.querySelector("#resultTable tbody").innerHTML += row;
+    start.setMonth(start.getMonth() + 1);
   }
+}
 
-  table += `</table>`;
-
-  document.getElementById("summary").innerHTML = `
-    <div class="summary">
-      <b>Total Months Pending:</b> ${month - 1}<br>
-      <b>Total Principal Paid:</b> ₹${Math.round(totalPrincipal).toLocaleString()}<br>
-      <b>Total Interest Paid:</b> ₹${Math.round(totalInterest).toLocaleString()}<br>
-      <b>Total Amount Paid:</b> ₹${Math.round(totalPrincipal + totalInterest).toLocaleString()}
-    </div>`;
-
-  document.getElementById("result").innerHTML = table;
+function downloadExcel() {
+  let ws = XLSX.utils.json_to_sheet(scheduleData);
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Repayment Schedule");
+  XLSX.writeFile(wb, "Loan_Repayment_Schedule.xlsx");
 }
 </script>
 
