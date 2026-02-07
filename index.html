@@ -1,148 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Important Dates Tracker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<title>Day Counter</title>
 
-    h2 {
-      text-align: center;
-    }
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+    text-align: center;
+  }
 
-    .input-box {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
+  h2 {
+    margin-bottom: 10px;
+  }
 
-    input[type="date"] {
-      padding: 8px;
-      font-size: 16px;
-    }
+  .input-box {
+    margin: 15px 0 25px;
+  }
 
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+  input[type="date"] {
+    padding: 8px;
+    font-size: 16px;
+  }
 
-    .list {
-      max-width: 500px;
-      margin: auto;
-    }
+  button {
+    padding: 8px 15px;
+    font-size: 16px;
+    margin-left: 5px;
+    cursor: pointer;
+  }
 
-    .item {
-      display: flex;
-      align-items: center;
-      background: #fff;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+  /* Top counter */
+  .top-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    max-width: 350px;
+    margin: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+  }
 
-    .circle {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: #007bff;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
-      margin-right: 15px;
-      flex-shrink: 0;
-    }
+  .circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: bold;
+    margin: auto;
+  }
 
-    .date-text {
-      font-size: 16px;
-      color: #333;
-    }
+  .last-date {
+    margin-top: 15px;
+    font-size: 16px;
+    color: #333;
+  }
 
-    .small {
-      color: #666;
-      font-size: 14px;
-    }
-  </style>
+  /* History */
+  .history {
+    max-width: 400px;
+    margin: auto;
+    text-align: left;
+  }
+
+  .history h3 {
+    text-align: center;
+  }
+
+  .item {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .item-date {
+    font-weight: bold;
+  }
+
+  .item-days {
+    color: #666;
+    font-size: 14px;
+  }
+</style>
 </head>
+
 <body>
 
-  <h2>📅 Important Dates Tracker</h2>
+<h2>📅 Day Counter</h2>
 
-  <div class="input-box">
-    <input type="date" id="dateInput">
-    <button onclick="saveDate()">Save</button>
-  </div>
+<div class="input-box">
+  <input type="date" id="dateInput">
+  <button onclick="saveDate()">Save</button>
+</div>
 
-  <div class="list" id="dateList"></div>
+<!-- Top Latest Counter -->
+<div class="top-card" id="topCard" style="display:none;">
+  <div class="circle" id="dayCount">1</div>
+  <div class="last-date" id="lastDateText"></div>
+</div>
+
+<!-- History -->
+<div class="history">
+  <h3>History (Latest First)</h3>
+  <div id="historyList"></div>
+</div>
 
 <script>
-  const STORAGE_KEY = "importantDates";
+const STORAGE_KEY = "importantDates";
 
-  function getSavedDates() {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+function getDates() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+}
+
+function saveDate() {
+  const dateValue = document.getElementById("dateInput").value;
+  if (!dateValue) {
+    alert("Please select a date");
+    return;
   }
 
-  function saveDate() {
-    const dateValue = document.getElementById("dateInput").value;
-    if (!dateValue) {
-      alert("Please select a date");
-      return;
-    }
+  const dates = getDates();
+  dates.push({ date: dateValue });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dates));
 
-    const dates = getSavedDates();
-    dates.push({ date: dateValue });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dates));
+  document.getElementById("dateInput").value = "";
+  render();
+}
 
-    document.getElementById("dateInput").value = "";
-    renderDates();
-  }
+function calculateDays(fromDate) {
+  const start = new Date(fromDate);
+  const today = new Date();
 
-  function daysPassed(fromDate) {
-    const start = new Date(fromDate);
-    const today = new Date();
+  start.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
 
-    start.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
+  return Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
+}
 
-    const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-    return diff + 1; // reset to 1 on saved date
-  }
+function render() {
+  const dates = getDates();
+  const historyList = document.getElementById("historyList");
+  historyList.innerHTML = "";
 
-  function renderDates() {
-    const list = document.getElementById("dateList");
-    list.innerHTML = "";
+  if (dates.length === 0) return;
 
-    const dates = getSavedDates();
+  // Latest date (last entered)
+  const latest = dates[dates.length - 1];
+  document.getElementById("topCard").style.display = "block";
+  document.getElementById("dayCount").innerText = calculateDays(latest.date);
+  document.getElementById("lastDateText").innerText =
+    "Started on: " + latest.date;
 
-    dates.forEach(item => {
-      const dayCount = daysPassed(item.date);
+  // History (descending order)
+  [...dates].reverse().forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div class="item-date">${item.date}</div>
+      <div class="item-days">${calculateDays(item.date)} days</div>
+    `;
+    historyList.appendChild(div);
+  });
+}
 
-      const div = document.createElement("div");
-      div.className = "item";
-
-      div.innerHTML = `
-        <div class="circle">${dayCount}</div>
-        <div>
-          <div class="date-text"><b>${item.date}</b></div>
-          <div class="small">Days passed</div>
-        </div>
-      `;
-
-      list.appendChild(div);
-    });
-  }
-
-  // refresh counts on load
-  renderDates();
+// Load on refresh
+render();
 </script>
 
 </body>
