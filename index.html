@@ -1,213 +1,111 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Day Counter</title>
-
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    padding: 20px;
-    text-align: center;
-  }
+/* RESET */
+* {
+  box-sizing: border-box;
+}
 
-  h2 {
-    margin-bottom: 10px;
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f4f6f8;
+  padding: 16px;
+  margin: 0;
+}
+
+/* HEADER */
+h2 {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+/* INPUT */
+.input-box {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.input-box input,
+.input-box button {
+  width: 100%;
+  font-size: 16px;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.input-box button {
+  background: #007bff;
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+/* TOP COUNTER */
+.top-card {
+  width: 100%;
+  padding: 20px;
+  border-radius: 18px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.circle {
+  width: 160px;
+  height: 160px;
+  font-size: 52px;
+  margin: auto;
+}
+
+/* HISTORY */
+.history {
+  width: 100%;
+}
+
+.history h3 {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.item {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+}
+
+.item-date {
+  font-size: 17px;
+}
+
+.item-days {
+  font-size: 15px;
+}
+
+/* DELETE BUTTON */
+.delete-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+/* DESKTOP ENHANCEMENT */
+@media (min-width: 768px) {
+  body {
+    max-width: 480px;
+    margin: auto;
   }
 
   .input-box {
-    margin: 15px 0 25px;
-  }
-
-  input[type="date"] {
-    padding: 8px;
-    font-size: 16px;
-  }
-
-  button {
-    padding: 8px 16px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  /* Top Counter */
-  .top-card {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    max-width: 360px;
-    margin: auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
-  }
-
-  .circle {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    background: #007bff;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 48px;
-    font-weight: bold;
-    margin: auto;
-  }
-
-  .last-date {
-    margin-top: 15px;
-    font-size: 16px;
-  }
-
-  /* History */
-  .history {
-    max-width: 420px;
-    margin: auto;
-    text-align: left;
+    flex-direction: row;
   }
 
   .item {
-    background: white;
-    padding: 14px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    display: flex;
-    justify-content: space-between;
+    flex-direction: row;
     align-items: center;
-    gap: 10px;
   }
 
-  .item-info {
-    flex: 1;
-  }
-
-  .item-date {
-    font-weight: bold;
-    font-size: 16px;
-  }
-
-  .item-days {
-    font-size: 14px;
-    color: #666;
-  }
-
-  /* 🔴 DELETE BUTTON FIX */
   .delete-btn {
-    background: #e53935;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 14px;
-    font-weight: bold;
-    min-width: 80px;
-    display: inline-block;
+    width: auto;
   }
+}
 </style>
-</head>
-
-<body>
-
-<h2>📅 Day Counter</h2>
-
-<div class="input-box">
-  <input type="date" id="dateInput">
-  <button onclick="saveDate()">Save</button>
-</div>
-
-<!-- Top Counter -->
-<div class="top-card" id="topCard" style="display:none;">
-  <div class="circle" id="dayCount">1</div>
-  <div class="last-date" id="lastDateText"></div>
-</div>
-
-<!-- History -->
-<div class="history">
-  <h3>History (Latest First)</h3>
-  <div id="historyList"></div>
-</div>
-
-<script>
-const STORAGE_KEY = "importantDates";
-
-function getDates() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-}
-
-function setDates(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-
-function saveDate() {
-  const dateValue = document.getElementById("dateInput").value;
-  if (!dateValue) {
-    alert("Please select a date");
-    return;
-  }
-
-  const dates = getDates();
-  dates.push({ date: dateValue, id: Date.now() });
-  setDates(dates);
-
-  document.getElementById("dateInput").value = "";
-  render();
-}
-
-function deleteDate(id) {
-  const dates = getDates().filter(d => d.id !== id);
-  setDates(dates);
-  render();
-}
-
-function calculateDays(fromDate) {
-  const start = new Date(fromDate);
-  const today = new Date();
-
-  start.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-
-  return Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
-}
-
-function render() {
-  const dates = getDates();
-  const historyList = document.getElementById("historyList");
-  historyList.innerHTML = "";
-
-  if (dates.length === 0) {
-    document.getElementById("topCard").style.display = "none";
-    return;
-  }
-
-  // Always last remaining entry
-  const latest = dates[dates.length - 1];
-  document.getElementById("topCard").style.display = "block";
-  document.getElementById("dayCount").innerText = calculateDays(latest.date);
-  document.getElementById("lastDateText").innerText =
-    "Started on: " + latest.date;
-
-  // History (latest first)
-  [...dates].reverse().forEach(item => {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    div.innerHTML = `
-      <div class="item-info">
-        <div class="item-date">${item.date}</div>
-        <div class="item-days">${calculateDays(item.date)} days</div>
-      </div>
-      <button class="delete-btn" onclick="deleteDate(${item.id})">❌ Delete</button>
-    `;
-
-    historyList.appendChild(div);
-  });
-}
-
-render();
-</script>
-
-</body>
-</html>
