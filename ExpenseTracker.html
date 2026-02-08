@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monthly Expense Tracker</title>
+<title>Expense Tracker (Recurring)</title>
 
 <style>
 body {
@@ -15,7 +15,7 @@ body {
 .container {
   max-width: 420px;
   margin: auto;
-  background: white;
+  background: #fff;
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -32,15 +32,22 @@ input, select, button {
   font-size: 16px;
 }
 
+.checkbox {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.checkbox input {
+  width: auto;
+  margin-right: 8px;
+}
+
 button {
   background: #1a73e8;
   color: white;
   border: none;
   border-radius: 6px;
-}
-
-button:hover {
-  opacity: 0.9;
 }
 
 .list {
@@ -57,8 +64,9 @@ button:hover {
   border-radius: 6px;
 }
 
-.amount {
-  font-weight: bold;
+.recurring {
+  font-size: 12px;
+  color: green;
 }
 
 .delete-btn {
@@ -67,9 +75,7 @@ button:hover {
   border: none;
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 14px;
   cursor: pointer;
-  margin-left: 6px;
 }
 
 .total {
@@ -90,6 +96,11 @@ button:hover {
 
   <select id="month"></select>
   <select id="year"></select>
+
+  <div class="checkbox">
+    <input type="checkbox" id="repeat">
+    <label for="repeat">Repeat every month</label>
+  </div>
 
   <button onclick="addExpense()">Add Expense</button>
 
@@ -114,43 +125,75 @@ for(let y=currentYear-5; y<=currentYear+5; y++){
 monthSelect.value = new Date().getMonth();
 yearSelect.value = currentYear;
 
-function getKey() {
-  return `expense_${yearSelect.value}_${monthSelect.value}`;
+function key(y, m) {
+  return `expense_${y}_${m}`;
+}
+
+function getData(y, m) {
+  return JSON.parse(localStorage.getItem(key(y, m))) || [];
+}
+
+function saveData(y, m, data) {
+  localStorage.setItem(key(y, m), JSON.stringify(data));
 }
 
 function addExpense() {
   const title = document.getElementById("title").value.trim();
   const amount = Number(document.getElementById("amount").value);
+  const repeat = document.getElementById("repeat").checked;
 
-  if(!title || amount <= 0) {
-    alert("Enter valid title and amount");
+  if (!title || amount <= 0) {
+    alert("Enter valid details");
     return;
   }
 
-  const data = JSON.parse(localStorage.getItem(getKey())) || [];
-  data.push({ title, amount });
+  const y = yearSelect.value;
+  const m = monthSelect.value;
 
-  localStorage.setItem(getKey(), JSON.stringify(data));
+  const data = getData(y, m);
+  data.push({ title, amount, repeat });
+  saveData(y, m, data);
 
   document.getElementById("title").value = "";
   document.getElementById("amount").value = "";
+  document.getElementById("repeat").checked = false;
 
   loadExpenses();
 }
 
 function loadExpenses() {
-  const data = JSON.parse(localStorage.getItem(getKey())) || [];
+  const y = Number(yearSelect.value);
+  const m = Number(monthSelect.value);
+
+  // Pull recurring from previous month
+  const prevM = m === 0 ? 11 : m - 1;
+  const prevY = m === 0 ? y - 1 : y;
+
+  const current = getData(y, m);
+  const previous = getData(prevY, prevM);
+
+  previous.forEach(p => {
+    if (p.repeat && !current.some(c => c.title === p.title)) {
+      current.push({ ...p });
+    }
+  });
+
+  saveData(y, m, current);
+
   list.innerHTML = "";
   let total = 0;
 
-  data.forEach((e,index)=>{
+  current.forEach((e, i) => {
     total += e.amount;
     list.innerHTML += `
       <div class="item">
-        <span>${e.title}</span>
-        <span class="amount">
+        <span>
+          ${e.title}
+          ${e.repeat ? '<div class="recurring">Recurring</div>' : ''}
+        </span>
+        <span>
           ₹${e.amount}
-          <button class="delete-btn" onclick="deleteExpense(${index})">Delete</button>
+          <button class="delete-btn" onclick="deleteExpense(${i})">Delete</button>
         </span>
       </div>
     `;
@@ -160,11 +203,11 @@ function loadExpenses() {
 }
 
 function deleteExpense(index) {
-  if(!confirm("Delete this expense?")) return;
+  if (!confirm("Delete this expense?")) return;
 
-  const data = JSON.parse(localStorage.getItem(getKey()));
+  const data = getData(yearSelect.value, monthSelect.value);
   data.splice(index, 1);
-  localStorage.setItem(getKey(), JSON.stringify(data));
+  saveData(yearSelect.value, monthSelect.value, data);
   loadExpenses();
 }
 
