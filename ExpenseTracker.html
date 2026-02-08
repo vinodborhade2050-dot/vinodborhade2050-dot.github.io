@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monthly Expense Tracker</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  padding: 15px;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h2 {
+  text-align: center;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+button {
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.list {
+  margin-top: 15px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eef2f7;
+  padding: 8px;
+  margin-top: 6px;
+  border-radius: 6px;
+}
+
+.amount {
+  font-weight: bold;
+}
+
+.delete-btn {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.total {
+  margin-top: 12px;
+  font-weight: bold;
+  text-align: right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Expense Tracker</h2>
+
+  <input id="title" placeholder="Expense title">
+  <input id="amount" type="number" placeholder="Amount">
+
+  <select id="month"></select>
+  <select id="year"></select>
+
+  <button onclick="addExpense()">Add Expense</button>
+
+  <div class="list" id="list"></div>
+  <div class="total" id="total"></div>
+</div>
+
+<script>
+const monthSelect = document.getElementById("month");
+const yearSelect = document.getElementById("year");
+const list = document.getElementById("list");
+const totalDiv = document.getElementById("total");
+
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+months.forEach((m,i)=>monthSelect.innerHTML += `<option value="${i}">${m}</option>`);
+
+const currentYear = new Date().getFullYear();
+for(let y=currentYear-5; y<=currentYear+5; y++){
+  yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+}
+
+monthSelect.value = new Date().getMonth();
+yearSelect.value = currentYear;
+
+function getKey() {
+  return `expense_${yearSelect.value}_${monthSelect.value}`;
+}
+
+function addExpense() {
+  const title = document.getElementById("title").value.trim();
+  const amount = Number(document.getElementById("amount").value);
+
+  if(!title || amount <= 0) {
+    alert("Enter valid title and amount");
+    return;
+  }
+
+  const data = JSON.parse(localStorage.getItem(getKey())) || [];
+  data.push({ title, amount });
+
+  localStorage.setItem(getKey(), JSON.stringify(data));
+
+  document.getElementById("title").value = "";
+  document.getElementById("amount").value = "";
+
+  loadExpenses();
+}
+
+function loadExpenses() {
+  const data = JSON.parse(localStorage.getItem(getKey())) || [];
+  list.innerHTML = "";
+  let total = 0;
+
+  data.forEach((e,index)=>{
+    total += e.amount;
+    list.innerHTML += `
+      <div class="item">
+        <span>${e.title}</span>
+        <span class="amount">
+          ₹${e.amount}
+          <button class="delete-btn" onclick="deleteExpense(${index})">Delete</button>
+        </span>
+      </div>
+    `;
+  });
+
+  totalDiv.innerText = "Total: ₹" + total;
+}
+
+function deleteExpense(index) {
+  if(!confirm("Delete this expense?")) return;
+
+  const data = JSON.parse(localStorage.getItem(getKey()));
+  data.splice(index, 1);
+  localStorage.setItem(getKey(), JSON.stringify(data));
+  loadExpenses();
+}
+
+monthSelect.onchange = loadExpenses;
+yearSelect.onchange = loadExpenses;
+
+loadExpenses();
+</script>
+
+</body>
+</html>
