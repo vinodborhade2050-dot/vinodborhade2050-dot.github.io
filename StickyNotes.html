@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Secure Sticky Notes</title>
+<style>
+body { font-family: Arial; background:#f4f4f4; text-align:center; }
+#notes { display:none; }
+.note {
+  width:200px;
+  height:150px;
+  background:yellow;
+  padding:10px;
+  margin:10px;
+}
+</style>
+</head>
+<body>
+
+<h2>🔐 Enter Password</h2>
+<input type="password" id="passwordInput">
+<button onclick="checkPassword()">Unlock</button>
+
+<div id="notes">
+  <h2>My Sticky Notes</h2>
+  <button onclick="addNote()">Add Note</button>
+  <div id="noteContainer"></div>
+</div>
+
+<script>
+
+const correctPassword = "1234";  // Change this
+
+function checkPassword() {
+  const entered = document.getElementById("passwordInput").value;
+  if (entered === correctPassword) {
+    document.getElementById("notes").style.display = "block";
+    document.querySelector("h2").style.display = "none";
+    document.getElementById("passwordInput").style.display = "none";
+    document.querySelector("button").style.display = "none";
+    loadNotes();
+  } else {
+    alert("Wrong Password!");
+  }
+}
+
+function addNote() {
+  let note = document.createElement("textarea");
+  note.className = "note";
+  note.oninput = saveNotes;
+  document.getElementById("noteContainer").appendChild(note);
+  saveNotes();
+}
+
+function saveNotes() {
+  let data = [];
+  document.querySelectorAll(".note").forEach(n => data.push(n.value));
+  localStorage.setItem("secureNotes", JSON.stringify(data));
+}
+
+function loadNotes() {
+  let saved = JSON.parse(localStorage.getItem("secureNotes")) || [];
+  saved.forEach(text => {
+    let note = document.createElement("textarea");
+    note.className = "note";
+    note.value = text;
+    note.oninput = saveNotes;
+    document.getElementById("noteContainer").appendChild(note);
+  });
+}
+
+</script>
+
+</body>
+</html>
