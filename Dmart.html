@@ -1,150 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Dmart Scanner With Camera</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://unpkg.com/html5-qrcode"></script>
-  <style>
-    body { font-family: Arial; padding: 15px; }
-    input, button { padding: 8px; margin: 5px 0; width: 100%; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-    th { background: #f2f2f2; }
-    .delete-btn { background: red; color: white; border: none; }
-  </style>
-</head>
-<body>
-
-<h2>Dmart Camera Barcode Scanner</h2>
-
-<div id="reader" style="width:100%;"></div>
-
-<label>Barcode</label>
-<input type="text" id="barcode">
-
-<label>Product Name</label>
-<input type="text" id="name">
-
-<label>Cost Price</label>
-<input type="number" id="cost">
-
-<label>Selling Price</label>
-<input type="number" id="sell">
-
-<label>Purchase Date</label>
-<input type="date" id="date">
-
-<button onclick="addProduct()">Add Product</button>
-
-<table>
-  <thead>
-    <tr>
-      <th>Barcode</th>
-      <th>Name</th>
-      <th>Qty</th>
-      <th>Cost</th>
-      <th>Selling</th>
-      <th>Profit</th>
-      <th>Date</th>
-      <th>Delete</th>
-    </tr>
-  </thead>
-  <tbody id="productList"></tbody>
-</table>
-
-<h3>Total Amount: ₹<span id="totalAmount">0</span></h3>
-<h3>Total Profit: ₹<span id="totalProfit">0</span></h3>
-
 <script>
 let products = JSON.parse(localStorage.getItem("products")) || [];
+let html5QrCode;
 
 function startScanner() {
-  const html5QrCode = new Html5Qrcode("reader");
+  html5QrCode = new Html5Qrcode("reader");
 
-  Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
-      let cameraId = devices[0].id;
-      html5QrCode.start(
-        cameraId,
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          document.getElementById("barcode").value = decodedText;
-          html5QrCode.stop();
-        }
-      );
+  html5QrCode.start(
+    { facingMode: "environment" },   // 🔥 Forces Rear Camera
+    {
+      fps: 10,
+      qrbox: 250
+    },
+    (decodedText) => {
+      document.getElementById("barcode").value = decodedText;
+      html5QrCode.stop();  // stop after scan
+    },
+    (errorMessage) => {
+      // ignore scan errors
     }
-  }).catch(err => {
-    alert("Camera permission denied or not supported.");
+  ).catch(err => {
+    alert("Camera not allowed or not supported: " + err);
   });
 }
 
 startScanner();
-
-function saveData() {
-  localStorage.setItem("products", JSON.stringify(products));
-}
-
-function addProduct() {
-  let barcode = barcode.value.trim();
-  let name = document.getElementById("name").value.trim();
-  let cost = parseFloat(document.getElementById("cost").value);
-  let sell = parseFloat(document.getElementById("sell").value);
-  let date = document.getElementById("date").value;
-
-  if (!barcode || !name || !cost || !sell || !date) {
-    alert("Fill all fields");
-    return;
-  }
-
-  let existing = products.find(p => p.barcode === barcode);
-
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    products.push({ barcode, name, qty: 1, cost, sell, date });
-  }
-
-  saveData();
-  renderTable();
-}
-
-function renderTable() {
-  let list = document.getElementById("productList");
-  list.innerHTML = "";
-  let totalAmount = 0;
-  let totalProfit = 0;
-
-  products.forEach((p, index) => {
-    let profit = (p.sell - p.cost) * p.qty;
-    totalAmount += p.sell * p.qty;
-    totalProfit += profit;
-
-    list.innerHTML += `
-      <tr>
-        <td>${p.barcode}</td>
-        <td>${p.name}</td>
-        <td>${p.qty}</td>
-        <td>${p.cost}</td>
-        <td>${p.sell}</td>
-        <td>${profit.toFixed(2)}</td>
-        <td>${p.date}</td>
-        <td><button class="delete-btn" onclick="deleteProduct(${index})">X</button></td>
-      </tr>
-    `;
-  });
-
-  document.getElementById("totalAmount").innerText = totalAmount.toFixed(2);
-  document.getElementById("totalProfit").innerText = totalProfit.toFixed(2);
-}
-
-function deleteProduct(index) {
-  products.splice(index, 1);
-  saveData();
-  renderTable();
-}
-
-renderTable();
 </script>
-
-</body>
-</html>
