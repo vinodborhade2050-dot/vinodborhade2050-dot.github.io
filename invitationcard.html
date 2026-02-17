@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<title>Pro Invitation Position Builder</title>
+
+<style>
+body{
+    font-family:'Noto Serif Devanagari', serif;
+    background:#eee;
+    text-align:center;
+}
+
+/* CARD CANVAS */
+.card{
+    width:1000px;
+    height:1500px;
+    margin:20px auto;
+    position:relative;
+    border:8px solid gold;
+    background-size:cover;
+}
+
+/* TEXT LAYERS */
+.layer{
+    position:absolute;
+    transform:translate(-50%, -50%);
+    font-weight:bold;
+}
+
+.title{ font-size:48px; color:#b71c1c; }
+.text{ font-size:36px; }
+
+.controls{
+    background:white;
+    padding:20px;
+    margin:20px;
+    box-shadow:0 0 10px #ccc;
+}
+
+input{ padding:6px; width:70px; }
+button{
+    padding:10px 20px;
+    background:#b71c1c;
+    color:white;
+    border:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="controls">
+
+<h2>🎨 Professional Position Builder</h2>
+
+Template:
+<select id="template">
+<option value="https://i.imgur.com/jW3Z6Gk.jpg">Royal</option>
+<option value="https://i.imgur.com/Q6aZbWQ.jpg">Floral</option>
+<option value="https://i.imgur.com/x4gFZ8M.jpg">Classic</option>
+</select>
+
+<hr>
+
+<h3>Text Content</h3>
+
+<input id="groomName" placeholder="वराचे नाव">
+<input id="brideName" placeholder="वधूचे नाव">
+<input id="dateText" placeholder="दिनांक">
+<input id="venueText" placeholder="स्थळ">
+
+<hr>
+
+<h3>Position Control (Top / Left)</h3>
+
+Groom: T<input id="gTop" value="500"> L<input id="gLeft" value="500"><br>
+Bride: T<input id="bTop" value="600"> L<input id="bLeft" value="500"><br>
+Date: T<input id="dTop" value="900"> L<input id="dLeft" value="500"><br>
+Venue: T<input id="vTop" value="1000"> L<input id="vLeft" value="500"><br>
+
+<br>
+<button onclick="updateCard()">Update Card</button>
+<button onclick="window.print()">Download PDF</button>
+
+</div>
+
+<div class="card" id="card">
+
+<div class="layer title" id="title" style="top:100px; left:500px">
+|| श्री गणेशाय नमः ||
+</div>
+
+<div class="layer text" id="groom"></div>
+<div class="layer text" id="bride"></div>
+<div class="layer text" id="date"></div>
+<div class="layer text" id="venue"></div>
+
+</div>
+
+<script>
+
+function updateCard(){
+
+    // background
+    document.getElementById("card").style.backgroundImage =
+        "url(" + template.value + ")";
+
+    // text
+    groom.innerText = groomName.value;
+    bride.innerText = brideName.value;
+    date.innerText = "📅 " + dateText.value;
+    venue.innerText = "📍 " + venueText.value;
+
+    // positions
+    groom.style.top = gTop.value + "px";
+    groom.style.left = gLeft.value + "px";
+
+    bride.style.top = bTop.value + "px";
+    bride.style.left = bLeft.value + "px";
+
+    date.style.top = dTop.value + "px";
+    date.style.left = dLeft.value + "px";
+
+    venue.style.top = vTop.value + "px";
+    venue.style.left = vLeft.value + "px";
+}
+
+</script>
+
+</body>
+</html>
