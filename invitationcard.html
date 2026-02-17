@@ -2,35 +2,37 @@
 <html lang="mr">
 <head>
 <meta charset="UTF-8">
-<title>Pro Invitation Position Builder</title>
+<title>Template Text Overlay Builder</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;700&family=Tiro+Devanagari+Marathi&family=Hind&display=swap" rel="stylesheet">
 
 <style>
 body{
-    font-family:'Noto Serif Devanagari', serif;
+    font-family: Arial;
     background:#eee;
     text-align:center;
 }
 
-/* CARD CANVAS */
+/* CANVAS */
 .card{
     width:1000px;
     height:1500px;
     margin:20px auto;
     position:relative;
-    border:8px solid gold;
+    border:6px solid #444;
     background-size:cover;
 }
 
-/* TEXT LAYERS */
+/* TEXT */
 .layer{
     position:absolute;
-    transform:translate(-50%, -50%);
+    transform:translate(-50%,-50%);
+    font-size:36px;
     font-weight:bold;
+    color:#000;
 }
 
-.title{ font-size:48px; color:#b71c1c; }
-.text{ font-size:36px; }
-
+/* PANEL */
 .controls{
     background:white;
     padding:20px;
@@ -38,10 +40,19 @@ body{
     box-shadow:0 0 10px #ccc;
 }
 
-input{ padding:6px; width:70px; }
+input{
+    padding:6px;
+    margin:5px;
+    width:120px;
+}
+
+select{
+    padding:6px;
+}
+
 button{
     padding:10px 20px;
-    background:#b71c1c;
+    background:#333;
     color:white;
     border:none;
 }
@@ -52,67 +63,84 @@ button{
 
 <div class="controls">
 
-<h2>🎨 Professional Position Builder</h2>
+<h2>🖼️ Upload Template + Add Text</h2>
 
-Template:
-<select id="template">
-<option value="https://i.imgur.com/jW3Z6Gk.jpg">Royal</option>
-<option value="https://i.imgur.com/Q6aZbWQ.jpg">Floral</option>
-<option value="https://i.imgur.com/x4gFZ8M.jpg">Classic</option>
+Upload Template:
+<input type="file" id="templateUpload"><br><br>
+
+Font:
+<select id="fontSelect">
+<option value="'Noto Serif Devanagari'">Classic Marathi</option>
+<option value="'Tiro Devanagari Marathi'">Royal Marathi</option>
+<option value="'Hind'">Simple Clean</option>
 </select>
 
 <hr>
 
-<h3>Text Content</h3>
+<h3>Text + Position</h3>
 
-<input id="groomName" placeholder="वराचे नाव">
-<input id="brideName" placeholder="वधूचे नाव">
-<input id="dateText" placeholder="दिनांक">
-<input id="venueText" placeholder="स्थळ">
+Groom:
+<input id="groomText" placeholder="Text">
+Top<input id="gTop" value="500">
+Left<input id="gLeft" value="500"><br>
 
-<hr>
+Bride:
+<input id="brideText" placeholder="Text">
+Top<input id="bTop" value="600">
+Left<input id="bLeft" value="500"><br>
 
-<h3>Position Control (Top / Left)</h3>
+Date:
+<input id="dateText" placeholder="Text">
+Top<input id="dTop" value="900">
+Left<input id="dLeft" value="500"><br>
 
-Groom: T<input id="gTop" value="500"> L<input id="gLeft" value="500"><br>
-Bride: T<input id="bTop" value="600"> L<input id="bLeft" value="500"><br>
-Date: T<input id="dTop" value="900"> L<input id="dLeft" value="500"><br>
-Venue: T<input id="vTop" value="1000"> L<input id="vLeft" value="500"><br>
+Venue:
+<input id="venueText" placeholder="Text">
+Top<input id="vTop" value="1000">
+Left<input id="vLeft" value="500"><br><br>
 
-<br>
-<button onclick="updateCard()">Update Card</button>
+<button onclick="updateCard()">Update</button>
 <button onclick="window.print()">Download PDF</button>
 
 </div>
 
 <div class="card" id="card">
 
-<div class="layer title" id="title" style="top:100px; left:500px">
-|| श्री गणेशाय नमः ||
-</div>
-
-<div class="layer text" id="groom"></div>
-<div class="layer text" id="bride"></div>
-<div class="layer text" id="date"></div>
-<div class="layer text" id="venue"></div>
+<div class="layer" id="groom"></div>
+<div class="layer" id="bride"></div>
+<div class="layer" id="date"></div>
+<div class="layer" id="venue"></div>
 
 </div>
 
 <script>
 
+/* TEMPLATE UPLOAD */
+templateUpload.addEventListener("change", function(){
+    const reader = new FileReader();
+    reader.onload = e => {
+        card.style.backgroundImage = `url(${e.target.result})`;
+    }
+    reader.readAsDataURL(this.files[0]);
+});
+
+
 function updateCard(){
 
-    // background
-    document.getElementById("card").style.backgroundImage =
-        "url(" + template.value + ")";
+    const font = fontSelect.value;
+
+    // apply font
+    document.querySelectorAll(".layer").forEach(el=>{
+        el.style.fontFamily = font;
+    });
 
     // text
-    groom.innerText = groomName.value;
-    bride.innerText = brideName.value;
-    date.innerText = "📅 " + dateText.value;
-    venue.innerText = "📍 " + venueText.value;
+    groom.innerText = groomText.value;
+    bride.innerText = brideText.value;
+    date.innerText = dateText.value;
+    venue.innerText = venueText.value;
 
-    // positions
+    // position
     groom.style.top = gTop.value + "px";
     groom.style.left = gLeft.value + "px";
 
