@@ -37,18 +37,22 @@ overflow:hidden;
 touch-action:none;
 }
 
+/* FIXED TEMPLATE CENTER */
 .template{
 position:absolute;
-width:100%;
-height:100%;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+max-width:100%;
+max-height:100%;
 object-fit:contain;
 z-index:0;
 }
 
 .element{
 position:absolute;
-touch-action:none;
 z-index:5;
+touch-action:none;
 }
 
 .selected{
@@ -58,6 +62,7 @@ outline:2px dashed #2196f3;
 .text{
 font-size:28px;
 font-weight:bold;
+white-space:pre;
 }
 
 .delete{
@@ -85,12 +90,12 @@ cursor:pointer;
 <input type="file" onchange="loadTemplate(event)">
 <input type="file" onchange="addImage(event)">
 
-<input id="txt" placeholder="Enter text">
+<input id="txt" placeholder="Type Marathi or English">
 
 <select id="font">
 <option value="Arial">Arial</option>
-<option value="ganesha" style="font-family:ganesha">Ganesha</option>
-<option value="matarani" style="font-family:matarani">Matarani</option>
+<option value="ganesha">Ganesha</option>
+<option value="matarani">Matarani</option>
 </select>
 
 <input type="color" id="color">
@@ -131,17 +136,19 @@ initElements();
 }
 }
 
-/* TEMPLATE */
+/* TEMPLATE LOAD (KEEP OLD ELEMENTS) */
 function loadTemplate(e){
 saveState();
 let r=new FileReader();
 r.onload=()=>{
-canvas.innerHTML=`<img src="${r.result}" class="template">`;
+let old=canvas.innerHTML;
+canvas.innerHTML=`<img src="${r.result}" class="template">`+old;
+initElements();
 }
 r.readAsDataURL(e.target.files[0]);
 }
 
-/* SELECT */
+/* SELECT ELEMENT */
 function select(el){
 document.querySelectorAll(".element").forEach(e=>e.classList.remove("selected"));
 selected=el;
@@ -154,20 +161,12 @@ let d=document.createElement("div");
 d.className="delete";
 d.innerHTML="✖";
 
-d.addEventListener("touchstart",(e)=>{
-e.stopPropagation();
-e.preventDefault();
-saveState();
-el.remove();
-selected=null;
-});
-
-d.addEventListener("click",(e)=>{
+d.onclick=(e)=>{
 e.stopPropagation();
 saveState();
 el.remove();
 selected=null;
-});
+};
 
 el.appendChild(d);
 }
@@ -202,7 +201,7 @@ canvas.appendChild(div);
 initElement(div);
 }
 
-/* INIT ELEMENT */
+/* DRAG */
 function initElement(el){
 addDelete(el);
 
@@ -229,12 +228,11 @@ el.style.top=(initY+dy)+"px";
 });
 }
 
-/* GLOBAL PINCH RESIZE */
+/* PINCH RESIZE */
 let startDist=0,startWidth=0;
 
 canvas.addEventListener("touchstart",(e)=>{
 if(e.touches.length===2 && selected){
-e.preventDefault();
 startDist=getDist(e);
 startWidth=selected.offsetWidth;
 }
@@ -242,7 +240,6 @@ startWidth=selected.offsetWidth;
 
 canvas.addEventListener("touchmove",(e)=>{
 if(e.touches.length===2 && selected){
-e.preventDefault();
 let newDist=getDist(e);
 let scale=newDist/startDist;
 selected.style.width=(startWidth*scale)+"px";
@@ -281,7 +278,7 @@ canvas.innerHTML=localStorage.getItem(key);
 initElements();
 }
 
-/* LIST DRAFTS */
+/* DRAFT LIST */
 function loadDraftList(){
 drafts.innerHTML="";
 for(let k in localStorage){
@@ -296,7 +293,6 @@ function initElements(){
 document.querySelectorAll(".element").forEach(el=>initElement(el));
 }
 
-/* INIT */
 loadDraftList();
 </script>
 
