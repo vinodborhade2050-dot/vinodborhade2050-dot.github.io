@@ -1,159 +1,146 @@
 <!DOCTYPE html>
-<html lang="mr">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Template Text Overlay Builder</title>
+<title>Invitation Builder</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;700&family=Tiro+Devanagari+Marathi&family=Hind&display=swap" rel="stylesheet">
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
 body{
     font-family: Arial;
-    background:#eee;
     text-align:center;
+    background:#f5f5f5;
 }
 
-/* CANVAS */
-.card{
-    width:1000px;
-    height:1500px;
+#canvas{
+    width:800px;
+    height:500px;
     margin:20px auto;
+    border:2px dashed #aaa;
     position:relative;
-    border:6px solid #444;
     background-size:cover;
+    background-position:center;
+    touch-action:none;
 }
 
-/* TEXT */
-.layer{
+.draggable{
     position:absolute;
-    transform:translate(-50%,-50%);
-    font-size:36px;
-    font-weight:bold;
-    color:#000;
-}
-
-/* PANEL */
-.controls{
-    background:white;
-    padding:20px;
-    margin:20px;
-    box-shadow:0 0 10px #ccc;
-}
-
-input{
-    padding:6px;
-    margin:5px;
-    width:120px;
-}
-
-select{
-    padding:6px;
+    width:150px;
+    touch-action:none;
 }
 
 button{
     padding:10px 20px;
-    background:#333;
-    color:white;
-    border:none;
+    margin:10px;
+    font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="controls">
-
-<h2>🖼️ Upload Template + Add Text</h2>
+<h2>💍 Invitation Builder</h2>
 
 Upload Template:
-<input type="file" id="templateUpload"><br><br>
+<input type="file" id="bgUpload"><br><br>
 
-Font:
-<select id="fontSelect">
-<option value="'Noto Serif Devanagari'">Classic Marathi</option>
-<option value="'Tiro Devanagari Marathi'">Royal Marathi</option>
-<option value="'Hind'">Simple Clean</option>
-</select>
+Upload Photo:
+<input type="file" id="imgUpload"><br><br>
 
-<hr>
+<button onclick="previewCard()">Preview</button>
+<button onclick="downloadCard()">Download</button>
 
-<h3>Text + Position</h3>
-
-Groom:
-<input id="groomText" placeholder="Text">
-Top<input id="gTop" value="500">
-Left<input id="gLeft" value="500"><br>
-
-Bride:
-<input id="brideText" placeholder="Text">
-Top<input id="bTop" value="600">
-Left<input id="bLeft" value="500"><br>
-
-Date:
-<input id="dateText" placeholder="Text">
-Top<input id="dTop" value="900">
-Left<input id="dLeft" value="500"><br>
-
-Venue:
-<input id="venueText" placeholder="Text">
-Top<input id="vTop" value="1000">
-Left<input id="vLeft" value="500"><br><br>
-
-<button onclick="updateCard()">Update</button>
-<button onclick="window.print()">Download PDF</button>
-
-</div>
-
-<div class="card" id="card">
-
-<div class="layer" id="groom"></div>
-<div class="layer" id="bride"></div>
-<div class="layer" id="date"></div>
-<div class="layer" id="venue"></div>
-
-</div>
+<div id="canvas"></div>
 
 <script>
+const canvas = document.getElementById("canvas");
 
-/* TEMPLATE UPLOAD */
-templateUpload.addEventListener("change", function(){
+// Background upload
+bgUpload.onchange = function(e){
     const reader = new FileReader();
-    reader.onload = e => {
-        card.style.backgroundImage = `url(${e.target.result})`;
-    }
-    reader.readAsDataURL(this.files[0]);
-});
+    reader.onload = () => canvas.style.backgroundImage = `url(${reader.result})`;
+    reader.readAsDataURL(e.target.files[0]);
+};
 
+// Image upload one by one
+imgUpload.onchange = function(e){
+    const file = e.target.files[0];
+    const reader = new FileReader();
 
-function updateCard(){
+    reader.onload = function(){
+        let img = document.createElement("img");
+        img.src = reader.result;
+        img.className = "draggable";
+        img.style.top = "50px";
+        img.style.left = "50px";
+        canvas.appendChild(img);
+        enableTouch(img);
+    };
 
-    const font = fontSelect.value;
+    reader.readAsDataURL(file);
+    e.target.value="";
+};
 
-    // apply font
-    document.querySelectorAll(".layer").forEach(el=>{
-        el.style.fontFamily = font;
-    });
-
-    // text
-    groom.innerText = groomText.value;
-    bride.innerText = brideText.value;
-    date.innerText = dateText.value;
-    venue.innerText = venueText.value;
-
-    // position
-    groom.style.top = gTop.value + "px";
-    groom.style.left = gLeft.value + "px";
-
-    bride.style.top = bTop.value + "px";
-    bride.style.left = bLeft.value + "px";
-
-    date.style.top = dTop.value + "px";
-    date.style.left = dLeft.value + "px";
-
-    venue.style.top = vTop.value + "px";
-    venue.style.left = vLeft.value + "px";
+function getDistance(touches){
+    let dx = touches[0].clientX - touches[1].clientX;
+    let dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx*dx + dy*dy);
 }
 
+function enableTouch(el){
+    let startX, startY, startWidth;
+    let dragging=false, resizing=false, startDist;
+
+    el.addEventListener("touchstart", e=>{
+        if(e.touches.length===1){
+            dragging=true;
+            startX=e.touches[0].clientX-el.offsetLeft;
+            startY=e.touches[0].clientY-el.offsetTop;
+        }
+        if(e.touches.length===2){
+            resizing=true;
+            startDist=getDistance(e.touches);
+            startWidth=el.offsetWidth;
+        }
+    });
+
+    el.addEventListener("touchmove", e=>{
+        e.preventDefault();
+        if(dragging && e.touches.length===1){
+            el.style.left=(e.touches[0].clientX-startX)+"px";
+            el.style.top=(e.touches[0].clientY-startY)+"px";
+        }
+        if(resizing && e.touches.length===2){
+            let newDist=getDistance(e.touches);
+            let scale=newDist/startDist;
+            el.style.width=(startWidth*scale)+"px";
+        }
+    });
+
+    el.addEventListener("touchend", ()=>{
+        dragging=false;
+        resizing=false;
+    });
+}
+
+// PREVIEW
+function previewCard(){
+    html2canvas(canvas).then(c=>{
+        let win = window.open("");
+        win.document.body.appendChild(c);
+    });
+}
+
+// DOWNLOAD
+function downloadCard(){
+    html2canvas(canvas).then(c=>{
+        let link = document.createElement("a");
+        link.download="invitation.png";
+        link.href = c.toDataURL();
+        link.click();
+    });
+}
 </script>
 
 </body>
