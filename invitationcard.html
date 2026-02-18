@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invitation Editor</title>
+<title>Invitation Card Editor</title>
 
 <style>
+
 body{
     font-family:Arial;
-    background:#f2f2f2;
-    margin:0;
-    padding:20px;
+    background:#f3f3f3;
+    padding:15px;
 }
 
 .controls{
@@ -21,19 +20,20 @@ body{
 }
 
 button,input,select{
-    margin:5px;
     padding:8px;
+    margin:5px;
 }
 
 #canvas{
     position:relative;
     max-width:500px;
     margin:auto;
+    border:3px dashed #ccc;
 }
 
 #bg{
     width:100%;
-    border-radius:10px;
+    display:block;
 }
 
 .element{
@@ -43,12 +43,14 @@ button,input,select{
 }
 
 .text{
+    font-size:28px;
     font-weight:bold;
 }
 
-img.dragImg{
+.dragImg{
     width:120px;
 }
+
 </style>
 </head>
 
@@ -56,9 +58,9 @@ img.dragImg{
 
 <div class="controls">
 
-<h3>Draft</h3>
+<h3>📂 invitation Draft</h3>
 <input id="draftName" placeholder="Draft Name">
-<button onclick="saveDraft()">Save Draft</button>
+<button onclick="saveDraft()">Save</button>
 
 <select id="draftList" onchange="loadDraft()">
 <option>Load Draft</option>
@@ -66,86 +68,93 @@ img.dragImg{
 
 <hr>
 
-<h3>Background</h3>
+<h3>🖼 Upload Template</h3>
 <input type="file" onchange="uploadBG(event)">
 
 <hr>
 
-<h3>Add Text</h3>
+<h3>✍ Add Text</h3>
 <input id="textInput" placeholder="Enter text">
-<input type="color" id="colorPicker">
+<input type="color" id="colorPicker" value="#000000">
 <button onclick="addText()">Add Text</button>
 
 <hr>
 
-<h3>Add Image</h3>
+<h3>📷 Add Image</h3>
 <input type="file" onchange="addImage(event)">
 
 </div>
 
 <div id="canvas">
-    <img id="bg">
+<img id="bg">
 </div>
 
 <script>
 
-let elements=[];
+const canvas = document.getElementById("canvas");
+const bg = document.getElementById("bg");
 
-/* ---------- DRAG FUNCTION ---------- */
+/* ---------- DRAG FUNCTION (Mobile + Desktop) ---------- */
+
 function makeDraggable(el){
 
-    let offsetX, offsetY, isDown=false;
+let startX=0,startY=0;
 
-    el.onmousedown=e=>{
-        isDown=true;
-        offsetX=e.offsetX;
-        offsetY=e.offsetY;
-    };
+el.onpointerdown = e => {
+    startX = e.clientX - el.offsetLeft;
+    startY = e.clientY - el.offsetTop;
+    el.setPointerCapture(e.pointerId);
+};
 
-    document.onmouseup=()=> isDown=false;
+el.onpointermove = e => {
+    if(e.pressure===0) return;
 
-    document.onmousemove=e=>{
-        if(!isDown) return;
+    const rect = canvas.getBoundingClientRect();
 
-        const rect=canvas.getBoundingClientRect();
-        el.style.left=(e.clientX-rect.left-offsetX)+"px";
-        el.style.top=(e.clientY-rect.top-offsetY)+"px";
-    };
+    let x = e.clientX - rect.left - startX;
+    let y = e.clientY - rect.top - startY;
+
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+};
+
 }
 
-/* ---------- BACKGROUND ---------- */
+/* ---------- TEMPLATE UPLOAD ---------- */
+
 function uploadBG(e){
     const reader=new FileReader();
-    reader.onload=()=> bg.src=reader.result;
+    reader.onload=()=>{
+        bg.src=reader.result;
+    }
     reader.readAsDataURL(e.target.files[0]);
 }
 
 /* ---------- ADD TEXT ---------- */
+
 function addText(){
 
-    const text=textInput.value;
-    const color=colorPicker.value;
+    const txt=document.getElementById("textInput").value;
+    const color=document.getElementById("colorPicker").value;
 
     const div=document.createElement("div");
     div.className="element text";
-    div.innerText=text;
+    div.innerText=txt;
     div.style.color=color;
     div.style.left="50px";
     div.style.top="50px";
 
     canvas.appendChild(div);
     makeDraggable(div);
-
-    elements.push(div.outerHTML);
 }
 
 /* ---------- ADD IMAGE ---------- */
+
 function addImage(e){
 
     const reader=new FileReader();
 
     reader.onload=()=>{
-
         const img=document.createElement("img");
         img.src=reader.result;
         img.className="element dragImg";
@@ -154,18 +163,21 @@ function addImage(e){
 
         canvas.appendChild(img);
         makeDraggable(img);
-
-        elements.push(img.outerHTML);
-    };
+    }
 
     reader.readAsDataURL(e.target.files[0]);
 }
 
 /* ---------- SAVE DRAFT ---------- */
+
 function saveDraft(){
 
-    const name=draftName.value;
-    if(!name) return alert("Enter name");
+    const name=document.getElementById("draftName").value;
+
+    if(!name){
+        alert("Enter draft name");
+        return;
+    }
 
     const data={
         bg:bg.src,
@@ -173,28 +185,32 @@ function saveDraft(){
     };
 
     localStorage.setItem("draft_"+name,JSON.stringify(data));
-    loadList();
 
-    alert("Saved!");
+    loadDraftList();
+    alert("Draft Saved");
 }
 
 /* ---------- LOAD LIST ---------- */
-function loadList(){
 
-    draftList.innerHTML="<option>Load Draft</option>";
+function loadDraftList(){
+
+    const list=document.getElementById("draftList");
+    list.innerHTML="<option>Load Draft</option>";
 
     Object.keys(localStorage).forEach(k=>{
         if(k.startsWith("draft_")){
             const name=k.replace("draft_","");
-            draftList.innerHTML+=`<option>${name}</option>`;
+            list.innerHTML+=`<option>${name}</option>`;
         }
     });
 }
 
 /* ---------- LOAD DRAFT ---------- */
+
 function loadDraft(){
 
-    const name=draftList.value;
+    const name=document.getElementById("draftList").value;
+
     const data=JSON.parse(localStorage.getItem("draft_"+name));
 
     canvas.innerHTML=data.html;
@@ -204,7 +220,7 @@ function loadDraft(){
 }
 
 /* INIT */
-loadList();
+loadDraftList();
 
 </script>
 
