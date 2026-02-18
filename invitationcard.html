@@ -7,26 +7,11 @@
 
 <style>
 body{font-family:Arial;text-align:center;background:#f0f0f0}
-
 #toolbar{background:white;padding:10px;position:sticky;top:0}
-
-#canvas{
-width:800px;height:1200px;background:white;
-margin:20px auto;border:3px solid #333;
-position:relative;overflow:hidden
-}
-
+#canvas{width:800px;height:1200px;background:white;margin:20px auto;border:3px solid #333;position:relative;overflow:hidden}
 .template{position:absolute}
-
 .draggable{position:absolute;touch-action:none}
-
-.deleteBtn{
-position:absolute;top:-15px;right:-15px;
-background:red;color:white;border-radius:50%;
-width:25px;height:25px;cursor:pointer;
-display:none;text-align:center;line-height:25px
-}
-
+.deleteBtn{position:absolute;top:-15px;right:-15px;background:red;color:white;border-radius:50%;width:25px;height:25px;cursor:pointer;display:none;text-align:center;line-height:25px}
 .textBox{font-size:40px;font-weight:bold;text-align:center}
 </style>
 </head>
@@ -34,11 +19,10 @@ display:none;text-align:center;line-height:25px
 <body>
 
 <div id="toolbar">
-
 <input type="file" id="templateUpload">
 <input type="file" id="imgUpload">
 
-<input id="textInput">
+<input id="textInput" placeholder="Text">
 <select id="fontSelect">
 <option value="Great Vibes">Great Vibes</option>
 <option value="Pacifico">Pacifico</option>
@@ -57,22 +41,29 @@ display:none;text-align:center;line-height:25px
 <button onclick="saveDraft()">Save Draft</button>
 
 <select id="draftList" onchange="loadDraft()">
-<option>Load Draft</option>
+<option value="">Load Draft</option>
 </select>
 
 <button onclick="download()">Download</button>
-
 </div>
 
 <div id="canvas"></div>
 
 <script>
 let canvas=document.getElementById("canvas")
+let templateData=""
 
 /* TEMPLATE */
 templateUpload.onchange=e=>{
 let r=new FileReader()
 r.onload=function(){
+templateData=r.result
+setTemplate(r.result)
+}
+r.readAsDataURL(e.target.files[0])
+}
+
+function setTemplate(src){
 let img=new Image()
 img.onload=function(){
 canvas.innerHTML=""
@@ -80,6 +71,7 @@ canvas.innerHTML=""
 let scale=Math.min(canvas.clientWidth/img.width,canvas.clientHeight/img.height)
 
 img.className="template"
+img.src=src
 img.style.width=img.width*scale+"px"
 img.style.height=img.height*scale+"px"
 img.style.left=(canvas.clientWidth-img.width*scale)/2+"px"
@@ -87,14 +79,11 @@ img.style.top=(canvas.clientHeight-img.height*scale)/2+"px"
 
 canvas.appendChild(img)
 }
-img.src=r.result
-}
-r.readAsDataURL(e.target.files[0])
+img.src=src
 }
 
 /* CREATE ELEMENT */
 function createElement(data){
-
 let wrap=document.createElement("div")
 wrap.className="draggable"
 wrap.style.left=data.left
@@ -134,13 +123,7 @@ del.style.display="block"
 imgUpload.onchange=e=>{
 let r=new FileReader()
 r.onload=function(){
-createElement({
-type:"img",
-src:r.result,
-left:"100px",
-top:"100px",
-width:"200px"
-})
+createElement({type:"img",src:r.result,left:"100px",top:"100px",width:"200px"})
 }
 r.readAsDataURL(e.target.files[0])
 }
@@ -160,20 +143,17 @@ top:"200px"
 /* DRAG */
 function enableDrag(el){
 let startX,startY,scale=1
-
 el.onpointerdown=e=>{
 startX=e.clientX-el.offsetLeft
 startY=e.clientY-el.offsetTop
 el.setPointerCapture(e.pointerId)
 }
-
 el.onpointermove=e=>{
 if(e.pressure>0){
 el.style.left=e.clientX-startX+"px"
 el.style.top=e.clientY-startY+"px"
 }
 }
-
 el.addEventListener("wheel",e=>{
 e.preventDefault()
 scale+=e.deltaY*-0.001
@@ -187,14 +167,9 @@ function saveDraft(){
 let name=draftName.value
 if(!name)return alert("Enter name")
 
-let data=[]
+let elements=[]
 canvas.querySelectorAll(".draggable").forEach(el=>{
-let obj={
-left:el.style.left,
-top:el.style.top,
-transform:el.style.transform
-}
-
+let obj={left:el.style.left,top:el.style.top,transform:el.style.transform}
 if(el.querySelector("img")){
 obj.type="img"
 obj.src=el.querySelector("img").src
@@ -206,17 +181,19 @@ obj.text=t.innerText
 obj.font=t.style.fontFamily
 obj.color=t.style.color
 }
-data.push(obj)
+elements.push(obj)
 })
 
-localStorage.setItem("draft_"+name,JSON.stringify(data))
+let draft={template:templateData,elements:elements}
+
+localStorage.setItem("draft_"+name,JSON.stringify(draft))
 loadDraftList()
-alert("Saved!")
+alert("Draft Saved!")
 }
 
 /* LOAD LIST */
 function loadDraftList(){
-draftList.innerHTML="<option>Load Draft</option>"
+draftList.innerHTML="<option value=''>Load Draft</option>"
 Object.keys(localStorage).forEach(k=>{
 if(k.startsWith("draft_")){
 let o=document.createElement("option")
@@ -230,9 +207,15 @@ loadDraftList()
 
 /* LOAD DRAFT */
 function loadDraft(){
-canvas.innerHTML=""
-let data=JSON.parse(localStorage.getItem(draftList.value))
-data.forEach(createElement)
+let key=draftList.value
+if(!key)return
+
+let draft=JSON.parse(localStorage.getItem(key))
+
+templateData=draft.template
+setTemplate(templateData)
+
+draft.elements.forEach(createElement)
 }
 
 /* DOWNLOAD */
@@ -249,6 +232,5 @@ let s=document.createElement("script")
 s.src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"
 document.body.appendChild(s)
 </script>
-
 </body>
 </html>
