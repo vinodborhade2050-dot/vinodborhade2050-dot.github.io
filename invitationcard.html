@@ -2,56 +2,37 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invitation Editor</title>
+<title>Wedding Card Editor</title>
 
 <style>
 
-body{
-    font-family:Arial;
-    background:#f5f5f5;
-    padding:15px;
-}
+body{font-family:Arial;background:#f5f5f5;padding:15px}
 
 .controls{
-    background:white;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
+background:white;padding:15px;border-radius:10px;margin-bottom:15px
 }
 
-button,input{
-    padding:8px;
-    margin:5px;
-}
+button,input,select{padding:8px;margin:5px}
 
 #canvas{
-    position:relative;
-    max-width:500px;
-    margin:auto;
-    border:3px dashed #ccc;
-    overflow:hidden;
+position:relative;
+max-width:500px;
+margin:auto;
+border:3px dashed #ccc;
+overflow:hidden
 }
 
-#bg{
-    width:100%;
-    display:block;
-}
+#bg{width:100%}
 
 .element{
-    position:absolute;
-    cursor:grab;
-    user-select:none;
-    touch-action:none;
+position:absolute;
+cursor:grab;
+touch-action:none;
+user-select:none
 }
 
-.text{
-    font-size:28px;
-    font-weight:bold;
-}
-
-.dragImg{
-    width:120px;
-}
+.text{font-size:28px;font-weight:bold}
+.dragImg{width:120px}
 
 </style>
 </head>
@@ -60,12 +41,12 @@ button,input{
 
 <div class="controls">
 
-<h3>Upload Template</h3>
+<h3>Template</h3>
 <input type="file" onchange="uploadBG(event)">
 
 <hr>
 
-<input id="textInput" placeholder="Enter text">
+<input id="textInput" placeholder="Text">
 <input type="color" id="colorPicker">
 <button onclick="addText()">Add Text</button>
 
@@ -73,164 +54,175 @@ button,input{
 
 <input type="file" onchange="addImage(event)">
 
+<hr>
+
+<h3>Draft</h3>
+<input id="draftName" placeholder="Draft Name">
+<button onclick="saveDraft()">Save Draft</button>
+
+<select id="draftList" onchange="loadDraft()">
+<option>Load Draft</option>
+</select>
+
+<hr>
+
+<button onclick="preview()">Preview</button>
+<button onclick="download()">Download</button>
+
 </div>
 
 <div id="canvas">
 <img id="bg">
 </div>
 
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
 <script>
 
 const canvas=document.getElementById("canvas");
 const bg=document.getElementById("bg");
 
-let active=null;
-let shiftX=0, shiftY=0;
-let initialDistance=0;
-let initialSize=0;
+let active=null,shiftX=0,shiftY=0;
+let initialDistance=0,initialSize=0;
 
-/* ---------- DISTANCE BETWEEN TWO TOUCHES ---------- */
+/* ---------- DISTANCE ---------- */
 
-function getDistance(t1,t2){
-    return Math.hypot(
-        t2.clientX - t1.clientX,
-        t2.clientY - t1.clientY
-    );
+function dist(t1,t2){
+return Math.hypot(t2.clientX-t1.clientX,t2.clientY-t1.clientY);
 }
 
-/* ---------- DRAG + PINCH HANDLER ---------- */
+/* ---------- DRAG ---------- */
 
-canvas.addEventListener("pointermove", e=>{
+canvas.addEventListener("pointerdown",e=>{
+if(!e.target.classList.contains("element")) return;
 
-    if(!active) return;
-
-    /* ----- PINCH RESIZE ----- */
-    if(e.pointerType==="touch" && e.isPrimary===false){
-
-        const touches = Array.from(canvas.getPointerCapture ? [] : []);
-
-    }
-
+active=e.target;
+const rect=active.getBoundingClientRect();
+shiftX=e.clientX-rect.left;
+shiftY=e.clientY-rect.top;
 });
 
-/* ---------- POINTER SYSTEM ---------- */
+canvas.addEventListener("pointermove",e=>{
+if(!active) return;
 
-canvas.addEventListener("pointerdown", e=>{
+const rect=canvas.getBoundingClientRect();
 
-    if(!e.target.classList.contains("element")) return;
+let x=e.clientX-rect.left-shiftX;
+let y=e.clientY-rect.top-shiftY;
 
-    active = e.target;
+x=Math.max(0,Math.min(x,canvas.clientWidth-active.offsetWidth));
+y=Math.max(0,Math.min(y,canvas.clientHeight-active.offsetHeight));
 
-    const rect = active.getBoundingClientRect();
-
-    shiftX = e.clientX - rect.left;
-    shiftY = e.clientY - rect.top;
-
-    active.setPointerCapture(e.pointerId);
-
+active.style.left=x+"px";
+active.style.top=y+"px";
 });
 
-canvas.addEventListener("pointermove", e=>{
+canvas.addEventListener("pointerup",()=>active=null);
 
-    if(!active) return;
+/* ---------- PINCH RESIZE ---------- */
 
-    if(e.pressure===0) return;
-
-    const rect = canvas.getBoundingClientRect();
-
-    let x = e.clientX - rect.left - shiftX;
-    let y = e.clientY - rect.top - shiftY;
-
-    x = Math.max(0, Math.min(x, canvas.clientWidth - active.offsetWidth));
-    y = Math.max(0, Math.min(y, canvas.clientHeight - active.offsetHeight));
-
-    active.style.left = x+"px";
-    active.style.top = y+"px";
-
+canvas.addEventListener("touchstart",e=>{
+if(e.touches.length==2 && active){
+initialDistance=dist(e.touches[0],e.touches[1]);
+initialSize=active.tagName=="IMG"?active.offsetWidth:
+parseFloat(getComputedStyle(active).fontSize);
+}
 });
 
-canvas.addEventListener("pointerup", ()=> active=null);
+canvas.addEventListener("touchmove",e=>{
+if(e.touches.length==2 && active){
+e.preventDefault();
+let newDist=dist(e.touches[0],e.touches[1]);
+let scale=newDist/initialDistance;
 
-/* ---------- MOBILE PINCH RESIZE ---------- */
-
-canvas.addEventListener("touchstart", e=>{
-
-    if(e.touches.length===2 && active){
-
-        initialDistance = getDistance(e.touches[0], e.touches[1]);
-
-        if(active.tagName==="IMG")
-            initialSize = active.offsetWidth;
-        else
-            initialSize = parseFloat(getComputedStyle(active).fontSize);
-
-    }
-
-});
-
-canvas.addEventListener("touchmove", e=>{
-
-    if(e.touches.length===2 && active){
-
-        e.preventDefault();
-
-        const newDist = getDistance(e.touches[0], e.touches[1]);
-
-        const scale = newDist / initialDistance;
-
-        if(active.tagName==="IMG"){
-            active.style.width = initialSize * scale + "px";
-        } else {
-            active.style.fontSize = initialSize * scale + "px";
-        }
-
-    }
-
+if(active.tagName=="IMG")
+active.style.width=initialSize*scale+"px";
+else
+active.style.fontSize=initialSize*scale+"px";
+}
 });
 
 /* ---------- TEMPLATE ---------- */
 
 function uploadBG(e){
-    const reader=new FileReader();
-    reader.onload=()=> bg.src=reader.result;
-    reader.readAsDataURL(e.target.files[0]);
+const r=new FileReader();
+r.onload=()=>bg.src=r.result;
+r.readAsDataURL(e.target.files[0]);
 }
 
-/* ---------- ADD TEXT ---------- */
+/* ---------- TEXT ---------- */
 
 function addText(){
-
-    const txt=document.getElementById("textInput").value;
-    const color=document.getElementById("colorPicker").value;
-
-    const div=document.createElement("div");
-    div.className="element text";
-    div.innerText=txt;
-    div.style.color=color;
-    div.style.left="50px";
-    div.style.top="50px";
-
-    canvas.appendChild(div);
+let div=document.createElement("div");
+div.className="element text";
+div.innerText=textInput.value;
+div.style.color=colorPicker.value;
+div.style.left="50px";
+div.style.top="50px";
+canvas.appendChild(div);
 }
 
-/* ---------- ADD IMAGE ---------- */
+/* ---------- IMAGE ---------- */
 
 function addImage(e){
-
-    const reader=new FileReader();
-
-    reader.onload=()=>{
-        const img=document.createElement("img");
-        img.src=reader.result;
-        img.className="element dragImg";
-        img.style.left="50px";
-        img.style.top="50px";
-
-        canvas.appendChild(img);
-    }
-
-    reader.readAsDataURL(e.target.files[0]);
+const r=new FileReader();
+r.onload=()=>{
+let img=document.createElement("img");
+img.src=r.result;
+img.className="element dragImg";
+img.style.left="50px";
+img.style.top="50px";
+canvas.appendChild(img);
 }
+r.readAsDataURL(e.target.files[0]);
+}
+
+/* ---------- SAVE DRAFT ---------- */
+
+function saveDraft(){
+const name=draftName.value;
+if(!name) return alert("Enter name");
+
+localStorage.setItem("draft_"+name,canvas.innerHTML);
+loadList();
+alert("Saved");
+}
+
+/* ---------- LOAD LIST ---------- */
+
+function loadList(){
+draftList.innerHTML="<option>Load Draft</option>";
+Object.keys(localStorage).forEach(k=>{
+if(k.startsWith("draft_"))
+draftList.innerHTML+=`<option>${k.replace("draft_","")}</option>`;
+});
+}
+
+function loadDraft(){
+canvas.innerHTML=localStorage.getItem("draft_"+draftList.value);
+}
+
+/* ---------- PREVIEW ---------- */
+
+function preview(){
+html2canvas(canvas).then(c=>{
+let w=window.open("");
+w.document.body.appendChild(c);
+});
+}
+
+/* ---------- DOWNLOAD ---------- */
+
+function download(){
+html2canvas(canvas).then(c=>{
+let link=document.createElement("a");
+link.download="invitation.png";
+link.href=c.toDataURL();
+link.click();
+});
+}
+
+loadList();
 
 </script>
 
