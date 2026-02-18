@@ -19,7 +19,7 @@ body{
     margin-bottom:15px;
 }
 
-button,input,select{
+button,input{
     padding:8px;
     margin:5px;
 }
@@ -41,6 +41,7 @@ button,input,select{
     position:absolute;
     cursor:grab;
     user-select:none;
+    touch-action:none;
 }
 
 .text{
@@ -59,7 +60,7 @@ button,input,select{
 
 <div class="controls">
 
-<h3>Upload invitation Template</h3>
+<h3>Upload Template</h3>
 <input type="file" onchange="uploadBG(event)">
 
 <hr>
@@ -83,41 +84,109 @@ button,input,select{
 const canvas=document.getElementById("canvas");
 const bg=document.getElementById("bg");
 
-/* ---------- PERFECT DRAG FUNCTION ---------- */
+let active=null;
+let shiftX=0, shiftY=0;
+let initialDistance=0;
+let initialSize=0;
 
-function makeDraggable(el){
+/* ---------- DISTANCE BETWEEN TWO TOUCHES ---------- */
 
-let shiftX, shiftY;
+function getDistance(t1,t2){
+    return Math.hypot(
+        t2.clientX - t1.clientX,
+        t2.clientY - t1.clientY
+    );
+}
 
-el.onpointerdown = e => {
+/* ---------- DRAG + PINCH HANDLER ---------- */
 
-    const rect = el.getBoundingClientRect();
+canvas.addEventListener("pointermove", e=>{
+
+    if(!active) return;
+
+    /* ----- PINCH RESIZE ----- */
+    if(e.pointerType==="touch" && e.isPrimary===false){
+
+        const touches = Array.from(canvas.getPointerCapture ? [] : []);
+
+    }
+
+});
+
+/* ---------- POINTER SYSTEM ---------- */
+
+canvas.addEventListener("pointerdown", e=>{
+
+    if(!e.target.classList.contains("element")) return;
+
+    active = e.target;
+
+    const rect = active.getBoundingClientRect();
 
     shiftX = e.clientX - rect.left;
     shiftY = e.clientY - rect.top;
 
-    el.setPointerCapture(e.pointerId);
+    active.setPointerCapture(e.pointerId);
 
-};
+});
 
-el.onpointermove = e => {
+canvas.addEventListener("pointermove", e=>{
 
-    if(!el.hasPointerCapture(e.pointerId)) return;
+    if(!active) return;
 
-    const canvasRect = canvas.getBoundingClientRect();
+    if(e.pressure===0) return;
 
-    let newX = e.clientX - canvasRect.left - shiftX;
-    let newY = e.clientY - canvasRect.top - shiftY;
+    const rect = canvas.getBoundingClientRect();
 
-    /* ----- KEEP INSIDE CANVAS ----- */
-    newX = Math.max(0, Math.min(newX, canvas.clientWidth - el.offsetWidth));
-    newY = Math.max(0, Math.min(newY, canvas.clientHeight - el.offsetHeight));
+    let x = e.clientX - rect.left - shiftX;
+    let y = e.clientY - rect.top - shiftY;
 
-    el.style.left = newX + "px";
-    el.style.top = newY + "px";
-};
+    x = Math.max(0, Math.min(x, canvas.clientWidth - active.offsetWidth));
+    y = Math.max(0, Math.min(y, canvas.clientHeight - active.offsetHeight));
 
-}
+    active.style.left = x+"px";
+    active.style.top = y+"px";
+
+});
+
+canvas.addEventListener("pointerup", ()=> active=null);
+
+/* ---------- MOBILE PINCH RESIZE ---------- */
+
+canvas.addEventListener("touchstart", e=>{
+
+    if(e.touches.length===2 && active){
+
+        initialDistance = getDistance(e.touches[0], e.touches[1]);
+
+        if(active.tagName==="IMG")
+            initialSize = active.offsetWidth;
+        else
+            initialSize = parseFloat(getComputedStyle(active).fontSize);
+
+    }
+
+});
+
+canvas.addEventListener("touchmove", e=>{
+
+    if(e.touches.length===2 && active){
+
+        e.preventDefault();
+
+        const newDist = getDistance(e.touches[0], e.touches[1]);
+
+        const scale = newDist / initialDistance;
+
+        if(active.tagName==="IMG"){
+            active.style.width = initialSize * scale + "px";
+        } else {
+            active.style.fontSize = initialSize * scale + "px";
+        }
+
+    }
+
+});
 
 /* ---------- TEMPLATE ---------- */
 
@@ -142,7 +211,6 @@ function addText(){
     div.style.top="50px";
 
     canvas.appendChild(div);
-    makeDraggable(div);
 }
 
 /* ---------- ADD IMAGE ---------- */
@@ -159,7 +227,6 @@ function addImage(e){
         img.style.top="50px";
 
         canvas.appendChild(img);
-        makeDraggable(img);
     }
 
     reader.readAsDataURL(e.target.files[0]);
