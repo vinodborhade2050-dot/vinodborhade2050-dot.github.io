@@ -2,15 +2,12 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Editor PRO</title>
+<title>Wedding Card PRO Editor</title>
 
 <style>
-
 body{font-family:Arial;background:#f5f5f5;padding:15px}
-
 .controls{background:white;padding:15px;border-radius:10px;margin-bottom:15px}
-
-button,input{padding:8px;margin:5px}
+button,input,select{padding:8px;margin:5px}
 
 #canvas{
 position:relative;
@@ -29,20 +26,16 @@ touch-action:none;
 user-select:none;
 }
 
-.active{
-outline:3px solid #2196F3;
-}
-
+.active{outline:3px solid #2196F3}
 .text{font-size:28px;font-weight:bold}
 .dragImg{width:120px}
 
 .deleteBtn{
 position:absolute;top:-12px;right:-12px;background:red;color:white;
 border-radius:50%;width:22px;height:22px;
-display:flex;align-items:center;justify-content:center;font-size:14px;
-cursor:pointer;
+display:flex;align-items:center;justify-content:center;
+font-size:14px;cursor:pointer;
 }
-
 </style>
 </head>
 
@@ -51,6 +44,7 @@ cursor:pointer;
 <div class="controls">
 
 <input type="file" onchange="uploadBG(event)">
+
 <br>
 
 <input id="textInput" placeholder="Text">
@@ -64,6 +58,20 @@ cursor:pointer;
 <br>
 
 <button onclick="undo()">Undo</button>
+
+<hr>
+
+<input id="draftName" placeholder="Draft Name">
+<button onclick="saveDraft()">Save Draft</button>
+
+<select id="draftList" onchange="loadDraft()">
+<option>Load Draft</option>
+</select>
+
+<hr>
+
+<button onclick="preview()">Preview</button>
+<button onclick="download()">Download</button>
 
 </div>
 
@@ -84,11 +92,11 @@ let startDist=0,startSize=0;
 
 let history=[];
 
-/* ---------- SAVE STATE ---------- */
+/* ---------- STATE ---------- */
 
 function saveState(){
 history.push(canvas.innerHTML);
-if(history.length>20) history.shift();
+if(history.length>30) history.shift();
 }
 
 /* ---------- UNDO ---------- */
@@ -99,7 +107,7 @@ canvas.innerHTML=history.pop();
 attachEvents();
 }
 
-/* ---------- SELECT ELEMENT ---------- */
+/* ---------- SELECT ---------- */
 
 function select(el){
 document.querySelectorAll(".element").forEach(e=>e.classList.remove("active"));
@@ -124,15 +132,12 @@ canvas.addEventListener("pointermove",e=>{
 if(!active) return;
 
 const rect=canvas.getBoundingClientRect();
-
 let x=e.clientX-rect.left-shiftX;
 let y=e.clientY-rect.top-shiftY;
 
 active.style.left=x+"px";
 active.style.top=y+"px";
 });
-
-canvas.addEventListener("pointerup",()=>{});
 
 /* ---------- PINCH ANYWHERE ---------- */
 
@@ -153,7 +158,6 @@ startSize=active.tagName=="IMG"
 
 canvas.addEventListener("touchmove",e=>{
 if(e.touches.length==2 && active){
-
 e.preventDefault();
 
 let newDist=Math.hypot(
@@ -173,7 +177,6 @@ active.style.fontSize=startSize*scale+"px";
 /* ---------- DELETE ---------- */
 
 function addDelete(el){
-
 let btn=document.createElement("div");
 btn.className="deleteBtn";
 btn.innerHTML="✖";
@@ -195,7 +198,7 @@ r.onload=()=>bg.src=r.result;
 r.readAsDataURL(e.target.files[0]);
 }
 
-/* ---------- ADD TEXT ---------- */
+/* ---------- TEXT ---------- */
 
 function addText(){
 saveState();
@@ -213,7 +216,7 @@ addDelete(div);
 canvas.appendChild(div);
 }
 
-/* ---------- ADD IMAGE ---------- */
+/* ---------- IMAGE ---------- */
 
 function addImage(e){
 const r=new FileReader();
@@ -234,13 +237,59 @@ canvas.appendChild(img);
 r.readAsDataURL(e.target.files[0]);
 }
 
-/* ---------- REATTACH EVENTS AFTER UNDO ---------- */
+/* ---------- DRAFT ---------- */
+
+function saveDraft(){
+const name=draftName.value;
+if(!name) return alert("Enter name");
+
+localStorage.setItem("draft_"+name,canvas.innerHTML);
+loadList();
+alert("Saved");
+}
+
+function loadList(){
+draftList.innerHTML="<option>Load Draft</option>";
+Object.keys(localStorage).forEach(k=>{
+if(k.startsWith("draft_"))
+draftList.innerHTML+=`<option>${k.replace("draft_","")}</option>`;
+});
+}
+
+function loadDraft(){
+canvas.innerHTML=localStorage.getItem("draft_"+draftList.value);
+attachEvents();
+}
+
+/* ---------- PREVIEW ---------- */
+
+function preview(){
+html2canvas(canvas).then(c=>{
+let w=window.open("");
+w.document.body.appendChild(c);
+});
+}
+
+/* ---------- DOWNLOAD ---------- */
+
+function download(){
+html2canvas(canvas).then(c=>{
+let link=document.createElement("a");
+link.download="invitation.png";
+link.href=c.toDataURL();
+link.click();
+});
+}
+
+/* ---------- REATTACH EVENTS ---------- */
 
 function attachEvents(){
 document.querySelectorAll(".element").forEach(el=>{
 el.onclick=()=>select(el);
 });
 }
+
+loadList();
 
 </script>
 </body>
