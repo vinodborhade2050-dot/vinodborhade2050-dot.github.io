@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Invitation Builder</title>
+<title>Wedding Invitation Builder</title>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
@@ -10,14 +10,14 @@
 body{
     font-family: Arial;
     text-align:center;
-    background:#f5f5f5;
+    background:#f0f0f0;
 }
 
 #canvas{
     width:800px;
-    height:500px;
+    height:1200px;
     margin:20px auto;
-    border:2px dashed #aaa;
+    border:3px solid #444;
     position:relative;
     background-size:cover;
     background-position:center;
@@ -26,13 +26,18 @@ body{
 
 .draggable{
     position:absolute;
-    width:150px;
+    width:200px;
     touch-action:none;
+    border:2px dashed transparent;
+}
+
+.selected{
+    border:2px dashed red;
 }
 
 button{
     padding:10px 20px;
-    margin:10px;
+    margin:8px;
     font-size:16px;
 }
 </style>
@@ -40,7 +45,7 @@ button{
 
 <body>
 
-<h2>💍 Invitation Builder</h2>
+<h2>💍 Wedding Invitation Builder</h2>
 
 Upload Template:
 <input type="file" id="bgUpload"><br><br>
@@ -48,6 +53,7 @@ Upload Template:
 Upload Photo:
 <input type="file" id="imgUpload"><br><br>
 
+<button onclick="deleteImage()">Delete Selected</button>
 <button onclick="previewCard()">Preview</button>
 <button onclick="downloadCard()">Download</button>
 
@@ -55,25 +61,34 @@ Upload Photo:
 
 <script>
 const canvas = document.getElementById("canvas");
+let selectedElement = null;
 
-// Background upload
-bgUpload.onchange = function(e){
+// Upload background
+bgUpload.onchange = e=>{
     const reader = new FileReader();
-    reader.onload = () => canvas.style.backgroundImage = `url(${reader.result})`;
+    reader.onload = ()=> canvas.style.backgroundImage=`url(${reader.result})`;
     reader.readAsDataURL(e.target.files[0]);
 };
 
-// Image upload one by one
-imgUpload.onchange = function(e){
+// Upload image one-by-one
+imgUpload.onchange = e=>{
     const file = e.target.files[0];
     const reader = new FileReader();
 
-    reader.onload = function(){
+    reader.onload = ()=>{
         let img = document.createElement("img");
         img.src = reader.result;
         img.className = "draggable";
-        img.style.top = "50px";
-        img.style.left = "50px";
+        img.style.top="100px";
+        img.style.left="100px";
+
+        img.onclick = ()=>{
+            document.querySelectorAll(".draggable")
+                .forEach(i=>i.classList.remove("selected"));
+            img.classList.add("selected");
+            selectedElement = img;
+        };
+
         canvas.appendChild(img);
         enableTouch(img);
     };
@@ -82,22 +97,36 @@ imgUpload.onchange = function(e){
     e.target.value="";
 };
 
-function getDistance(touches){
-    let dx = touches[0].clientX - touches[1].clientX;
-    let dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx*dx + dy*dy);
+// Delete selected image
+function deleteImage(){
+    if(selectedElement){
+        selectedElement.remove();
+        selectedElement = null;
+    }else{
+        alert("Select image first");
+    }
+}
+
+// Touch gestures
+function getDistance(t){
+    let dx=t[0].clientX-t[1].clientX;
+    let dy=t[0].clientY-t[1].clientY;
+    return Math.sqrt(dx*dx+dy*dy);
 }
 
 function enableTouch(el){
-    let startX, startY, startWidth;
-    let dragging=false, resizing=false, startDist;
+    let startX,startY,startWidth;
+    let dragging=false,resizing=false,startDist;
 
     el.addEventListener("touchstart", e=>{
+        el.click();
+
         if(e.touches.length===1){
             dragging=true;
             startX=e.touches[0].clientX-el.offsetLeft;
             startY=e.touches[0].clientY-el.offsetTop;
         }
+
         if(e.touches.length===2){
             resizing=true;
             startDist=getDistance(e.touches);
@@ -107,10 +136,12 @@ function enableTouch(el){
 
     el.addEventListener("touchmove", e=>{
         e.preventDefault();
+
         if(dragging && e.touches.length===1){
             el.style.left=(e.touches[0].clientX-startX)+"px";
             el.style.top=(e.touches[0].clientY-startY)+"px";
         }
+
         if(resizing && e.touches.length===2){
             let newDist=getDistance(e.touches);
             let scale=newDist/startDist;
@@ -124,20 +155,20 @@ function enableTouch(el){
     });
 }
 
-// PREVIEW
+// Preview
 function previewCard(){
     html2canvas(canvas).then(c=>{
-        let win = window.open("");
+        let win=window.open("");
         win.document.body.appendChild(c);
     });
 }
 
-// DOWNLOAD
+// Download
 function downloadCard(){
     html2canvas(canvas).then(c=>{
-        let link = document.createElement("a");
-        link.download="invitation.png";
-        link.href = c.toDataURL();
+        let link=document.createElement("a");
+        link.download="wedding-card.png";
+        link.href=c.toDataURL();
         link.click();
     });
 }
