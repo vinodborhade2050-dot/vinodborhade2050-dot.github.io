@@ -1,314 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="mr">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Invitation Editor</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Pacifico&family=Playfair+Display&family=Dancing+Script&family=Lobster&display=swap" rel="stylesheet">
+<title>Marriage Invitation Editor</title>
 
 <style>
-body{font-family:Arial;text-align:center;background:#f0f0f0}
-
-#toolbar{
-background:white;padding:10px;position:sticky;top:0;z-index:20
+body{
+    font-family: Arial;
+    background:#f3f3f3;
+    margin:0;
+    padding:20px;
 }
 
-#canvas{
-width:800px;height:1200px;background:white;
-margin:20px auto;border:3px solid #333;
-position:relative;overflow:hidden
+/* Controls */
+.controls{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
 }
 
-/* TEMPLATE ALWAYS BACKGROUND */
-.template{
-position:absolute;
-z-index:0;
+input, select, button{
+    padding:8px;
+    margin:5px;
+    width:100%;
+    max-width:300px;
 }
 
-/* ELEMENTS ALWAYS ABOVE */
-.draggable{
-position:absolute;
-touch-action:none;
-z-index:5;
+/* Card */
+#cardWrapper{
+    position:relative;
+    width:100%;
+    max-width:500px;
+    margin:auto;
 }
 
-/* DELETE BUTTON */
-.deleteBtn{
-position:absolute;
-top:-15px;right:-15px;
-background:red;color:white;
-border-radius:50%;
-width:25px;height:25px;
-cursor:pointer;display:none;
-text-align:center;line-height:25px;
+#bg{
+    width:100%;
+    border-radius:10px;
+    display:block;
 }
 
-.textBox{
-font-size:40px;
-font-weight:bold;
-text-align:center;
-min-width:100px;
+/* TEXT LAYER */
+.text{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    color:#000;
+    font-weight:bold;
+    z-index:5;   /* IMPORTANT FIX */
+}
+
+/* Responsive */
+@media(max-width:600px){
+    .text{
+        font-size:14px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div id="toolbar">
+<div class="controls">
 
-Template:
-<input type="file" id="templateUpload">
+<h3>Draft Settings</h3>
 
-Image:
-<input type="file" id="imgUpload">
+<input id="draftName" placeholder="Enter Draft Name">
 
-<br><br>
+<button onclick="saveDraft()">💾 Save Draft</button>
 
-<input id="textInput" placeholder="Enter text">
-
-<select id="fontSelect">
-<option value="Great Vibes">Great Vibes</option>
-<option value="Pacifico">Pacifico</option>
-<option value="Playfair Display">Playfair</option>
-<option value="Dancing Script">Dancing Script</option>
-<option value="Lobster">Lobster</option>
-</select>
-
-<input type="color" id="colorPicker">
-
-<button onclick="addText()">Add Text</button>
-
-<br><br>
-
-<input id="draftName" placeholder="Draft Name">
-<button onclick="saveDraft()">Save Draft</button>
+<br>
 
 <select id="draftList" onchange="loadDraft()">
-<option value="">Load Draft</option>
+<option value="">-- Load Draft --</option>
 </select>
 
-<button onclick="download()">Download</button>
+<hr>
+
+<h3>Content</h3>
+
+<input id="name1" placeholder="Bride Name">
+<input id="name2" placeholder="Groom Name">
+<input id="date" placeholder="Date">
+<input id="venue" placeholder="Venue">
+
+<h3>Background</h3>
+<input type="file" onchange="uploadBG(event)">
 
 </div>
 
-<div id="canvas"></div>
+<div id="cardWrapper">
+    <img id="bg">
+
+    <div class="text" id="t1" style="top:30%; left:50%"></div>
+    <div class="text" id="t2" style="top:40%; left:50%"></div>
+    <div class="text" id="t3" style="top:50%; left:50%"></div>
+    <div class="text" id="t4" style="top:60%; left:50%"></div>
+</div>
 
 <script>
-let canvas=document.getElementById("canvas")
-let templateData=""
 
-/* ================= TEMPLATE LOAD ================= */
-templateUpload.onchange=e=>{
-let r=new FileReader()
-r.onload=function(){
-templateData=r.result
-setTemplate(r.result)
-}
-r.readAsDataURL(e.target.files[0])
-}
+/* LIVE TEXT UPDATE */
+document.querySelectorAll("input").forEach(input=>{
+    input.addEventListener("input", updateText);
+});
 
-function setTemplate(src){
-let img=new Image()
-
-img.onload=function(){
-
-canvas.innerHTML=""   // CLEAR FIRST
-
-let scale=Math.min(canvas.clientWidth/img.width,canvas.clientHeight/img.height)
-
-img.className="template"
-img.src=src
-img.style.width=img.width*scale+"px"
-img.style.height=img.height*scale+"px"
-img.style.left=(canvas.clientWidth-img.width*scale)/2+"px"
-img.style.top=(canvas.clientHeight-img.height*scale)/2+"px"
-
-canvas.appendChild(img)   // ALWAYS FIRST ELEMENT
+function updateText(){
+    t1.innerText = name1.value;
+    t2.innerText = name2.value;
+    t3.innerText = date.value;
+    t4.innerText = venue.value;
 }
 
-img.src=src
+/* UPLOAD BACKGROUND */
+function uploadBG(e){
+    const reader = new FileReader();
+    reader.onload = ()=> bg.src = reader.result;
+    reader.readAsDataURL(e.target.files[0]);
 }
 
-/* ================= CREATE ELEMENT ================= */
-function createElement(data){
-
-let wrap=document.createElement("div")
-wrap.className="draggable"
-wrap.style.left=data.left
-wrap.style.top=data.top
-wrap.style.transform=data.transform||"scale(1)"
-
-let del=document.createElement("div")
-del.innerText="×"
-del.className="deleteBtn"
-del.onclick=e=>{e.stopPropagation();wrap.remove()}
-
-if(data.type=="img"){
-let img=document.createElement("img")
-img.src=data.src
-img.style.width=data.width
-wrap.appendChild(img)
-}
-else{
-let t=document.createElement("div")
-t.innerText=data.text
-t.className="textBox"
-t.style.fontFamily=data.font
-t.style.color=data.color
-wrap.appendChild(t)
-}
-
-wrap.appendChild(del)
-canvas.appendChild(wrap)
-enableDrag(wrap)
-
-wrap.onclick=()=>{
-document.querySelectorAll(".deleteBtn").forEach(b=>b.style.display="none")
-del.style.display="block"
-}
-}
-
-/* ================= ADD IMAGE ================= */
-imgUpload.onchange=e=>{
-let r=new FileReader()
-r.onload=function(){
-createElement({
-type:"img",
-src:r.result,
-left:"100px",
-top:"100px",
-width:"200px"
-})
-}
-r.readAsDataURL(e.target.files[0])
-}
-
-/* ================= ADD TEXT ================= */
-function addText(){
-if(!textInput.value) return
-
-createElement({
-type:"text",
-text:textInput.value,
-font:fontSelect.value,
-color:colorPicker.value,
-left:"150px",
-top:"200px"
-})
-}
-
-/* ================= DRAG + RESIZE ================= */
-function enableDrag(el){
-
-let startX,startY,scale=1
-
-el.onpointerdown=e=>{
-startX=e.clientX-el.offsetLeft
-startY=e.clientY-el.offsetTop
-el.setPointerCapture(e.pointerId)
-}
-
-el.onpointermove=e=>{
-if(e.pressure>0){
-el.style.left=e.clientX-startX+"px"
-el.style.top=e.clientY-startY+"px"
-}
-}
-
-el.addEventListener("wheel",e=>{
-e.preventDefault()
-scale+=e.deltaY*-0.001
-scale=Math.min(Math.max(.5,scale),3)
-el.style.transform=`scale(${scale})`
-})
-}
-
-/* ================= SAVE DRAFT ================= */
+/* SAVE DRAFT */
 function saveDraft(){
 
-let name=draftName.value
-if(!name) return alert("Enter Draft Name")
+    const name = draftName.value;
+    if(!name){ alert("Enter draft name"); return; }
 
-let elements=[]
+    const data = {
+        name1:name1.value,
+        name2:name2.value,
+        date:date.value,
+        venue:venue.value,
+        bg:bg.src
+    };
 
-canvas.querySelectorAll(".draggable").forEach(el=>{
+    localStorage.setItem("draft_"+name, JSON.stringify(data));
 
-let obj={
-left:el.style.left,
-top:el.style.top,
-transform:el.style.transform
+    loadDraftList();
+    alert("Draft Saved!");
 }
 
-if(el.querySelector("img")){
-obj.type="img"
-obj.src=el.querySelector("img").src
-obj.width=el.querySelector("img").style.width
-}
-else{
-let t=el.querySelector(".textBox")
-obj.type="text"
-obj.text=t.innerText
-obj.font=t.style.fontFamily
-obj.color=t.style.color
-}
-
-elements.push(obj)
-})
-
-let draft={
-template:templateData,
-elements:elements
-}
-
-localStorage.setItem("draft_"+name,JSON.stringify(draft))
-
-loadDraftList()
-alert("Draft Saved!")
-}
-
-/* ================= LOAD LIST ================= */
+/* LOAD LIST */
 function loadDraftList(){
-draftList.innerHTML="<option value=''>Load Draft</option>"
 
-Object.keys(localStorage).forEach(k=>{
-if(k.startsWith("draft_")){
-let o=document.createElement("option")
-o.value=k
-o.innerText=k.replace("draft_","")
-draftList.appendChild(o)
-}
-})
-}
-loadDraftList()
+    draftList.innerHTML = "<option>-- Load Draft --</option>";
 
-/* ================= LOAD DRAFT ================= */
+    Object.keys(localStorage).forEach(key=>{
+        if(key.startsWith("draft_")){
+            const name = key.replace("draft_","");
+            draftList.innerHTML += `<option value="${name}">${name}</option>`;
+        }
+    });
+}
+
+/* LOAD DRAFT */
 function loadDraft(){
 
-let key=draftList.value
-if(!key) return
+    const name = draftList.value;
+    const data = JSON.parse(localStorage.getItem("draft_"+name));
 
-let draft=JSON.parse(localStorage.getItem(key))
+    if(!data) return;
 
-templateData=draft.template
-setTemplate(templateData)
+    name1.value = data.name1;
+    name2.value = data.name2;
+    date.value = data.date;
+    venue.value = data.venue;
+    bg.src = data.bg;
 
-draft.elements.forEach(createElement)
+    updateText();
 }
 
-/* ================= DOWNLOAD ================= */
-function download(){
-html2canvas(canvas).then(c=>{
-let a=document.createElement("a")
-a.href=c.toDataURL()
-a.download="invitation.png"
-a.click()
-})
-}
+/* INIT */
+loadDraftList();
 
-let s=document.createElement("script")
-s.src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"
-document.body.appendChild(s)
 </script>
 
 </body>
