@@ -1,122 +1,237 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Invitation Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invitation Card Builder</title>
 
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Dancing+Script&family=Playfair+Display&family=Poppins&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Pacifico&family=Playfair+Display&family=Dancing+Script&family=Lobster&display=swap" rel="stylesheet">
 
 <style>
-body{font-family:Arial;text-align:center;background:#f0f0f0;}
+body{font-family:Arial;margin:0;background:#f0f0f0;text-align:center}
+
+#toolbar{
+position:sticky;top:0;background:white;padding:10px;
+box-shadow:0 2px 5px rgba(0,0,0,.2);z-index:10
+}
+
+button,select,input{margin:5px;padding:8px;font-size:14px}
 
 #canvas{
-    width:800px;height:1200px;margin:20px auto;
-    border:3px solid #444;position:relative;overflow:hidden;
+width:800px;height:1200px;background:white;
+margin:20px auto;position:relative;overflow:hidden;
+border:3px solid #333
 }
 
-/* PERFECT TEMPLATE FIT */
-#templateImg{
-    position:absolute;
-    top:0;left:0;right:0;bottom:0;
-    margin:auto;
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    z-index:0;
+#canvas img.template{
+width:100%;height:100%;object-fit:contain;position:absolute
 }
 
-.draggable{
-    position:absolute;touch-action:none;z-index:10;
+.draggable{position:absolute;touch-action:none}
+
+.selected{border:2px dashed red}
+
+.deleteBtn{
+position:absolute;top:-15px;right:-15px;
+background:red;color:white;border-radius:50%;
+width:25px;height:25px;cursor:pointer;
+display:none;font-size:18px;line-height:25px
 }
 
 .textBox{
-    padding:5px 10px;
-    font-size:40px;
-    color:#000;
-    border:2px dashed transparent;
+font-size:40px;font-weight:bold;
+min-width:100px;text-align:center
 }
-
-.selected{border:2px dashed red;}
-
-button{padding:10px 20px;margin:6px;}
 </style>
 </head>
 
 <body>
 
-<h2>💍 Invitation Builder</h2>
+<div id="toolbar">
 
-Upload Template:
-<input type="file" id="bgUpload"><br><br>
+<input type="file" id="templateUpload">
 
-Upload Photo:
-<input type="file" id="imgUpload"><br><br>
+<input type="file" id="imgUpload">
 
-Text:
-<input type="text" id="textInput">
+<input id="textInput" placeholder="Enter text">
+
 <select id="fontSelect">
-<option value="Great Vibes">Great Vibes</option>
-<option value="Dancing Script">Dancing Script</option>
-<option value="Playfair Display">Playfair Display</option>
-<option value="Poppins">Poppins</option>
+<option style="font-family:Great Vibes" value="Great Vibes">Great Vibes</option>
+<option style="font-family:Pacifico" value="Pacifico">Pacifico</option>
+<option style="font-family:Playfair Display" value="Playfair Display">Playfair</option>
+<option style="font-family:Dancing Script" value="Dancing Script">Dancing</option>
+<option style="font-family:Lobster" value="Lobster">Lobster</option>
 </select>
 
-<button onclick="addText()">Add Text</button>
-<button onclick="deleteElement()">Delete</button>
-<button onclick="downloadCard()">Download</button>
+<input type="color" id="colorPicker" value="#000000">
 
-<div id="canvas">
-    <img id="templateImg">
+<button onclick="addText()">Add Text</button>
+
+<br>
+
+<input id="draftName" placeholder="Draft Name">
+<button onclick="saveDraft()">Save Draft</button>
+
+<select id="draftList" onchange="loadDraft()">
+<option value="">Load Draft</option>
+</select>
+
+<button onclick="download()">Download</button>
+
 </div>
 
+<div id="canvas"></div>
+
 <script>
-let selected=null;
+let canvas=document.getElementById("canvas")
+let selected=null
 
-// TEMPLATE
-bgUpload.onchange=e=>{
-    let r=new FileReader();
-    r.onload=()=>templateImg.src=r.result;
-    r.readAsDataURL(e.target.files[0]);
-};
+/* TEMPLATE */
+templateUpload.onchange=e=>{
+let file=e.target.files[0]
+let reader=new FileReader()
+reader.onload=function(){
+canvas.innerHTML=""
+let img=document.createElement("img")
+img.src=reader.result
+img.className="template"
+canvas.appendChild(img)
+}
+reader.readAsDataURL(file)
+}
 
-// ADD TEXT
+/* ADD IMAGE */
+imgUpload.onchange=e=>{
+let file=e.target.files[0]
+let reader=new FileReader()
+reader.onload=function(){
+createElement(reader.result,true)
+}
+reader.readAsDataURL(file)
+}
+
+/* ADD TEXT */
 function addText(){
-    let div=document.createElement("div");
-    div.innerText=textInput.value;
-    div.className="draggable textBox";
-    div.style.fontFamily=fontSelect.value;
-    div.style.top="200px";
-    div.style.left="150px";
-    canvas.appendChild(div);
-    select(div);
+let txt=textInput.value
+if(!txt)return
+
+let div=document.createElement("div")
+div.innerText=txt
+div.className="textBox"
+div.style.fontFamily=fontSelect.value
+div.style.color=colorPicker.value
+
+createElement(div,false)
 }
 
-// SELECT
-function select(el){
-    document.querySelectorAll(".draggable")
-        .forEach(e=>e.classList.remove("selected"));
-    el.classList.add("selected");
-    selected=el;
-    el.onclick=()=>select(el);
+/* CREATE ELEMENT */
+function createElement(content,isImage){
+
+let wrap=document.createElement("div")
+wrap.className="draggable"
+wrap.style.left="100px"
+wrap.style.top="100px"
+
+let del=document.createElement("div")
+del.innerText="×"
+del.className="deleteBtn"
+del.onclick=e=>{e.stopPropagation();wrap.remove()}
+
+if(isImage){
+let img=document.createElement("img")
+img.src=content
+img.style.width="200px"
+wrap.appendChild(img)
+}else{
+wrap.appendChild(content)
 }
 
-// DELETE
-function deleteElement(){
-    if(selected) selected.remove();
+wrap.appendChild(del)
+canvas.appendChild(wrap)
+
+enableTouch(wrap)
+
+wrap.onclick=()=>{
+document.querySelectorAll(".draggable").forEach(d=>{
+d.classList.remove("selected")
+if(d.lastChild)d.lastChild.style.display="none"
+})
+wrap.classList.add("selected")
+del.style.display="block"
+selected=wrap
+}
 }
 
-// DOWNLOAD
-function downloadCard(){
-    html2canvas(canvas).then(c=>{
-        let link=document.createElement("a");
-        link.download="invitation.png";
-        link.href=c.toDataURL();
-        link.click();
-    });
+/* DRAG + PINCH */
+function enableTouch(el){
+let startX,startY,scale=1
+
+el.onpointerdown=e=>{
+startX=e.clientX-el.offsetLeft
+startY=e.clientY-el.offsetTop
+el.setPointerCapture(e.pointerId)
 }
+
+el.onpointermove=e=>{
+if(e.pressure>0){
+el.style.left=e.clientX-startX+"px"
+el.style.top=e.clientY-startY+"px"
+}
+}
+
+el.addEventListener("wheel",e=>{
+e.preventDefault()
+scale+=e.deltaY*-0.001
+scale=Math.min(Math.max(.5,scale),3)
+el.style.transform=`scale(${scale})`
+})
+}
+
+/* SAVE DRAFT */
+function saveDraft(){
+let name=draftName.value
+if(!name)return alert("Enter draft name")
+
+let data=canvas.innerHTML
+localStorage.setItem("draft_"+name,data)
+loadDraftList()
+alert("Draft saved!")
+}
+
+/* LOAD LIST */
+function loadDraftList(){
+draftList.innerHTML="<option>Load Draft</option>"
+Object.keys(localStorage).forEach(k=>{
+if(k.startsWith("draft_")){
+let opt=document.createElement("option")
+opt.value=k
+opt.innerText=k.replace("draft_","")
+draftList.appendChild(opt)
+}
+})
+}
+loadDraftList()
+
+/* LOAD DRAFT */
+function loadDraft(){
+let data=localStorage.getItem(draftList.value)
+canvas.innerHTML=data
+}
+
+/* DOWNLOAD */
+function download(){
+html2canvas(canvas).then(c=>{
+let link=document.createElement("a")
+link.download="invitation.png"
+link.href=c.toDataURL()
+link.click()
+})
+}
+
+/* HTML2CANVAS */
+let script=document.createElement("script")
+script.src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"
+document.body.appendChild(script)
+
 </script>
-
 </body>
 </html>
