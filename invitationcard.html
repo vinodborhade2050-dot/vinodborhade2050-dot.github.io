@@ -1,19 +1,18 @@
 <!DOCTYPE html>
-<html lang="mr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marriage Invitation Editor</title>
+<title>Invitation Editor</title>
 
 <style>
 body{
-    font-family: Arial;
-    background:#f3f3f3;
+    font-family:Arial;
+    background:#f2f2f2;
     margin:0;
     padding:20px;
 }
 
-/* Controls */
 .controls{
     background:white;
     padding:15px;
@@ -21,17 +20,13 @@ body{
     margin-bottom:15px;
 }
 
-input, select, button{
-    padding:8px;
+button,input,select{
     margin:5px;
-    width:100%;
-    max-width:300px;
+    padding:8px;
 }
 
-/* Card */
-#cardWrapper{
+#canvas{
     position:relative;
-    width:100%;
     max-width:500px;
     margin:auto;
 }
@@ -39,23 +34,20 @@ input, select, button{
 #bg{
     width:100%;
     border-radius:10px;
-    display:block;
 }
 
-/* TEXT LAYER */
-.text{
+.element{
     position:absolute;
-    transform:translate(-50%,-50%);
-    color:#000;
-    font-weight:bold;
-    z-index:5;   /* IMPORTANT FIX */
+    cursor:move;
+    user-select:none;
 }
 
-/* Responsive */
-@media(max-width:600px){
-    .text{
-        font-size:14px;
-    }
+.text{
+    font-weight:bold;
+}
+
+img.dragImg{
+    width:120px;
 }
 </style>
 </head>
@@ -64,114 +56,155 @@ input, select, button{
 
 <div class="controls">
 
-<h3>Draft Settings</h3>
-
-<input id="draftName" placeholder="Enter Draft Name">
-
-<button onclick="saveDraft()">💾 Save Draft</button>
-
-<br>
+<h3>Draft</h3>
+<input id="draftName" placeholder="Draft Name">
+<button onclick="saveDraft()">Save Draft</button>
 
 <select id="draftList" onchange="loadDraft()">
-<option value="">-- Load Draft --</option>
+<option>Load Draft</option>
 </select>
 
 <hr>
 
-<h3>Content</h3>
-
-<input id="name1" placeholder="Bride Name">
-<input id="name2" placeholder="Groom Name">
-<input id="date" placeholder="Date">
-<input id="venue" placeholder="Venue">
-
 <h3>Background</h3>
 <input type="file" onchange="uploadBG(event)">
 
+<hr>
+
+<h3>Add Text</h3>
+<input id="textInput" placeholder="Enter text">
+<input type="color" id="colorPicker">
+<button onclick="addText()">Add Text</button>
+
+<hr>
+
+<h3>Add Image</h3>
+<input type="file" onchange="addImage(event)">
+
 </div>
 
-<div id="cardWrapper">
+<div id="canvas">
     <img id="bg">
-
-    <div class="text" id="t1" style="top:30%; left:50%"></div>
-    <div class="text" id="t2" style="top:40%; left:50%"></div>
-    <div class="text" id="t3" style="top:50%; left:50%"></div>
-    <div class="text" id="t4" style="top:60%; left:50%"></div>
 </div>
 
 <script>
 
-/* LIVE TEXT UPDATE */
-document.querySelectorAll("input").forEach(input=>{
-    input.addEventListener("input", updateText);
-});
+let elements=[];
 
-function updateText(){
-    t1.innerText = name1.value;
-    t2.innerText = name2.value;
-    t3.innerText = date.value;
-    t4.innerText = venue.value;
+/* ---------- DRAG FUNCTION ---------- */
+function makeDraggable(el){
+
+    let offsetX, offsetY, isDown=false;
+
+    el.onmousedown=e=>{
+        isDown=true;
+        offsetX=e.offsetX;
+        offsetY=e.offsetY;
+    };
+
+    document.onmouseup=()=> isDown=false;
+
+    document.onmousemove=e=>{
+        if(!isDown) return;
+
+        const rect=canvas.getBoundingClientRect();
+        el.style.left=(e.clientX-rect.left-offsetX)+"px";
+        el.style.top=(e.clientY-rect.top-offsetY)+"px";
+    };
 }
 
-/* UPLOAD BACKGROUND */
+/* ---------- BACKGROUND ---------- */
 function uploadBG(e){
-    const reader = new FileReader();
-    reader.onload = ()=> bg.src = reader.result;
+    const reader=new FileReader();
+    reader.onload=()=> bg.src=reader.result;
     reader.readAsDataURL(e.target.files[0]);
 }
 
-/* SAVE DRAFT */
-function saveDraft(){
+/* ---------- ADD TEXT ---------- */
+function addText(){
 
-    const name = draftName.value;
-    if(!name){ alert("Enter draft name"); return; }
+    const text=textInput.value;
+    const color=colorPicker.value;
 
-    const data = {
-        name1:name1.value,
-        name2:name2.value,
-        date:date.value,
-        venue:venue.value,
-        bg:bg.src
-    };
+    const div=document.createElement("div");
+    div.className="element text";
+    div.innerText=text;
+    div.style.color=color;
+    div.style.left="50px";
+    div.style.top="50px";
 
-    localStorage.setItem("draft_"+name, JSON.stringify(data));
+    canvas.appendChild(div);
+    makeDraggable(div);
 
-    loadDraftList();
-    alert("Draft Saved!");
+    elements.push(div.outerHTML);
 }
 
-/* LOAD LIST */
-function loadDraftList(){
+/* ---------- ADD IMAGE ---------- */
+function addImage(e){
 
-    draftList.innerHTML = "<option>-- Load Draft --</option>";
+    const reader=new FileReader();
 
-    Object.keys(localStorage).forEach(key=>{
-        if(key.startsWith("draft_")){
-            const name = key.replace("draft_","");
-            draftList.innerHTML += `<option value="${name}">${name}</option>`;
+    reader.onload=()=>{
+
+        const img=document.createElement("img");
+        img.src=reader.result;
+        img.className="element dragImg";
+        img.style.left="50px";
+        img.style.top="50px";
+
+        canvas.appendChild(img);
+        makeDraggable(img);
+
+        elements.push(img.outerHTML);
+    };
+
+    reader.readAsDataURL(e.target.files[0]);
+}
+
+/* ---------- SAVE DRAFT ---------- */
+function saveDraft(){
+
+    const name=draftName.value;
+    if(!name) return alert("Enter name");
+
+    const data={
+        bg:bg.src,
+        html:canvas.innerHTML
+    };
+
+    localStorage.setItem("draft_"+name,JSON.stringify(data));
+    loadList();
+
+    alert("Saved!");
+}
+
+/* ---------- LOAD LIST ---------- */
+function loadList(){
+
+    draftList.innerHTML="<option>Load Draft</option>";
+
+    Object.keys(localStorage).forEach(k=>{
+        if(k.startsWith("draft_")){
+            const name=k.replace("draft_","");
+            draftList.innerHTML+=`<option>${name}</option>`;
         }
     });
 }
 
-/* LOAD DRAFT */
+/* ---------- LOAD DRAFT ---------- */
 function loadDraft(){
 
-    const name = draftList.value;
-    const data = JSON.parse(localStorage.getItem("draft_"+name));
+    const name=draftList.value;
+    const data=JSON.parse(localStorage.getItem("draft_"+name));
 
-    if(!data) return;
+    canvas.innerHTML=data.html;
+    bg.src=data.bg;
 
-    name1.value = data.name1;
-    name2.value = data.name2;
-    date.value = data.date;
-    venue.value = data.venue;
-    bg.src = data.bg;
-
-    updateText();
+    document.querySelectorAll(".element").forEach(makeDraggable);
 }
 
 /* INIT */
-loadDraftList();
+loadList();
 
 </script>
 
