@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Wedding Invitation Builder</title>
+<title>Invitation Builder</title>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
@@ -16,9 +16,15 @@ body{font-family:Arial;text-align:center;background:#f0f0f0;}
     border:3px solid #444;position:relative;overflow:hidden;
 }
 
+/* PERFECT TEMPLATE FIT */
 #templateImg{
-    position:absolute;width:100%;height:100%;
-    object-fit:contain;z-index:0;
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    margin:auto;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    z-index:0;
 }
 
 .draggable{
@@ -29,14 +35,12 @@ body{font-family:Arial;text-align:center;background:#f0f0f0;}
     padding:5px 10px;
     font-size:40px;
     color:#000;
-    min-width:100px;
-    cursor:move;
     border:2px dashed transparent;
 }
 
 .selected{border:2px dashed red;}
 
-button{padding:10px 20px;margin:6px;font-size:15px;}
+button{padding:10px 20px;margin:6px;}
 </style>
 </head>
 
@@ -51,7 +55,7 @@ Upload Photo:
 <input type="file" id="imgUpload"><br><br>
 
 Text:
-<input type="text" id="textInput" placeholder="Enter text">
+<input type="text" id="textInput">
 <select id="fontSelect">
 <option value="Great Vibes">Great Vibes</option>
 <option value="Dancing Script">Dancing Script</option>
@@ -60,8 +64,7 @@ Text:
 </select>
 
 <button onclick="addText()">Add Text</button>
-<button onclick="deleteElement()">Delete Selected</button>
-<button onclick="previewCard()">Preview</button>
+<button onclick="deleteElement()">Delete</button>
 <button onclick="downloadCard()">Download</button>
 
 <div id="canvas">
@@ -69,125 +72,42 @@ Text:
 </div>
 
 <script>
-const canvas=document.getElementById("canvas");
-const templateImg=document.getElementById("templateImg");
 let selected=null;
 
-// Template upload
+// TEMPLATE
 bgUpload.onchange=e=>{
     let r=new FileReader();
     r.onload=()=>templateImg.src=r.result;
     r.readAsDataURL(e.target.files[0]);
 };
 
-// Upload image
-imgUpload.onchange=e=>{
-    let r=new FileReader();
-    r.onload=()=>{
-        let img=document.createElement("img");
-        img.src=r.result;
-        img.className="draggable";
-        img.style.width="200px";
-        img.style.top="100px";
-        img.style.left="100px";
-        selectElement(img);
-        canvas.appendChild(img);
-        enableTouch(img);
-    };
-    r.readAsDataURL(e.target.files[0]);
-    e.target.value="";
-};
-
-// Add text
+// ADD TEXT
 function addText(){
-    let txt=document.getElementById("textInput").value;
-    if(!txt) return alert("Enter text");
-
     let div=document.createElement("div");
-    div.innerText=txt;
+    div.innerText=textInput.value;
     div.className="draggable textBox";
     div.style.fontFamily=fontSelect.value;
     div.style.top="200px";
     div.style.left="150px";
-
-    div.ondblclick=()=>{
-        let newText=prompt("Edit text",div.innerText);
-        if(newText) div.innerText=newText;
-    };
-
-    selectElement(div);
     canvas.appendChild(div);
-    enableTouch(div);
+    select(div);
 }
 
-// Selection
-function selectElement(el){
+// SELECT
+function select(el){
     document.querySelectorAll(".draggable")
         .forEach(e=>e.classList.remove("selected"));
     el.classList.add("selected");
     selected=el;
-    el.onclick=()=>selectElement(el);
+    el.onclick=()=>select(el);
 }
 
-// Delete
+// DELETE
 function deleteElement(){
-    if(selected){selected.remove();selected=null;}
+    if(selected) selected.remove();
 }
 
-// Touch logic
-function getDistance(t){
-    let dx=t[0].clientX-t[1].clientX;
-    let dy=t[0].clientY-t[1].clientY;
-    return Math.sqrt(dx*dx+dy*dy);
-}
-
-function enableTouch(el){
-    let startX,startY,startW;
-    let drag=false,resize=false,startDist;
-
-    el.addEventListener("touchstart",e=>{
-        selectElement(el);
-
-        if(e.touches.length===1){
-            drag=true;
-            startX=e.touches[0].clientX-el.offsetLeft;
-            startY=e.touches[0].clientY-el.offsetTop;
-        }
-
-        if(e.touches.length===2){
-            resize=true;
-            startDist=getDistance(e.touches);
-            startW=el.offsetWidth;
-        }
-    });
-
-    el.addEventListener("touchmove",e=>{
-        e.preventDefault();
-
-        if(drag && e.touches.length===1){
-            el.style.left=(e.touches[0].clientX-startX)+"px";
-            el.style.top=(e.touches[0].clientY-startY)+"px";
-        }
-
-        if(resize && e.touches.length===2){
-            let newDist=getDistance(e.touches);
-            let scale=newDist/startDist;
-            el.style.width=(startW*scale)+"px";
-        }
-    });
-
-    el.addEventListener("touchend",()=>{drag=false;resize=false;});
-}
-
-// Preview
-function previewCard(){
-    html2canvas(canvas).then(c=>{
-        let w=window.open("");
-        w.document.body.appendChild(c);
-    });
-}
-
-// Download
+// DOWNLOAD
 function downloadCard(){
     html2canvas(canvas).then(c=>{
         let link=document.createElement("a");
