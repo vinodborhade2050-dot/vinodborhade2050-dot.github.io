@@ -2,13 +2,13 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invitation Card Editor</title>
+<title>Invitation Editor</title>
 
 <style>
 
 body{
     font-family:Arial;
-    background:#f3f3f3;
+    background:#f5f5f5;
     padding:15px;
 }
 
@@ -29,6 +29,7 @@ button,input,select{
     max-width:500px;
     margin:auto;
     border:3px dashed #ccc;
+    overflow:hidden;
 }
 
 #bg{
@@ -38,7 +39,7 @@ button,input,select{
 
 .element{
     position:absolute;
-    cursor:move;
+    cursor:grab;
     user-select:none;
 }
 
@@ -58,29 +59,17 @@ button,input,select{
 
 <div class="controls">
 
-<h3>📂 invitation Draft</h3>
-<input id="draftName" placeholder="Draft Name">
-<button onclick="saveDraft()">Save</button>
-
-<select id="draftList" onchange="loadDraft()">
-<option>Load Draft</option>
-</select>
-
-<hr>
-
-<h3>🖼 Upload Template</h3>
+<h3>Upload invitation Template</h3>
 <input type="file" onchange="uploadBG(event)">
 
 <hr>
 
-<h3>✍ Add Text</h3>
 <input id="textInput" placeholder="Enter text">
-<input type="color" id="colorPicker" value="#000000">
+<input type="color" id="colorPicker">
 <button onclick="addText()">Add Text</button>
 
 <hr>
 
-<h3>📷 Add Image</h3>
 <input type="file" onchange="addImage(event)">
 
 </div>
@@ -91,42 +80,50 @@ button,input,select{
 
 <script>
 
-const canvas = document.getElementById("canvas");
-const bg = document.getElementById("bg");
+const canvas=document.getElementById("canvas");
+const bg=document.getElementById("bg");
 
-/* ---------- DRAG FUNCTION (Mobile + Desktop) ---------- */
+/* ---------- PERFECT DRAG FUNCTION ---------- */
 
 function makeDraggable(el){
 
-let startX=0,startY=0;
+let shiftX, shiftY;
 
 el.onpointerdown = e => {
-    startX = e.clientX - el.offsetLeft;
-    startY = e.clientY - el.offsetTop;
+
+    const rect = el.getBoundingClientRect();
+
+    shiftX = e.clientX - rect.left;
+    shiftY = e.clientY - rect.top;
+
     el.setPointerCapture(e.pointerId);
+
 };
 
 el.onpointermove = e => {
-    if(e.pressure===0) return;
 
-    const rect = canvas.getBoundingClientRect();
+    if(!el.hasPointerCapture(e.pointerId)) return;
 
-    let x = e.clientX - rect.left - startX;
-    let y = e.clientY - rect.top - startY;
+    const canvasRect = canvas.getBoundingClientRect();
 
-    el.style.left = x + "px";
-    el.style.top = y + "px";
+    let newX = e.clientX - canvasRect.left - shiftX;
+    let newY = e.clientY - canvasRect.top - shiftY;
+
+    /* ----- KEEP INSIDE CANVAS ----- */
+    newX = Math.max(0, Math.min(newX, canvas.clientWidth - el.offsetWidth));
+    newY = Math.max(0, Math.min(newY, canvas.clientHeight - el.offsetHeight));
+
+    el.style.left = newX + "px";
+    el.style.top = newY + "px";
 };
 
 }
 
-/* ---------- TEMPLATE UPLOAD ---------- */
+/* ---------- TEMPLATE ---------- */
 
 function uploadBG(e){
     const reader=new FileReader();
-    reader.onload=()=>{
-        bg.src=reader.result;
-    }
+    reader.onload=()=> bg.src=reader.result;
     reader.readAsDataURL(e.target.files[0]);
 }
 
@@ -167,60 +164,6 @@ function addImage(e){
 
     reader.readAsDataURL(e.target.files[0]);
 }
-
-/* ---------- SAVE DRAFT ---------- */
-
-function saveDraft(){
-
-    const name=document.getElementById("draftName").value;
-
-    if(!name){
-        alert("Enter draft name");
-        return;
-    }
-
-    const data={
-        bg:bg.src,
-        html:canvas.innerHTML
-    };
-
-    localStorage.setItem("draft_"+name,JSON.stringify(data));
-
-    loadDraftList();
-    alert("Draft Saved");
-}
-
-/* ---------- LOAD LIST ---------- */
-
-function loadDraftList(){
-
-    const list=document.getElementById("draftList");
-    list.innerHTML="<option>Load Draft</option>";
-
-    Object.keys(localStorage).forEach(k=>{
-        if(k.startsWith("draft_")){
-            const name=k.replace("draft_","");
-            list.innerHTML+=`<option>${name}</option>`;
-        }
-    });
-}
-
-/* ---------- LOAD DRAFT ---------- */
-
-function loadDraft(){
-
-    const name=document.getElementById("draftList").value;
-
-    const data=JSON.parse(localStorage.getItem("draft_"+name));
-
-    canvas.innerHTML=data.html;
-    bg.src=data.bg;
-
-    document.querySelectorAll(".element").forEach(makeDraggable);
-}
-
-/* INIT */
-loadDraftList();
 
 </script>
 
