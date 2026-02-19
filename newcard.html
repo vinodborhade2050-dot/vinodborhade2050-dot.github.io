@@ -2,95 +2,120 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Invitation Card Maker</title>
 
 <style>
 body{
   margin:0;
-  font-family:Arial;
+  font-family:sans-serif;
   background:#f2f2f2;
 }
 
-.toolbar{
-  background:#fff;
-  padding:10px;
+#toolbar{
+  background:white;
+  padding:8px;
   display:flex;
   flex-wrap:wrap;
-  gap:8px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  gap:6px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  position:sticky;
+  top:0;
+  z-index:1000;
 }
 
-button,select,input{
-  padding:6px 8px;
-}
-
-.canvas{
-  width:350px;
-  height:500px;
-  margin:20px auto;
+#canvas{
+  width:100%;
+  max-width:400px;
+  height:600px;
+  margin:10px auto;
   background:#fff;
-  border:2px solid #ddd;
   position:relative;
   overflow:hidden;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.15);
   background-size:cover;
   background-position:center;
 }
 
 .textBox,.imgBox{
   position:absolute;
-  min-width:60px;
-  min-height:30px;
   cursor:move;
-  border:1px dashed transparent;
-  padding:4px;
+  user-select:none;
+  touch-action:none;
+}
+
+.textBox{
+  min-width:60px;
+  text-align:center;
 }
 
 .selected{
-  border:1px dashed #000;
+  outline:2px dashed red;
 }
 
-.guideH,.guideV{
+.guide{
   position:absolute;
   background:red;
-  z-index:1000;
-  display:none;
+  z-index:999;
+  pointer-events:none;
 }
 
-.guideH{
+.guide.v{
+  width:1px;
+  height:100%;
+}
+
+.guide.h{
   height:1px;
   width:100%;
 }
 
-.guideV{
-  width:1px;
-  height:100%;
+#templateGallery{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:white;
+  display:none;
+  overflow-x:auto;
+  padding:10px;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.2);
+  white-space:nowrap;
+  z-index:2000;
 }
 </style>
 </head>
 
 <body>
 
-<div class="toolbar">
+<div id="toolbar">
 
 <button onclick="addText()">Add Text</button>
 
-<input type="color" id="fontColor" onchange="changeColor()">
+<input type="color" id="colorPicker">
+<input type="number" id="fontSize" placeholder="Size" style="width:60px">
+<button onclick="applyStyle()">Apply</button>
 
-<button onclick="centerText()">Center Text</button>
+<button onclick="alignLeft()">Left</button>
+<button onclick="alignCenter()">Center</button>
+<button onclick="alignRight()">Right</button>
 
-<input type="file" onchange="uploadBackground(event)">
+<input type="file" onchange="addImage(event)">
 
-<input type="text" id="draftName" placeholder="Draft name">
+<input type="file" onchange="setBackground(event)">
+<button onclick="openTemplateGallery()">Browse Template</button>
 
-<button onclick="saveDraft()">Save Draft</button>
-
-<select id="draftList" onchange="loadDraft()">
-<option value="">Load Draft</option>
-</select>
+<input type="text" id="draftName" placeholder="Draft Name" style="width:100px">
+<select id="draftList"></select>
+<button onclick="saveDraft()">Save</button>
+<button onclick="loadDraft()">Load</button>
 
 </div>
 
-<div class="canvas" id="canvas"></div>
+<div id="canvas"></div>
+
+<div id="templateGallery"></div>
 
 <script>
 
@@ -98,216 +123,284 @@ const canvas=document.getElementById("canvas");
 let selected=null;
 
 /* ================= ADD TEXT ================= */
-
 function addText(){
-  const el=document.createElement("div");
-  el.className="textBox";
-  el.contentEditable=true;
-  el.innerText="Edit Text";
-  el.style.left="100px";
-  el.style.top="100px";
-  canvas.appendChild(el);
-  setupDrag(el);
-  select(el);
+  const div=document.createElement("div");
+  div.className="textBox";
+  div.contentEditable=true;
+  div.innerText="Your Text";
+  div.style.top="200px";
+  div.style.left="100px";
+  div.style.fontSize="20px";
+  div.style.color="#000000";
+  canvas.appendChild(div);
+  setupElement(div);
 }
 
-/* ================= SELECT ================= */
-
-function select(el){
-  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("selected"));
-  selected=el;
-  el.classList.add("selected");
-}
-
-/* ================= CHANGE COLOR ================= */
-
-function changeColor(){
-  if(selected){
-    selected.style.color=document.getElementById("fontColor").value;
-  }
-}
-
-/* ================= CENTER TEXT ================= */
-
-function centerText(){
-  if(selected){
-    selected.style.textAlign="center";
-  }
-}
-
-/* ================= UPLOAD BACKGROUND ================= */
-
-function uploadBackground(e){
+/* ================= ADD IMAGE ================= */
+function addImage(e){
   const reader=new FileReader();
-  reader.onload=function(event){
-    canvas.style.backgroundImage=`url(${event.target.result})`;
+  reader.onload=function(){
+    const div=document.createElement("div");
+    div.className="imgBox";
+    div.style.top="150px";
+    div.style.left="80px";
+    div.innerHTML=`<img src="${reader.result}" style="width:150px">`;
+    canvas.appendChild(div);
+    setupElement(div);
   };
   reader.readAsDataURL(e.target.files[0]);
 }
 
-/* ================= DRAG ================= */
-
-function setupDrag(el){
-
-  el.onmousedown=function(e){
-    select(el);
-
-    const rect=canvas.getBoundingClientRect();
-    const elRect=el.getBoundingClientRect();
-
-    let offsetX=e.clientX-elRect.left;
-    let offsetY=e.clientY-elRect.top;
-
-    function move(ev){
-
-      let x=ev.clientX-rect.left-offsetX;
-      let y=ev.clientY-rect.top-offsetY;
-
-      el.style.left=x+"px";
-      el.style.top=y+"px";
-
-      showGuides(el);
-    }
-
-    document.addEventListener("mousemove",move);
-
-    document.addEventListener("mouseup",function(){
-      document.removeEventListener("mousemove",move);
-      hideGuides();
-    },{once:true});
+/* ================= BACKGROUND UPLOAD ================= */
+function setBackground(e){
+  const reader=new FileReader();
+  reader.onload=function(){
+    canvas.style.backgroundImage=`url(${reader.result})`;
   };
+  reader.readAsDataURL(e.target.files[0]);
 }
 
-/* ================= ALIGN GUIDES ================= */
+/* ================= SELECT ================= */
+function selectElement(el){
+  document.querySelectorAll(".textBox,.imgBox")
+  .forEach(e=>e.classList.remove("selected"));
+  selected=el;
+  el.classList.add("selected");
+}
 
-let guideH=document.createElement("div");
-guideH.className="guideH";
-canvas.appendChild(guideH);
+/* ================= MOVE CENTERED ================= */
+function setupElement(el){
 
-let guideV=document.createElement("div");
-guideV.className="guideV";
-canvas.appendChild(guideV);
+  let offsetX,offsetY;
 
+  el.addEventListener("pointerdown",e=>{
+    selectElement(el);
+    const rect=el.getBoundingClientRect();
+    offsetX=rect.width/2;
+    offsetY=rect.height/2;
+    el.setPointerCapture(e.pointerId);
+  });
+
+  el.addEventListener("pointermove",e=>{
+    if(!el.hasPointerCapture(e.pointerId)) return;
+
+    const canvasRect=canvas.getBoundingClientRect();
+    let x=e.clientX-canvasRect.left-offsetX;
+    let y=e.clientY-canvasRect.top-offsetY;
+
+    el.style.left=x+"px";
+    el.style.top=y+"px";
+
+    showGuides(el);
+  });
+
+  el.addEventListener("pointerup",e=>{
+    el.releasePointerCapture(e.pointerId);
+    removeGuides();
+  });
+
+  /* pinch resize image */
+  let startDist=0;
+
+  el.addEventListener("touchstart",e=>{
+    if(e.touches.length===2)
+      startDist=getDist(e.touches);
+  });
+
+  el.addEventListener("touchmove",e=>{
+    if(e.touches.length===2){
+      const dist=getDist(e.touches);
+      const scale=dist/startDist;
+      const img=el.querySelector("img");
+      if(img){
+        img.style.width=(img.offsetWidth*scale)+"px";
+      }
+      startDist=dist;
+    }
+  });
+}
+
+function getDist(t){
+  return Math.hypot(
+    t[0].clientX-t[1].clientX,
+    t[0].clientY-t[1].clientY
+  );
+}
+
+/* ================= ALIGNMENT GUIDE ================= */
 function showGuides(el){
+  removeGuides();
 
-  const centerX=canvas.clientWidth/2;
-  const centerY=canvas.clientHeight/2;
-
-  const elRect=el.getBoundingClientRect();
+  const rect=el.getBoundingClientRect();
   const canvasRect=canvas.getBoundingClientRect();
 
-  const elCenterX=elRect.left-canvasRect.left+elRect.width/2;
-  const elCenterY=elRect.top-canvasRect.top+elRect.height/2;
+  const centerX=rect.left-canvasRect.left+rect.width/2;
+  const centerY=rect.top-canvasRect.top+rect.height/2;
 
-  if(Math.abs(elCenterX-centerX)<5){
-    guideV.style.left=centerX+"px";
-    guideV.style.display="block";
-  }else{
-    guideV.style.display="none";
-  }
+  document.querySelectorAll(".textBox,.imgBox").forEach(other=>{
+    if(other===el) return;
 
-  if(Math.abs(elCenterY-centerY)<5){
-    guideH.style.top=centerY+"px";
-    guideH.style.display="block";
-  }else{
-    guideH.style.display="none";
-  }
+    const r=other.getBoundingClientRect();
+    const oX=r.left-canvasRect.left+r.width/2;
+    const oY=r.top-canvasRect.top+r.height/2;
+
+    if(Math.abs(centerX-oX)<5){
+      const v=document.createElement("div");
+      v.className="guide v";
+      v.style.left=oX+"px";
+      canvas.appendChild(v);
+    }
+
+    if(Math.abs(centerY-oY)<5){
+      const h=document.createElement("div");
+      h.className="guide h";
+      h.style.top=oY+"px";
+      canvas.appendChild(h);
+    }
+  });
 }
 
-function hideGuides(){
-  guideH.style.display="none";
-  guideV.style.display="none";
+function removeGuides(){
+  document.querySelectorAll(".guide").forEach(g=>g.remove());
 }
 
-/* ================= SAVE DRAFT ================= */
+/* ================= TEXT STYLE ================= */
+function applyStyle(){
+  if(!selected) return;
+
+  selected.style.color=
+    document.getElementById("colorPicker").value;
+
+  const size=document.getElementById("fontSize").value;
+  if(size)
+    selected.style.fontSize=size+"px";
+}
+
+function alignLeft(){ if(selected) selected.style.textAlign="left"; }
+function alignCenter(){ if(selected) selected.style.textAlign="center"; }
+function alignRight(){ if(selected) selected.style.textAlign="right"; }
+
+/* ================= TEMPLATE GALLERY ================= */
+const templateImages=[
+  "https://i.imgur.com/1Xq9BiB.jpg",
+  "https://i.imgur.com/4NJlR7F.jpg",
+  "https://i.imgur.com/Vp5F3mM.jpg",
+  "https://i.imgur.com/lW8QG3m.jpg"
+];
+
+function openTemplateGallery(){
+  const gallery=document.getElementById("templateGallery");
+  gallery.innerHTML="";
+
+  templateImages.forEach(src=>{
+    const img=document.createElement("img");
+    img.src=src;
+    img.style.width="120px";
+    img.style.marginRight="10px";
+    img.style.borderRadius="8px";
+    img.style.cursor="pointer";
+
+    img.onclick=()=>{
+      canvas.style.backgroundImage=`url(${src})`;
+      gallery.style.display="none";
+    };
+
+    gallery.appendChild(img);
+  });
+
+  gallery.style.display="block";
+}
+
+/* ================= DRAFT SYSTEM ================= */
+
+function getDrafts(){
+  return JSON.parse(localStorage.getItem("cardDrafts")||"{}");
+}
+
+function saveDrafts(obj){
+  localStorage.setItem("cardDrafts",JSON.stringify(obj));
+}
 
 function saveDraft(){
 
-  const name=document.getElementById("draftName").value;
-  if(!name){
-    alert("Enter draft name");
-    return;
-  }
+  const name=document.getElementById("draftName").value.trim();
+  if(!name){ alert("Enter draft name"); return; }
 
-  const elements=[];
-  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
-    elements.push({
-      type:el.classList.contains("textBox")?"text":"img",
-      html:el.innerHTML,
-      left:el.style.left,
-      top:el.style.top,
-      color:el.style.color,
-      align:el.style.textAlign
-    });
-  });
+  const drafts=getDrafts();
 
   const data={
     bg:canvas.style.backgroundImage,
-    elements:elements
+    elements:[]
   };
 
-  localStorage.setItem("draft_"+name,JSON.stringify(data));
-  updateDraftList();
-  alert("Draft saved successfully!");
-}
+  document.querySelectorAll(".textBox,.imgBox")
+  .forEach(el=>{
+    data.elements.push({
+      type:el.classList.contains("textBox")?"text":"image",
+      html:el.innerHTML,
+      top:el.style.top,
+      left:el.style.left,
+      color:el.style.color,
+      fontSize:el.style.fontSize,
+      textAlign:el.style.textAlign,
+      width:el.querySelector("img")?
+        el.querySelector("img").style.width:null
+    });
+  });
 
-/* ================= LOAD DRAFT ================= */
+  drafts[name]=data;
+  saveDrafts(drafts);
+  loadDraftList();
+
+  alert("Draft Saved ✅");
+}
 
 function loadDraft(){
 
   const name=document.getElementById("draftList").value;
   if(!name) return;
 
-  const data=JSON.parse(localStorage.getItem("draft_"+name));
+  const drafts=getDrafts();
+  const data=drafts[name];
   if(!data) return;
 
   canvas.innerHTML="";
-  canvas.style.backgroundImage=data.bg;
+  canvas.style.backgroundImage=data.bg||"";
 
   data.elements.forEach(item=>{
-
     const el=document.createElement("div");
     el.className=item.type==="text"?"textBox":"imgBox";
     el.innerHTML=item.html;
-
-    if(item.type==="text"){
-      el.contentEditable=true;   // FIXED
-    }
-
-    el.style.left=item.left;
     el.style.top=item.top;
+    el.style.left=item.left;
     el.style.color=item.color;
-    el.style.textAlign=item.align;
+    el.style.fontSize=item.fontSize;
+    el.style.textAlign=item.textAlign;
+
+    if(item.type==="image" && el.querySelector("img"))
+      el.querySelector("img").style.width=item.width;
 
     canvas.appendChild(el);
-    setupDrag(el);
+    setupElement(el);
   });
 
-  canvas.appendChild(guideH);
-  canvas.appendChild(guideV);
+  alert("Draft Loaded ✅");
 }
 
-/* ================= UPDATE DRAFT LIST ================= */
-
-function updateDraftList(){
-
-  const list=document.getElementById("draftList");
-  list.innerHTML='<option value="">Load Draft</option>';
-
-  Object.keys(localStorage).forEach(key=>{
-    if(key.startsWith("draft_")){
-      const name=key.replace("draft_","");
-      const opt=document.createElement("option");
-      opt.value=name;
-      opt.textContent=name;
-      list.appendChild(opt);
-    }
-  });
+function loadDraftList(){
+  const select=document.getElementById("draftList");
+  select.innerHTML="";
+  const drafts=getDrafts();
+  for(let k in drafts){
+    const opt=document.createElement("option");
+    opt.value=k;
+    opt.textContent=k;
+    select.appendChild(opt);
+  }
 }
 
-updateDraftList();
+loadDraftList();
 
 </script>
-
 </body>
 </html>
