@@ -6,6 +6,7 @@
 <title>Invitation Editor PRO</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&family=Baloo+2:wght@400;600;800&family=Hind:wght@400;700&family=Mukta:wght@300;400;600;700&family=Rasa:wght@400;700&family=Kalapi&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -79,11 +80,18 @@ button{
 
 <input type="number" id="fontSize" placeholder="Font Size" onchange="changeFontSize()" style="width:90px">
 
-<select onchange="changeAlignment(this.value)">
-<option value="left">Left</option>
-<option value="center">Center</option>
-<option value="right">Right</option>
+<select id="fontPicker" onchange="changeFont()">
+  <option value="'Tiro Devanagari Marathi', serif">Traditional Marathi</option>
+  <option value="'Noto Serif Devanagari', serif">Elegant Serif</option>
+  <option value="'Yatra One', cursive">Decorative Script</option>
+  <option value="'Baloo 2', cursive">Festival Style</option>
+  <option value="'Mukta', sans-serif">Clean Body Text</option>
+  <option value="'Hind', sans-serif">Bold Headings</option>
+  <option value="'Kalapi', cursive">Handwritten</option>
+  <option value="'Rasa', serif">Semi-Calligraphic</option>
+  <option value="'Tangerine', serif">Fancy Cursive</option>
 </select>
+
 
 <input type="text" id="draftName" placeholder="Draft Name" style="width:120px">
 
