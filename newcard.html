@@ -12,6 +12,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
+  @font-face {
+  font-family: 'Baloo 2 Extra Bold';
+  src: url('fonts/Baloo2-ExtraBold.ttf') format('truetype');
+  font-weight: 800; /* extra bold */
+  font-style: normal;
+}
+
   .textBox{
   text-align: center;
 }
@@ -118,6 +125,7 @@ button{
 
 <input type="color" id="colorPicker" onchange="changeColor()">
 <select id="fontPicker" onchange="changeFont()">
+  <option value="'Baloo 2 Extra Bold', cursive">Baloo 2 Extra Bold</option>
   <option value="'Tiro Devanagari Marathi', serif">Traditional</option>
   <option value="'Noto Serif Devanagari', serif">Wedding Classic</option> 
   <option value="'Yatra One', cursive">Decorative</option>
