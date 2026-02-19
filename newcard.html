@@ -1,264 +1,266 @@
 <!DOCTYPE html>
-<html lang="mr">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invitation Editor PRO</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>Invitation Card Maker</title>
 
 <style>
-body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
-
-.toolbar{
-  background:white;padding:10px;display:flex;gap:10px;
-  overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#f3f3f3;
 }
 
-button{
-  padding:8px 12px;
-  border:none;
-  background:#e57373;
-  color:white;
-  cursor:pointer;
+#toolbar{
+  background:white;
+  padding:8px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
+  position:sticky;
+  top:0;
+  z-index:1000;
 }
 
-.canvas{
-  width:500px;
-  height:700px;
-  margin:20px auto;
+#canvas{
+  width:100%;
+  max-width:400px;
+  height:600px;
+  margin:10px auto;
   background:#fff;
   position:relative;
-  border-radius:12px;
   overflow:hidden;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.15);
   background-size:cover;
   background-position:center;
 }
 
-.textBox,.imgBox{
+.textBox, .imgBox{
   position:absolute;
   cursor:move;
-  padding:4px;
   user-select:none;
+  touch-action:none;
+}
+
+.selected{
+  outline:2px dashed red;
+}
+
+.guide{
+  position:absolute;
+  background:red;
+  z-index:999;
+  pointer-events:none;
+}
+
+.guide.vertical{
+  width:1px;
+  height:100%;
+}
+
+.guide.horizontal{
+  height:1px;
+  width:100%;
 }
 
 .textBox{
-  font-size:24px;
-  color:#000;
-  min-width:100px;
-}
-
-.imgBox img{
-  width:150px;
-}
-
-.active{
-  outline:2px dashed red;
+  min-width:50px;
+  text-align:center;
 }
 </style>
 </head>
 
 <body>
 
-<div class="toolbar">
+<div id="toolbar">
 
-<input type="file" id="bgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
-<input type="file" id="imgUpload" accept="image/*">
+<input type="color" id="colorPicker">
+<input type="number" id="fontSize" placeholder="Size" style="width:60px">
+<button onclick="applyStyle()">Apply</button>
 
-<input type="color" id="colorPicker" onchange="changeColor()">
+<button onclick="alignLeft()">Left</button>
+<button onclick="alignCenter()">Center</button>
+<button onclick="alignRight()">Right</button>
 
-<select id="fontPicker" onchange="changeFont()">
-<option value="'Tiro Devanagari Marathi', serif">Traditional</option>
-<option value="'Noto Serif Devanagari', serif">Wedding Classic</option>
-<option value="'Yatra One', cursive">Decorative</option>
-<option value="'Noto Sans Devanagari', sans-serif">Modern</option>
-</select>
+<input type="file" onchange="addImage(event)">
 
-<input type="number" id="fontSize" placeholder="Font Size" onchange="changeFontSize()" style="width:90px">
-
-<select onchange="changeAlignment(this.value)">
-<option value="left">Left</option>
-<option value="center">Center</option>
-<option value="right">Right</option>
-</select>
-
-<input type="text" id="draftName" placeholder="Draft Name" style="width:120px">
-
+<input type="text" id="draftName" placeholder="Draft Name" style="width:100px">
 <select id="draftList"></select>
-
 <button onclick="saveDraft()">Save</button>
 <button onclick="loadDraft()">Load</button>
-<button onclick="deleteDraft()">Delete</button>
-
-<button onclick="downloadImage()">Download</button>
 
 </div>
 
-<div id="canvas" class="canvas"></div>
+<div id="canvas"></div>
 
 <script>
-
-let active=null;
-const canvas=document.getElementById("canvas");
-
-/* ================= SELECT ================= */
-
-function select(el){
-  document.querySelectorAll(".textBox,.imgBox")
-    .forEach(e=>e.classList.remove("active"));
-  active=el;
-  el.classList.add("active");
-}
+const canvas = document.getElementById("canvas");
+let selected = null;
 
 /* ================= ADD TEXT ================= */
-
 function addText(){
-  const d=document.createElement("div");
-  d.className="textBox";
-  d.innerText="डबल क्लिक करून मजकूर बदला";
-  d.style.top="100px";
-  d.style.left="100px";
-  d.style.color="#000";
-
-  canvas.appendChild(d);
-  setupElement(d);
-
-  d.ondblclick=()=>{
-    let t=prompt("Edit",d.innerText);
-    if(t!==null) d.innerText=t;
-  };
+  const div=document.createElement("div");
+  div.className="textBox";
+  div.contentEditable=true;
+  div.innerText="Your Text";
+  div.style.top="200px";
+  div.style.left="100px";
+  div.style.fontSize="20px";
+  div.style.color="#000";
+  canvas.appendChild(div);
+  setupElement(div);
 }
 
-/* ================= IMAGE ================= */
-
-imgUpload.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    const box=document.createElement("div");
-    box.className="imgBox";
-
-    const img=document.createElement("img");
-    img.src=r.result;
-
-    box.appendChild(img);
-    box.style.top="120px";
-    box.style.left="120px";
-
-    canvas.appendChild(box);
-    setupElement(box);
+/* ================= ADD IMAGE ================= */
+function addImage(e){
+  const reader=new FileReader();
+  reader.onload=function(){
+    const div=document.createElement("div");
+    div.className="imgBox";
+    div.style.top="150px";
+    div.style.left="80px";
+    div.innerHTML=`<img src="${reader.result}" style="width:150px">`;
+    canvas.appendChild(div);
+    setupElement(div);
   };
-  r.readAsDataURL(e.target.files[0]);
-};
+  reader.readAsDataURL(e.target.files[0]);
+}
 
-/* ================= BACKGROUND ================= */
+/* ================= SELECT ================= */
+function selectElement(el){
+  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("selected"));
+  selected=el;
+  el.classList.add("selected");
+}
 
-bgUpload.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    canvas.style.backgroundImage=`url(${r.result})`;
-  };
-  r.readAsDataURL(e.target.files[0]);
-};
-
-/* ================= DRAG (CENTERED) ================= */
-
+/* ================= MOVE WITH CENTER ================= */
 function setupElement(el){
 
-  select(el);
+  let offsetX, offsetY;
 
-  // Desktop
-  el.onmousedown=function(e){
-    select(el);
+  el.addEventListener("pointerdown", e=>{
+    selectElement(el);
+    const rect=el.getBoundingClientRect();
+    offsetX = rect.width/2;
+    offsetY = rect.height/2;
+    el.setPointerCapture(e.pointerId);
+  });
 
-    const rect=canvas.getBoundingClientRect();
-    const elRect=el.getBoundingClientRect();
+  el.addEventListener("pointermove", e=>{
+    if(!el.hasPointerCapture(e.pointerId)) return;
 
-    let offsetX=e.clientX-elRect.left;
-    let offsetY=e.clientY-elRect.top;
+    const canvasRect=canvas.getBoundingClientRect();
 
-    function move(ev){
-      let x=ev.clientX-rect.left-offsetX;
-      let y=ev.clientY-rect.top-offsetY;
-      el.style.left=x+"px";
-      el.style.top=y+"px";
-    }
-
-    document.addEventListener("mousemove",move);
-    document.addEventListener("mouseup",()=>{
-      document.removeEventListener("mousemove",move);
-    },{once:true});
-  };
-
-  // Mobile (center under finger)
-  el.addEventListener("touchmove",e=>{
-    e.preventDefault();
-
-    const rect=canvas.getBoundingClientRect();
-
-    let x=e.touches[0].clientX-rect.left-el.offsetWidth/2;
-    let y=e.touches[0].clientY-rect.top-el.offsetHeight/2;
+    let x=e.clientX - canvasRect.left - offsetX;
+    let y=e.clientY - canvasRect.top - offsetY;
 
     el.style.left=x+"px";
     el.style.top=y+"px";
+
+    showGuides(el);
+  });
+
+  el.addEventListener("pointerup", e=>{
+    el.releasePointerCapture(e.pointerId);
+    removeGuides();
+  });
+
+  /* Pinch resize */
+  let startDist=0;
+
+  el.addEventListener("touchstart", e=>{
+    if(e.touches.length===2){
+      startDist=getDistance(e.touches);
+    }
+  });
+
+  el.addEventListener("touchmove", e=>{
+    if(e.touches.length===2){
+      const dist=getDistance(e.touches);
+      const scale=dist/startDist;
+      const img=el.querySelector("img");
+      if(img){
+        img.style.width=(img.offsetWidth*scale)+"px";
+      }
+      startDist=dist;
+    }
   });
 }
 
-/* ================= STYLE ================= */
-
-function changeColor(){
-  if(active && active.classList.contains("textBox"))
-    active.style.color=document.getElementById("colorPicker").value;
+function getDistance(t){
+  return Math.hypot(
+    t[0].clientX - t[1].clientX,
+    t[0].clientY - t[1].clientY
+  );
 }
 
-function changeFont(){
-  if(active && active.classList.contains("textBox"))
-    active.style.fontFamily=document.getElementById("fontPicker").value;
-}
+/* ================= ALIGNMENT GUIDES ================= */
+function showGuides(el){
+  removeGuides();
 
-function changeFontSize(){
-  if(active && active.classList.contains("textBox"))
-    active.style.fontSize=document.getElementById("fontSize").value+"px";
-}
+  const rect=el.getBoundingClientRect();
+  const canvasRect=canvas.getBoundingClientRect();
 
-function changeAlignment(val){
-  if(active && active.classList.contains("textBox"))
-    active.style.textAlign=val;
-}
+  const centerX = rect.left - canvasRect.left + rect.width/2;
+  const centerY = rect.top - canvasRect.top + rect.height/2;
 
-/* ================= DOWNLOAD IMAGE ================= */
+  document.querySelectorAll(".textBox,.imgBox").forEach(other=>{
+    if(other===el) return;
 
-function downloadImage(){
-  html2canvas(canvas).then(c=>{
-    const link=document.createElement("a");
-    link.download="invitation.png";
-    link.href=c.toDataURL();
-    link.click();
+    const r=other.getBoundingClientRect();
+    const oCenterX=r.left - canvasRect.left + r.width/2;
+    const oCenterY=r.top - canvasRect.top + r.height/2;
+
+    if(Math.abs(centerX - oCenterX)<5){
+      const v=document.createElement("div");
+      v.className="guide vertical";
+      v.style.left=oCenterX+"px";
+      canvas.appendChild(v);
+    }
+
+    if(Math.abs(centerY - oCenterY)<5){
+      const h=document.createElement("div");
+      h.className="guide horizontal";
+      h.style.top=oCenterY+"px";
+      canvas.appendChild(h);
+    }
   });
 }
 
-/* ================= MULTI DRAFT SYSTEM ================= */
-
-function getAllDrafts(){
-  return JSON.parse(localStorage.getItem("allInvitationDrafts") || "{}");
+function removeGuides(){
+  document.querySelectorAll(".guide").forEach(g=>g.remove());
 }
 
-function saveAllDrafts(obj){
-  localStorage.setItem("allInvitationDrafts", JSON.stringify(obj));
+/* ================= TEXT STYLE ================= */
+function applyStyle(){
+  if(!selected) return;
+  selected.style.color=document.getElementById("colorPicker").value;
+  const size=document.getElementById("fontSize").value;
+  if(size) selected.style.fontSize=size+"px";
+}
+
+function alignLeft(){ if(selected) selected.style.textAlign="left"; }
+function alignCenter(){ if(selected) selected.style.textAlign="center"; }
+function alignRight(){ if(selected) selected.style.textAlign="right"; }
+
+/* ================= DRAFT SYSTEM ================= */
+function getDrafts(){
+  return JSON.parse(localStorage.getItem("invDrafts")||"{}");
+}
+
+function saveDrafts(obj){
+  localStorage.setItem("invDrafts",JSON.stringify(obj));
 }
 
 function saveDraft(){
-
   const name=document.getElementById("draftName").value.trim();
+  if(!name){ alert("Enter draft name"); return;}
 
-  if(!name){
-    alert("Please enter draft name");
-    return;
-  }
-
-  let drafts=getAllDrafts();
+  const drafts=getDrafts();
 
   const data={
     bg:canvas.style.backgroundImage,
@@ -273,53 +275,37 @@ function saveDraft(){
       left:el.style.left,
       color:el.style.color,
       fontSize:el.style.fontSize,
-      fontFamily:el.style.fontFamily,
       textAlign:el.style.textAlign,
       width:el.querySelector("img")?.style.width
     });
   });
 
   drafts[name]=data;
-  saveAllDrafts(drafts);
-
+  saveDrafts(drafts);
   loadDraftList();
-  document.getElementById("draftList").value=name;
-
-  alert("Draft Saved Successfully ✅");
+  alert("Saved ✅");
 }
 
 function loadDraft(){
-
   const name=document.getElementById("draftList").value;
+  if(!name) return;
 
-  if(!name){
-    alert("Select Draft");
-    return;
-  }
-
-  let drafts=getAllDrafts();
-  if(!drafts[name]){
-    alert("Draft Not Found");
-    return;
-  }
-
+  const drafts=getDrafts();
   const data=drafts[name];
+  if(!data) return;
 
   canvas.innerHTML="";
-  canvas.style.backgroundImage=data.bg || "";
+  canvas.style.backgroundImage=data.bg||"";
 
   data.elements.forEach(item=>{
     const el=document.createElement("div");
     el.className=item.type==="text"?"textBox":"imgBox";
     el.innerHTML=item.html;
-
     el.style.top=item.top;
     el.style.left=item.left;
     el.style.color=item.color;
     el.style.fontSize=item.fontSize;
-    el.style.fontFamily=item.fontFamily;
     el.style.textAlign=item.textAlign;
-
     if(item.type==="image" && el.querySelector("img"))
       el.querySelector("img").style.width=item.width;
 
@@ -327,38 +313,23 @@ function loadDraft(){
     setupElement(el);
   });
 
-  alert("Draft Loaded Successfully ✅");
-}
-
-function deleteDraft(){
-
-  const name=document.getElementById("draftList").value;
-  if(!name) return;
-
-  let drafts=getAllDrafts();
-  delete drafts[name];
-  saveAllDrafts(drafts);
-
-  loadDraftList();
+  alert("Loaded ✅");
 }
 
 function loadDraftList(){
-
   const select=document.getElementById("draftList");
   select.innerHTML="";
-
-  let drafts=getAllDrafts();
-
-  for(let key in drafts){
-    let option=document.createElement("option");
-    option.value=key;
-    option.textContent=key;
-    select.appendChild(option);
+  const drafts=getDrafts();
+  for(let k in drafts){
+    const opt=document.createElement("option");
+    opt.value=k;
+    opt.textContent=k;
+    select.appendChild(opt);
   }
 }
 
 loadDraftList();
-
 </script>
+
 </body>
 </html>
