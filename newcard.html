@@ -1,298 +1,236 @@
 <!DOCTYPE html>
-<html>
+<html lang="mr">
 <head>
 <meta charset="UTF-8">
-<title>Invitation Card Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Marathi Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+<title>Invitation Editor PRO</title>
 
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-body{
-  font-family:'Noto Sans Devanagari',sans-serif;
-  margin:0;
-  display:flex;
-  background:#f4f4f4;
+
+body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
+
+.toolbar{
+  background:white;padding:10px;display:flex;gap:10px;
+  overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-.controls{
-  width:280px;
-  background:#fff;
-  padding:15px;
-  box-shadow:0 0 10px #ccc;
+button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointer;}
+
+.canvas{
+  width:500px;height:700px;margin:20px auto;background:#ddd;
+  position:relative;border-radius:12px;overflow:hidden;
+  background-size:cover;background-position:center;touch-action:none;
 }
 
-.controls input,select,button{
-  width:100%;
-  margin:6px 0;
-  padding:6px;
-}
+.textBox,.imgBox{position:absolute;cursor:move;border:1px dashed transparent;}
+.textBox{font-size:24px;color:#fff;padding:4px;}
+.imgBox img{width:120px;}
+.active{border-color:red;}
 
-#canvas{
-  width:600px;
-  height:800px;
-  margin:20px;
-  background:#fff;
-  border:3px solid #aaa;
-  position:relative;
-  overflow:hidden;
-}
-
-.textBox{
-  position:absolute;
-  cursor:move;
-  min-width:60px;
-  padding:5px;
-  border:1px dashed transparent;
-}
-
-.textBox.active{ border-color:red; }
-
-.imgBox{
-  position:absolute;
-  cursor:move;
-}
-
-.resizer{
-  width:12px;
-  height:12px;
-  background:red;
-  position:absolute;
-  right:-6px;
-  bottom:-6px;
-  cursor:se-resize;
-}
 </style>
 </head>
 
 <body>
 
-<div class="controls">
+<div class="toolbar">
 
-<h3>Template</h3>
-<input type="file" id="bgUpload">
-
-<h3>Add Text</h3>
-<input id="textInput" placeholder="Enter text">
+<input type="file" id="bgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
+<input type="file" id="imgUpload" accept="image/*">
 
-<h3>Upload Image</h3>
-<input type="file" id="imgUpload">
+<input type="color" id="colorPicker" onchange="changeColor()">
 
-<h3>Style</h3>
-
-<select id="font" onchange="applyStyle()">
-<option value="Tiro Devanagari Marathi">Marathi Wedding</option>
-<option value="Noto Sans Devanagari">Clean Marathi</option>
-<option value="serif">Serif</option>
-<option value="sans-serif">Sans</option>
+<select id="fontPicker" onchange="changeFont()">
+<option value="'Tiro Devanagari Marathi'">Traditional</option>
+<option value="'Noto Sans Devanagari'">Modern</option>
 </select>
 
-<input type="color" id="color" onchange="applyStyle()">
-
-<select id="weight" onchange="applyStyle()">
-<option value="normal">Normal</option>
-<option value="bold">Bold</option>
-<option value="bolder">Extra Bold</option>
+<select id="weightPicker" onchange="changeWeight()">
+<option value="300">Light</option>
+<option value="400">Normal</option>
+<option value="700">Bold</option>
 </select>
 
-<input type="number" id="size" value="24" onchange="applyStyle()">
+<button onclick="saveDraft()">💾 Save</button>
+<button onclick="loadDraft()">🔄 Load</button>
+<button onclick="clearDraft()">🗑 Clear</button>
 
-<h3>Drafts</h3>
-
-<input id="draftName" placeholder="Draft name">
-<button onclick="saveDraft()">Save Draft</button>
-
-<select id="draftList" onchange="loadDraft()">
-<option value="">Select Draft</option>
-</select>
-
-<h3>Export</h3>
-<button onclick="downloadPDF()">Download PDF</button>
+<button onclick="deleteElement()">Delete</button>
+<button onclick="downloadPDF()">Download</button>
 
 </div>
 
-<div id="canvas"></div>
+<div id="canvas" class="canvas"></div>
 
 <script>
-const canvas = document.getElementById("canvas");
-let selected = null;
 
-/* ---------------- Background Upload ---------------- */
+let active=null,startDist=0,startSize=0;
 
-bgUpload.onchange = e=>{
- const reader = new FileReader();
- reader.onload = ()=>{
-   canvas.style.backgroundImage = `url(${reader.result})`;
-   canvas.style.backgroundSize = "cover";
- };
- reader.readAsDataURL(e.target.files[0]);
+/* Background Upload */
+bgUpload.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=> canvas.style.backgroundImage=`url(${r.result})`;
+  r.readAsDataURL(e.target.files[0]);
 };
 
-/* ---------------- Add Text ---------------- */
-
+/* Add Text */
 function addText(){
- const div = document.createElement("div");
- div.className="textBox";
- div.innerText = textInput.value || "Text";
- div.style.left="100px";
- div.style.top="100px";
- canvas.appendChild(div);
- makeDraggable(div);
- addResizer(div);
+  const d=document.createElement("div");
+  d.className="textBox";
+  d.innerText="डबल क्लिक करून मजकूर बदला";
+  d.style.top="100px"; d.style.left="100px";
+  canvas.appendChild(d); setupElement(d);
+
+  d.ondblclick=()=>{ let t=prompt("Edit",d.innerText); if(t)d.innerText=t; };
 }
 
-/* ---------------- Upload Image ---------------- */
-
-imgUpload.onchange = e=>{
- const reader = new FileReader();
- reader.onload = ()=>{
-   const img = document.createElement("img");
-   img.src = reader.result;
-   img.className="imgBox";
-   img.style.width="150px";
-   img.style.left="120px";
-   img.style.top="120px";
-   canvas.appendChild(img);
-   makeDraggable(img);
-   addResizer(img);
- };
- reader.readAsDataURL(e.target.files[0]);
+/* Upload Image */
+imgUpload.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=>{
+    const box=document.createElement("div");
+    box.className="imgBox";
+    const img=document.createElement("img");
+    img.src=r.result; box.appendChild(img);
+    box.style.top="120px"; box.style.left="120px";
+    canvas.appendChild(box); setupElement(box);
+  };
+  r.readAsDataURL(e.target.files[0]);
 };
 
-/* ---------------- Drag Logic ---------------- */
-
-function makeDraggable(el){
-
- el.onclick = e=>{
-   selected = el;
-   e.stopPropagation();
- };
-
- let offsetX, offsetY;
- let dragging=false;
-
- el.addEventListener("mousedown", e=>{
-   if(e.target.classList.contains("resizer")) return;
-   dragging=true;
-   offsetX=e.offsetX;
-   offsetY=e.offsetY;
-
-   document.onmousemove = ev=>{
-     if(!dragging) return;
-     el.style.left = (ev.pageX - canvas.offsetLeft - offsetX) + "px";
-     el.style.top = (ev.pageY - canvas.offsetTop - offsetY) + "px";
-   };
-
-   document.onmouseup = ()=>{
-     dragging=false;
-     document.onmousemove=null;
-   };
- });
+/* Selection */
+function select(el){
+  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
+  active=el; el.classList.add("active");
 }
 
-/* ---------------- Resize Logic ---------------- */
+canvas.onclick=e=>{
+  const el=e.target.closest(".textBox,.imgBox");
+  if(el) select(el);
+};
 
-function addResizer(el){
- const r=document.createElement("div");
- r.className="resizer";
- el.appendChild(r);
+/* Drag & Resize */
+function setupElement(el){
+  select(el);
+  let offsetX,offsetY;
 
- let resizing=false;
+  el.addEventListener("touchstart",e=>{
+    select(el);
+    if(e.touches.length===1){
+      offsetX=e.touches[0].clientX-el.offsetLeft;
+      offsetY=e.touches[0].clientY-el.offsetTop;
+    }
+    if(e.touches.length===2){
+      startDist=getDistance(e.touches);
+      startSize=el.offsetWidth;
+    }
+  });
 
- r.addEventListener("mousedown", e=>{
-   e.stopPropagation();
-   resizing=true;
+  el.addEventListener("touchmove",e=>{
+    e.preventDefault();
+    if(e.touches.length===1){
+      el.style.left=(e.touches[0].clientX-offsetX)+"px";
+      el.style.top=(e.touches[0].clientY-offsetY)+"px";
+    }
+    if(e.touches.length===2){
+      let newSize=startSize+(getDistance(e.touches)-startDist);
+      if(el.classList.contains("imgBox")) el.querySelector("img").style.width=newSize+"px";
+      else el.style.fontSize=newSize/5+"px";
+    }
+  });
 
-   document.onmousemove = ev=>{
-     if(!resizing) return;
-     el.style.width = (ev.pageX - el.offsetLeft) + "px";
-     el.style.height = (ev.pageY - el.offsetTop) + "px";
-   };
-
-   document.onmouseup = ()=>{
-     resizing=false;
-     document.onmousemove=null;
-   };
- });
+  el.onmousedown=e=>{
+    select(el);
+    offsetX=e.offsetX; offsetY=e.offsetY;
+    document.onmousemove=e=>{
+      el.style.left=(e.pageX-offsetX)+"px";
+      el.style.top=(e.pageY-offsetY)+"px";
+    };
+    document.onmouseup=()=>document.onmousemove=null;
+  };
 }
 
-/* ---------------- Style Apply ---------------- */
+function getDistance(t){ return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
 
-function applyStyle(){
- if(!selected || !selected.classList.contains("textBox")) return;
+/* Style Controls */
+function changeColor(){ if(active?.classList.contains("textBox")) active.style.color=colorPicker.value; }
+function changeFont(){ if(active?.classList.contains("textBox")) active.style.fontFamily=fontPicker.value; }
+function changeWeight(){ if(active?.classList.contains("textBox")) active.style.fontWeight=weightPicker.value; }
 
- selected.style.fontFamily = font.value;
- selected.style.color = color.value;
- selected.style.fontWeight = weight.value;
- selected.style.fontSize = size.value + "px";
-}
+/* Delete */
+function deleteElement(){ if(active) active.remove(); }
 
-/* ---------------- Save Draft ---------------- */
+/* PDF */
+function downloadPDF(){ html2pdf().from(canvas).save("invitation.pdf"); }
+
+/* ===================== DRAFT SAVE SYSTEM ===================== */
 
 function saveDraft(){
 
- const name = draftName.value.trim();
- if(!name) return alert("Enter draft name");
+  const data={
+    bg: canvas.style.backgroundImage,
+    elements:[]
+  };
 
- const data = {
-   bg: canvas.style.backgroundImage,
-   html: canvas.innerHTML
- };
+  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+    const item={
+      type: el.classList.contains("textBox")?"text":"image",
+      html: el.innerHTML,
+      top: el.style.top,
+      left: el.style.left,
+      fontSize: el.style.fontSize,
+      color: el.style.color,
+      fontFamily: el.style.fontFamily,
+      fontWeight: el.style.fontWeight,
+      width: el.querySelector("img")?.style.width
+    };
+    data.elements.push(item);
+  });
 
- localStorage.setItem("draft_"+name, JSON.stringify(data));
- updateDraftList();
- alert("Draft Saved");
+  localStorage.setItem("invitationDraft", JSON.stringify(data));
+  alert("Draft Saved ✅");
 }
-
-/* ---------------- Load Draft ---------------- */
 
 function loadDraft(){
- const name = draftList.value;
- if(!name) return;
 
- const data = JSON.parse(localStorage.getItem("draft_"+name));
+  const saved=localStorage.getItem("invitationDraft");
+  if(!saved) return alert("No Draft Found");
 
- canvas.innerHTML = data.html;
- canvas.style.backgroundImage = data.bg;
+  const data=JSON.parse(saved);
+  canvas.innerHTML="";
+  canvas.style.backgroundImage=data.bg;
 
- // re-enable drag & resize
- document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
-   makeDraggable(el);
-   addResizer(el);
- });
+  data.elements.forEach(item=>{
+    const el=document.createElement("div");
+    el.className=item.type==="text"?"textBox":"imgBox";
+    el.innerHTML=item.html;
+    el.style.top=item.top;
+    el.style.left=item.left;
+    el.style.fontSize=item.fontSize;
+    el.style.color=item.color;
+    el.style.fontFamily=item.fontFamily;
+    el.style.fontWeight=item.fontWeight;
+
+    if(item.type==="image")
+      el.querySelector("img").style.width=item.width;
+
+    canvas.appendChild(el);
+    setupElement(el);
+  });
+
+  alert("Draft Loaded ✅");
 }
 
-/* ---------------- Draft Dropdown ---------------- */
-
-function updateDraftList(){
- draftList.innerHTML = "<option>Select Draft</option>";
- Object.keys(localStorage).forEach(k=>{
-   if(k.startsWith("draft_")){
-     const name=k.replace("draft_","");
-     draftList.innerHTML += `<option value="${name}">${name}</option>`;
-   }
- });
-}
-updateDraftList();
-
-/* ---------------- PDF Download ---------------- */
-
-async function downloadPDF(){
- const canvasImg = await html2canvas(canvas);
- const img = canvasImg.toDataURL("image/png");
-
- const {jsPDF} = window.jspdf;
- const pdf = new jsPDF("p","mm","a4");
-
- pdf.addImage(img,"PNG",10,10,190,270);
- pdf.save("invitation.pdf");
+function clearDraft(){
+  localStorage.removeItem("invitationDraft");
+  alert("Draft Cleared");
 }
 
 </script>
-
 </body>
 </html>
