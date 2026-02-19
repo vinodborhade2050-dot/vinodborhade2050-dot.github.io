@@ -205,14 +205,22 @@ function addDeleteButton(el){
 
   el.appendChild(btn);
 }
-
 function toggleBold(){
 
   if(!active) return;
+
   if(!active.classList.contains("textBox")) return;
 
-  document.execCommand("bold");
+  let weight = window.getComputedStyle(active).fontWeight;
+
+  if(weight === "700" || weight === "bold"){
+    active.style.fontWeight = "400";
+  }else{
+    active.style.fontWeight = "700";
+  }
+
 }
+
 
 /* ================= ADD TEXT ================= */
 
@@ -309,6 +317,13 @@ bgUpload.onchange=e=>{
 /* ================= DRAG (CENTERED) ================= */
 
 function setupElement(el){
+el.addEventListener("touchstart", function(){
+  select(el);
+});
+
+el.addEventListener("click", function(){
+  select(el);
+});
 
   select(el);
 
