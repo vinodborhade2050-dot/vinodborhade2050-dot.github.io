@@ -150,7 +150,10 @@ let selectedElement = null;
 
 function select(el){ 
   document.querySelectorAll(".textBox,.imgBox") 
-    .forEach(e=>e.classList.remove("active"));
+    .forEach(e=>{e.classList.remove("active");
+                const oldBtn = e.querySelector(".deleteBtn");
+      if(oldBtn) oldBtn.remove();} 
+            );
   active=el; 
   el.classList.add("active"); 
   addDeleteButton(el)
