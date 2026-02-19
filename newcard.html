@@ -147,21 +147,15 @@ const canvas=document.getElementById("canvas");
 let selectedElement = null;
 
 /* ================= SELECT ================= */
-function select(el){
 
-  document.querySelectorAll(".textBox,.imgBox").forEach(e=>{
-    e.classList.remove("active");
-
-    let oldBtn = e.querySelector(".deleteBtn");
-    if(oldBtn) oldBtn.remove();
-  });
-
+function select(el){ 
+  document.querySelectorAll(".textBox,.imgBox") 
+    .forEach(e=>e.classList.remove("active"));
+  active=el; 
+  el.classList.add("active"); 
+  addDeleteButton(el)
   selectedElement = el;
-  el.classList.add("active");
-
-  addDeleteButton(el);
 }
-
 function addDeleteButton(el){
 
   // remove old button if exists
