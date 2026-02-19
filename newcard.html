@@ -92,6 +92,8 @@ button{
 
 <input type="file" id="bgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
+  <button onclick="toggleBold()">Bold</button>
+
 <input type="file" id="imgUpload" accept="image/*">
 
 <input type="color" id="colorPicker" onchange="changeColor()">
@@ -202,6 +204,15 @@ function addDeleteButton(el){
   });
 
   el.appendChild(btn);
+}
+function toggleBold(){
+  if(active && active.classList.contains("textBox")){
+    if(active.style.fontWeight === "bold"){
+      active.style.fontWeight = "normal";
+    } else {
+      active.style.fontWeight = "bold";
+    }
+  }
 }
 
 /* ================= ADD TEXT ================= */
