@@ -4,314 +4,276 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Invitation Editor PRO - Wedding Edition</title>
+<title>Invitation Editor PRO+</title>
 
-<!-- Wedding Marathi Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Hind:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
+body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
 
-body{
-  margin:0;
-  font-family:'Noto Sans Devanagari', sans-serif;
-  background:#eee;
-}
-
-.toolbar{
-  background:white;
-  padding:10px;
-  display:flex;
-  gap:10px;
-  overflow:auto;
-  box-shadow:0 2px 10px rgba(0,0,0,.1);
-}
-
-button{
-  padding:8px 12px;
-  border:none;
-  background:#c62828;
-  color:white;
-  cursor:pointer;
-  border-radius:6px;
-}
+.toolbar{background:white;padding:10px;display:flex;gap:8px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.1);}
+button,input,select{padding:6px;border-radius:6px;border:1px solid #ccc;}
+button{background:#c62828;color:white;border:none;cursor:pointer;}
 
 .canvas{
-  width:500px;
-  height:700px;
-  margin:20px auto;
-  background:#ddd;
-  position:relative;
-  border-radius:12px;
-  overflow:hidden;
-  background-size:cover;
-  background-position:center;
+  width:500px;height:700px;margin:20px auto;background:#ddd;
+  position:relative;border-radius:12px;overflow:hidden;
+  background-size:cover;background-position:center;
   touch-action:none;
 }
 
 .textBox,.imgBox{
   position:absolute;
+  transform:translate(-50%,-50%);
   cursor:move;
   border:1px dashed transparent;
 }
 
-.textBox{
-  font-size:24px;
-  color:#000;
-  padding:4px;
-  font-family:'Tiro Devanagari Marathi', serif;
-}
+.textBox{font-size:30px;color:#000;padding:4px;}
+.imgBox img{width:150px;}
 
-.imgBox img{
-  width:120px;
-}
+.active{border-color:red;}
 
-.active{
-  border-color:red;
+.guideV,.guideH{
+  position:absolute;background:red;pointer-events:none;display:none;
 }
-
+.guideV{width:1px;height:100%;}
+.guideH{height:1px;width:100%;}
 </style>
 </head>
 
 <body>
 
 <div class="toolbar">
-
 <input type="file" id="bgUpload" accept="image/*">
-<button onclick="addText()">Add Text</button>
 <input type="file" id="imgUpload" accept="image/*">
+<button onclick="addText()">Add Text</button>
 
 <input type="color" id="colorPicker" onchange="changeColor()">
 
 <select id="fontPicker" onchange="changeFont()">
-<option value="'Tiro Devanagari Marathi', serif">Traditional Wedding</option>
-<option value="'Noto Serif Devanagari', serif">Wedding Classic</option>
-<option value="'Hind', sans-serif">Royal Bold</option>
-<option value="'Yatra One', cursive">Decorative Wedding</option>
-<option value="'Noto Sans Devanagari', sans-serif">Modern Simple</option>
+<option value="'Tiro Devanagari Marathi', serif">Traditional</option>
+<option value="'Noto Serif Devanagari', serif">Classic</option>
+<option value="'Hind', sans-serif">Bold</option>
+<option value="'Yatra One', cursive">Decorative</option>
+<option value="'Noto Sans Devanagari', sans-serif">Modern</option>
 </select>
 
-<select id="weightPicker" onchange="changeWeight()">
-<option value="300">Light</option>
-<option value="400">Normal</option>
-<option value="700">Bold</option>
-</select>
+<input type="number" id="fontSizeInput" value="30" min="10" max="200" onchange="changeFontSize()">
 
-<button onclick="saveDraft()">💾 Save</button>
-<button onclick="loadDraft()">🔄 Load</button>
-<button onclick="clearDraft()">🗑 Clear</button>
-
-<button onclick="deleteElement()">Delete</button>
-<button onclick="downloadImage()">Download Image</button>
-
+<button onclick="saveDraft()">Save</button>
+<button onclick="loadDraft()">Load</button>
+<button onclick="downloadImage()">Download</button>
 </div>
 
 <div id="canvas" class="canvas"></div>
 
 <script>
 
-let active=null,startDist=0,startSize=0;
+const canvas=document.getElementById("canvas");
 
-/* Background Upload */
+let active=null,startDist=0,startWidth=0;
+
+/* ---------- Background ---------- */
 bgUpload.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=> canvas.style.backgroundImage=`url(${r.result})`;
-  r.readAsDataURL(e.target.files[0]);
+ const r=new FileReader();
+ r.onload=()=>canvas.style.backgroundImage=`url(${r.result})`;
+ r.readAsDataURL(e.target.files[0]);
 };
 
-/* Add Text */
+/* ---------- Add Text ---------- */
 function addText(){
-  const d=document.createElement("div");
-  d.className="textBox";
-  d.innerText="|| शुभ विवाह ||";
-  d.style.top="100px"; 
-  d.style.left="100px";
-  d.style.color="#000";
-  canvas.appendChild(d); 
-  setupElement(d);
-
-  d.ondblclick=()=>{
-    let t=prompt("Edit Text",d.innerText); 
-    if(t)d.innerText=t; 
-  };
+ const d=document.createElement("div");
+ d.className="textBox";
+ d.innerText="|| शुभ विवाह ||";
+ d.style.left="50%";
+ d.style.top="50%";
+ d.style.fontFamily="'Tiro Devanagari Marathi'";
+ canvas.appendChild(d);
+ setupDrag(d);
+ select(d);
 }
 
-/* Upload Image */
+/* ---------- Upload Image ---------- */
 imgUpload.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    const box=document.createElement("div");
-    box.className="imgBox";
-    const img=document.createElement("img");
-    img.src=r.result; 
-    box.appendChild(img);
-    box.style.top="120px"; 
-    box.style.left="120px";
-    canvas.appendChild(box); 
-    setupElement(box);
-  };
-  r.readAsDataURL(e.target.files[0]);
+ const r=new FileReader();
+ r.onload=()=>{
+   const box=document.createElement("div");
+   box.className="imgBox";
+   box.style.left="50%";
+   box.style.top="50%";
+
+   const img=document.createElement("img");
+   img.src=r.result;
+   box.appendChild(img);
+
+   canvas.appendChild(box);
+   setupDrag(box);
+   setupPinchResize(box);
+   select(box);
+ };
+ r.readAsDataURL(e.target.files[0]);
 };
 
-/* Selection */
+/* ---------- Select ---------- */
 function select(el){
-  document.querySelectorAll(".textBox,.imgBox")
-    .forEach(e=>e.classList.remove("active"));
-  active=el; 
-  el.classList.add("active");
+ document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
+ active=el;
+ el.classList.add("active");
+
+ if(el.classList.contains("textBox")){
+   fontSizeInput.value=parseInt(window.getComputedStyle(el).fontSize);
+   colorPicker.value=rgbToHex(window.getComputedStyle(el).color);
+ }
 }
 
 canvas.onclick=e=>{
-  const el=e.target.closest(".textBox,.imgBox");
-  if(el) select(el);
+ const el=e.target.closest(".textBox,.imgBox");
+ if(el) select(el);
 };
 
-/* Drag & Resize */
-function setupElement(el){
-  select(el);
-  let offsetX,offsetY;
+/* ---------- Drag ---------- */
+function setupDrag(el){
+ el.onmousedown=e=>{
+   select(el);
+   const rect=canvas.getBoundingClientRect();
 
-  el.addEventListener("touchstart",e=>{
-    select(el);
-    if(e.touches.length===1){
-      offsetX=e.touches[0].clientX-el.offsetLeft;
-      offsetY=e.touches[0].clientY-el.offsetTop;
-    }
-    if(e.touches.length===2){
-      startDist=getDistance(e.touches);
-      startSize=el.offsetWidth;
-    }
-  });
+   document.onmousemove=ev=>{
+     let x=ev.clientX-rect.left;
+     let y=ev.clientY-rect.top;
+     el.style.left=x+"px";
+     el.style.top=y+"px";
+   };
 
-  el.addEventListener("touchmove",e=>{
-    e.preventDefault();
-    if(e.touches.length===1){
-      el.style.left=(e.touches[0].clientX-offsetX)+"px";
-      el.style.top=(e.touches[0].clientY-offsetY)+"px";
-    }
-    if(e.touches.length===2){
-      let newSize=startSize+(getDistance(e.touches)-startDist);
-      if(el.classList.contains("imgBox"))
-        el.querySelector("img").style.width=newSize+"px";
-      else
-        el.style.fontSize=newSize/5+"px";
-    }
-  });
-
-  el.onmousedown=e=>{
-    select(el);
-    offsetX=e.offsetX; 
-    offsetY=e.offsetY;
-    document.onmousemove=e=>{
-      el.style.left=(e.pageX-offsetX)+"px";
-      el.style.top=(e.pageY-offsetY)+"px";
-    };
-    document.onmouseup=()=>document.onmousemove=null;
-  };
+   document.onmouseup=()=>document.onmousemove=null;
+ };
 }
 
-function getDistance(t){ 
-  return Math.hypot(
-    t[0].clientX-t[1].clientX,
-    t[0].clientY-t[1].clientY
-  ); 
+/* ---------- Pinch Resize for Image ---------- */
+function setupPinchResize(el){
+
+ el.addEventListener("touchstart",e=>{
+   if(e.touches.length===2){
+     startDist=getDistance(e.touches);
+     startWidth=el.querySelector("img").offsetWidth;
+   }
+ });
+
+ el.addEventListener("touchmove",e=>{
+   if(e.touches.length===2){
+     e.preventDefault();
+     let newDist=getDistance(e.touches);
+     let newWidth=startWidth+(newDist-startDist);
+     if(newWidth>30)
+       el.querySelector("img").style.width=newWidth+"px";
+   }
+ });
+
 }
 
-/* Style Controls */
+function getDistance(t){
+ return Math.hypot(
+   t[0].clientX-t[1].clientX,
+   t[0].clientY-t[1].clientY
+ );
+}
+
+/* ---------- Text Controls ---------- */
 function changeColor(){
-  if(active && active.classList.contains("textBox")){
-    active.style.color = colorPicker.value;
-  }
+ if(active?.classList.contains("textBox"))
+   active.style.color=colorPicker.value;
 }
 
 function changeFont(){
-  if(active && active.classList.contains("textBox")){
-    active.style.fontFamily = fontPicker.value;
-  }
+ if(active?.classList.contains("textBox"))
+   active.style.fontFamily=fontPicker.value;
 }
 
-function changeWeight(){
-  if(active && active.classList.contains("textBox")){
-    active.style.fontWeight = weightPicker.value;
-  }
+function changeFontSize(){
+ if(active?.classList.contains("textBox"))
+   active.style.fontSize=fontSizeInput.value+"px";
 }
 
-/* Delete */
-function deleteElement(){ 
-  if(active) active.remove(); 
-}
-
-/* Download Image */
+/* ---------- Download ---------- */
 function downloadImage(){
-  document.fonts.ready.then(()=>{
-    html2canvas(canvas,{scale:2,useCORS:true}).then(canvasImage=>{
-      const link=document.createElement("a");
-      link.download="marathi-wedding-invitation.png";
-      link.href=canvasImage.toDataURL("image/png");
-      link.click();
-    });
-  });
+ document.fonts.ready.then(()=>{
+   html2canvas(canvas,{scale:2}).then(c=>{
+     const link=document.createElement("a");
+     link.download="invitation.png";
+     link.href=c.toDataURL();
+     link.click();
+   });
+ });
 }
 
-/* Draft Save System */
+/* ================= DRAFT FIXED ================= */
+
 function saveDraft(){
-  const data={
-    bg: canvas.style.backgroundImage,
-    elements:[]
-  };
 
-  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
-    const item={
-      type: el.classList.contains("textBox")?"text":"image",
-      html: el.innerHTML,
-      top: el.style.top,
-      left: el.style.left,
-      fontSize: el.style.fontSize,
-      color: el.style.color,
-      fontFamily: el.style.fontFamily,
-      fontWeight: el.style.fontWeight,
-      width: el.querySelector("img")?.style.width
-    };
-    data.elements.push(item);
-  });
+ const data={
+   bg:canvas.style.backgroundImage,
+   elements:[]
+ };
 
-  localStorage.setItem("invitationDraft", JSON.stringify(data));
-  alert("Draft Saved ✅");
+ document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+   const obj={
+     type:el.classList.contains("textBox")?"text":"image",
+     html:el.innerHTML,
+     left:el.style.left,
+     top:el.style.top,
+     font:el.style.fontFamily,
+     size:el.style.fontSize,
+     color:window.getComputedStyle(el).color
+   };
+
+   if(obj.type==="image"){
+     obj.width=el.querySelector("img").style.width;
+   }
+
+   data.elements.push(obj);
+ });
+
+ localStorage.setItem("draft",JSON.stringify(data));
+ alert("Draft Saved ✅");
 }
 
 function loadDraft(){
-  const saved=localStorage.getItem("invitationDraft");
-  if(!saved) return alert("No Draft Found");
 
-  const data=JSON.parse(saved);
-  canvas.innerHTML="";
-  canvas.style.backgroundImage=data.bg;
+ const saved=localStorage.getItem("draft");
+ if(!saved) return alert("No Draft Found");
 
-  data.elements.forEach(item=>{
-    const el=document.createElement("div");
-    el.className=item.type==="text"?"textBox":"imgBox";
-    el.innerHTML=item.html;
-    el.style.top=item.top;
-    el.style.left=item.left;
-    el.style.fontSize=item.fontSize;
-    el.style.color=item.color;
-    el.style.fontFamily=item.fontFamily;
-    el.style.fontWeight=item.fontWeight;
+ const data=JSON.parse(saved);
+ canvas.innerHTML="";
+ canvas.style.backgroundImage=data.bg;
 
-    if(item.type==="image")
-      el.querySelector("img").style.width=item.width;
+ data.elements.forEach(item=>{
+   const el=document.createElement("div");
+   el.className=item.type==="text"?"textBox":"imgBox";
+   el.innerHTML=item.html;
+   el.style.left=item.left;
+   el.style.top=item.top;
+   el.style.fontFamily=item.font;
+   el.style.fontSize=item.size;
+   el.style.color=item.color;
 
-    canvas.appendChild(el);
-    setupElement(el);
-  });
+   if(item.type==="image"){
+     el.querySelector("img").style.width=item.width;
+     setupPinchResize(el);
+   }
 
-  alert("Draft Loaded ✅");
+   canvas.appendChild(el);
+   setupDrag(el);
+ });
+
+ alert("Draft Loaded ✅");
 }
 
-function clearDraft(){
-  localStorage.removeItem("invitationDraft");
-  alert("Draft Cleared");
+/* ---------- RGB to HEX ---------- */
+function rgbToHex(rgb){
+ const nums=rgb.match(/\d+/g);
+ return "#"+((1<<24)+(parseInt(nums[0])<<16)+(parseInt(nums[1])<<8)+parseInt(nums[2])).toString(16).slice(1);
 }
 
 </script>
