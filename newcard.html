@@ -2,235 +2,212 @@
 <html lang="mr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invitation Card Designer</title>
 
-<title>Invitation Editor PRO</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&display=swap" rel="stylesheet">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 
 <style>
-
-body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
-
-.toolbar{
-  background:white;padding:10px;display:flex;gap:10px;
-  overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
+body{
+  font-family:'Noto Sans Devanagari';
+  background:#f5f5f5;
+  text-align:center;
 }
 
-button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointer;}
-
-.canvas{
-  width:500px;height:700px;margin:20px auto;background:#ddd;
-  position:relative;border-radius:12px;overflow:hidden;
-  background-size:cover;background-position:center;touch-action:none;
+#canvas{
+  width:800px;
+  height:1100px;
+  margin:auto;
+  border:3px dashed #aaa;
+  background-size:cover;
+  position:relative;
+  overflow:hidden;
 }
 
-.textBox,.imgBox{position:absolute;cursor:move;border:1px dashed transparent;}
-.textBox{font-size:24px;color:#fff;padding:4px;}
-.imgBox img{width:120px;}
-.active{border-color:red;}
+.draggable{
+  position:absolute;
+  cursor:move;
+  padding:5px;
+  border:1px dashed transparent;
+  user-select:none;
+}
 
+.draggable:hover{
+  border-color:#333;
+}
+
+.resizer{
+  width:12px;
+  height:12px;
+  background:black;
+  position:absolute;
+  right:-6px;
+  bottom:-6px;
+  cursor:se-resize;
+}
+
+.controls{
+  margin:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="toolbar">
+<h2>🎉 Invitation Card Designer</h2>
 
-<input type="file" id="bgUpload" accept="image/*">
+<div class="controls">
+Upload Template:
+<input type="file" id="bgUpload">
+
+Upload Image:
+<input type="file" id="imgUpload">
+
 <button onclick="addText()">Add Text</button>
-<input type="file" id="imgUpload" accept="image/*">
 
-<input type="color" id="colorPicker" onchange="changeColor()">
+<br><br>
 
-<select id="fontPicker" onchange="changeFont()">
-<option value="'Tiro Devanagari Marathi'">Traditional</option>
-<option value="'Noto Sans Devanagari'">Modern</option>
-</select>
+Font Size:
+<input type="number" id="fontSize" value="30">
 
-<select id="weightPicker" onchange="changeWeight()">
+Color:
+<input type="color" id="fontColor" value="#000000">
+
+Weight:
+<select id="fontWeight">
 <option value="300">Light</option>
 <option value="400">Normal</option>
+<option value="600">Semi Bold</option>
 <option value="700">Bold</option>
+<option value="900">Extra Bold</option>
 </select>
 
-<button onclick="saveDraft()">💾 Save</button>
-<button onclick="loadDraft()">🔄 Load</button>
-<button onclick="clearDraft()">🗑 Clear</button>
+<button onclick="applyStyle()">Apply Style</button>
 
-<button onclick="deleteElement()">Delete</button>
-<button onclick="downloadPDF()">Download</button>
+<br><br>
 
+<button onclick="saveDraft()">💾 Save Draft</button>
+<button onclick="loadDraft()">📂 Load Draft</button>
 </div>
 
-<div id="canvas" class="canvas"></div>
+<div id="canvas"></div>
 
 <script>
+let selected=null;
 
-let active=null,startDist=0,startSize=0;
+// BACKGROUND UPLOAD
+bgUpload.onchange = e=>{
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    canvas.style.backgroundImage=`url(${ev.target.result})`;
+  }
+  reader.readAsDataURL(e.target.files[0]);
+}
 
-/* Background Upload */
-bgUpload.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=> canvas.style.backgroundImage=`url(${r.result})`;
-  r.readAsDataURL(e.target.files[0]);
-};
-
-/* Add Text */
+// ADD TEXT
 function addText(){
-  const d=document.createElement("div");
-  d.className="textBox";
-  d.innerText="डबल क्लिक करून मजकूर बदला";
-  d.style.top="100px"; d.style.left="100px";
-  canvas.appendChild(d); setupElement(d);
+  const div=document.createElement("div");
+  div.className="draggable";
+  div.contentEditable=true;
+  div.innerText="इथे मजकूर लिहा";
+  div.style.fontSize="30px";
+  div.style.color="#000000";
 
-  d.ondblclick=()=>{ let t=prompt("Edit",d.innerText); if(t)d.innerText=t; };
+  makeDraggable(div);
+  addResizer(div);
+
+  canvas.appendChild(div);
 }
 
-/* Upload Image */
+// IMAGE UPLOAD
 imgUpload.onchange=e=>{
-  const r=new FileReader();
-  r.onload=()=>{
-    const box=document.createElement("div");
-    box.className="imgBox";
+  const reader=new FileReader();
+  reader.onload=ev=>{
     const img=document.createElement("img");
-    img.src=r.result; box.appendChild(img);
-    box.style.top="120px"; box.style.left="120px";
-    canvas.appendChild(box); setupElement(box);
-  };
-  r.readAsDataURL(e.target.files[0]);
-};
+    img.src=ev.target.result;
+    img.className="draggable";
+    img.style.width="150px";
 
-/* Selection */
-function select(el){
-  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
-  active=el; el.classList.add("active");
+    makeDraggable(img);
+    addResizer(img);
+
+    canvas.appendChild(img);
+  }
+  reader.readAsDataURL(e.target.files[0]);
 }
 
-canvas.onclick=e=>{
-  const el=e.target.closest(".textBox,.imgBox");
-  if(el) select(el);
-};
+// STYLE APPLY FIXED
+function applyStyle(){
+  if(!selected) return;
 
-/* Drag & Resize */
-function setupElement(el){
-  select(el);
+  selected.style.fontSize=fontSize.value+"px";
+  selected.style.color=fontColor.value;
+  selected.style.fontWeight=fontWeight.value;
+}
+
+// DRAG LOGIC
+function makeDraggable(el){
+  el.onclick=()=> selected=el;
+
   let offsetX,offsetY;
 
-  el.addEventListener("touchstart",e=>{
-    select(el);
-    if(e.touches.length===1){
-      offsetX=e.touches[0].clientX-el.offsetLeft;
-      offsetY=e.touches[0].clientY-el.offsetTop;
-    }
-    if(e.touches.length===2){
-      startDist=getDistance(e.touches);
-      startSize=el.offsetWidth;
-    }
-  });
-
-  el.addEventListener("touchmove",e=>{
-    e.preventDefault();
-    if(e.touches.length===1){
-      el.style.left=(e.touches[0].clientX-offsetX)+"px";
-      el.style.top=(e.touches[0].clientY-offsetY)+"px";
-    }
-    if(e.touches.length===2){
-      let newSize=startSize+(getDistance(e.touches)-startDist);
-      if(el.classList.contains("imgBox")) el.querySelector("img").style.width=newSize+"px";
-      else el.style.fontSize=newSize/5+"px";
-    }
-  });
-
   el.onmousedown=e=>{
-    select(el);
-    offsetX=e.offsetX; offsetY=e.offsetY;
-    document.onmousemove=e=>{
-      el.style.left=(e.pageX-offsetX)+"px";
-      el.style.top=(e.pageY-offsetY)+"px";
-    };
-    document.onmouseup=()=>document.onmousemove=null;
-  };
+    offsetX=e.offsetX;
+    offsetY=e.offsetY;
+
+    document.onmousemove=ev=>{
+      el.style.left=(ev.pageX-canvas.offsetLeft-offsetX)+"px";
+      el.style.top=(ev.pageY-canvas.offsetTop-offsetY)+"px";
+    }
+
+    document.onmouseup=()=> document.onmousemove=null;
+  }
 }
 
-function getDistance(t){ return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
+// RESIZE
+function addResizer(el){
+  const res=document.createElement("div");
+  res.className="resizer";
+  el.appendChild(res);
 
-/* Style Controls */
-function changeColor(){ if(active?.classList.contains("textBox")) active.style.color=colorPicker.value; }
-function changeFont(){ if(active?.classList.contains("textBox")) active.style.fontFamily=fontPicker.value; }
-function changeWeight(){ if(active?.classList.contains("textBox")) active.style.fontWeight=weightPicker.value; }
+  res.onmousedown=e=>{
+    e.stopPropagation();
 
-/* Delete */
-function deleteElement(){ if(active) active.remove(); }
+    document.onmousemove=ev=>{
+      el.style.width=ev.pageX-el.offsetLeft+"px";
+    }
 
-/* PDF */
-function downloadPDF(){ html2pdf().from(canvas).save("invitation.pdf"); }
+    document.onmouseup=()=> document.onmousemove=null;
+  }
+}
 
-/* ===================== DRAFT SAVE SYSTEM ===================== */
-
+// SAVE MULTIPLE DRAFTS
 function saveDraft(){
+  const name=prompt("Enter Draft Name:");
+  if(!name) return;
 
-  const data={
-    bg: canvas.style.backgroundImage,
-    elements:[]
-  };
-
-  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
-    const item={
-      type: el.classList.contains("textBox")?"text":"image",
-      html: el.innerHTML,
-      top: el.style.top,
-      left: el.style.left,
-      fontSize: el.style.fontSize,
-      color: el.style.color,
-      fontFamily: el.style.fontFamily,
-      fontWeight: el.style.fontWeight,
-      width: el.querySelector("img")?.style.width
-    };
-    data.elements.push(item);
-  });
-
-  localStorage.setItem("invitationDraft", JSON.stringify(data));
-  alert("Draft Saved ✅");
+  localStorage.setItem("draft_"+name, canvas.innerHTML);
+  alert("Draft Saved!");
 }
 
+// LOAD DRAFT
 function loadDraft(){
+  let drafts=[];
+  for(let key in localStorage){
+    if(key.startsWith("draft_")) drafts.push(key.replace("draft_",""));
+  }
 
-  const saved=localStorage.getItem("invitationDraft");
-  if(!saved) return alert("No Draft Found");
+  const name=prompt("Available Drafts:\n"+drafts.join("\n")+"\n\nEnter name:");
+  if(!name) return;
 
-  const data=JSON.parse(saved);
-  canvas.innerHTML="";
-  canvas.style.backgroundImage=data.bg;
+  canvas.innerHTML=localStorage.getItem("draft_"+name);
 
-  data.elements.forEach(item=>{
-    const el=document.createElement("div");
-    el.className=item.type==="text"?"textBox":"imgBox";
-    el.innerHTML=item.html;
-    el.style.top=item.top;
-    el.style.left=item.left;
-    el.style.fontSize=item.fontSize;
-    el.style.color=item.color;
-    el.style.fontFamily=item.fontFamily;
-    el.style.fontWeight=item.fontWeight;
-
-    if(item.type==="image")
-      el.querySelector("img").style.width=item.width;
-
-    canvas.appendChild(el);
-    setupElement(el);
+  // Reattach drag
+  document.querySelectorAll(".draggable").forEach(el=>{
+    makeDraggable(el);
+    addResizer(el);
   });
-
-  alert("Draft Loaded ✅");
 }
-
-function clearDraft(){
-  localStorage.removeItem("invitationDraft");
-  alert("Draft Cleared");
-}
-
 </script>
+
 </body>
 </html>
