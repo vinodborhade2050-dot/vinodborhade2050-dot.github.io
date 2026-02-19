@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Invitation Editor PRO+</title>
+<title>Invitation Editor Stable</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Hind:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
 
@@ -13,9 +13,19 @@
 <style>
 body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
 
-.toolbar{background:white;padding:10px;display:flex;gap:8px;flex-wrap:wrap;box-shadow:0 2px 10px rgba(0,0,0,.1);}
-button,input,select{padding:6px;border-radius:6px;border:1px solid #ccc;}
-button{background:#c62828;color:white;border:none;cursor:pointer;}
+.toolbar{
+  background:white;padding:10px;display:flex;
+  gap:8px;flex-wrap:wrap;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+button,input,select{
+  padding:6px;border-radius:6px;border:1px solid #ccc;
+}
+
+button{
+  background:#c62828;color:white;border:none;cursor:pointer;
+}
 
 .canvas{
   width:500px;height:700px;margin:20px auto;background:#ddd;
@@ -26,27 +36,30 @@ button{background:#c62828;color:white;border:none;cursor:pointer;}
 
 .textBox,.imgBox{
   position:absolute;
-  transform:translate(-50%,-50%);
   cursor:move;
   border:1px dashed transparent;
 }
 
-.textBox{font-size:30px;color:#000;padding:4px;}
-.imgBox img{width:150px;}
+.textBox{
+  font-size:30px;
+  color:#000;
+  padding:4px;
+}
+
+.imgBox img{
+  width:150px;
+  display:block;
+}
 
 .active{border-color:red;}
 
-.guideV,.guideH{
-  position:absolute;background:red;pointer-events:none;display:none;
-}
-.guideV{width:1px;height:100%;}
-.guideH{height:1px;width:100%;}
 </style>
 </head>
 
 <body>
 
 <div class="toolbar">
+
 <input type="file" id="bgUpload" accept="image/*">
 <input type="file" id="imgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
@@ -66,6 +79,7 @@ button{background:#c62828;color:white;border:none;cursor:pointer;}
 <button onclick="saveDraft()">Save</button>
 <button onclick="loadDraft()">Load</button>
 <button onclick="downloadImage()">Download</button>
+
 </div>
 
 <div id="canvas" class="canvas"></div>
@@ -76,34 +90,34 @@ const canvas=document.getElementById("canvas");
 
 let active=null,startDist=0,startWidth=0;
 
-/* ---------- Background ---------- */
+/* Background */
 bgUpload.onchange=e=>{
  const r=new FileReader();
  r.onload=()=>canvas.style.backgroundImage=`url(${r.result})`;
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* ---------- Add Text ---------- */
+/* Add Text */
 function addText(){
  const d=document.createElement("div");
  d.className="textBox";
  d.innerText="|| शुभ विवाह ||";
- d.style.left="50%";
- d.style.top="50%";
+ d.style.left="100px";
+ d.style.top="100px";
  d.style.fontFamily="'Tiro Devanagari Marathi'";
  canvas.appendChild(d);
  setupDrag(d);
  select(d);
 }
 
-/* ---------- Upload Image ---------- */
+/* Upload Image */
 imgUpload.onchange=e=>{
  const r=new FileReader();
  r.onload=()=>{
    const box=document.createElement("div");
    box.className="imgBox";
-   box.style.left="50%";
-   box.style.top="50%";
+   box.style.left="120px";
+   box.style.top="120px";
 
    const img=document.createElement("img");
    img.src=r.result;
@@ -117,9 +131,10 @@ imgUpload.onchange=e=>{
  r.readAsDataURL(e.target.files[0]);
 };
 
-/* ---------- Select ---------- */
+/* Select */
 function select(el){
- document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
+ document.querySelectorAll(".textBox,.imgBox")
+   .forEach(e=>e.classList.remove("active"));
  active=el;
  el.classList.add("active");
 
@@ -134,24 +149,25 @@ canvas.onclick=e=>{
  if(el) select(el);
 };
 
-/* ---------- Drag ---------- */
+/* Drag */
 function setupDrag(el){
+
  el.onmousedown=e=>{
    select(el);
-   const rect=canvas.getBoundingClientRect();
+   let offsetX=e.offsetX;
+   let offsetY=e.offsetY;
 
    document.onmousemove=ev=>{
-     let x=ev.clientX-rect.left;
-     let y=ev.clientY-rect.top;
-     el.style.left=x+"px";
-     el.style.top=y+"px";
+     el.style.left=(ev.pageX-offsetX)+"px";
+     el.style.top=(ev.pageY-offsetY)+"px";
    };
 
    document.onmouseup=()=>document.onmousemove=null;
  };
+
 }
 
-/* ---------- Pinch Resize for Image ---------- */
+/* Pinch Resize Image */
 function setupPinchResize(el){
 
  el.addEventListener("touchstart",e=>{
@@ -173,6 +189,7 @@ function setupPinchResize(el){
 
 }
 
+/* Helpers */
 function getDistance(t){
  return Math.hypot(
    t[0].clientX-t[1].clientX,
@@ -180,7 +197,7 @@ function getDistance(t){
  );
 }
 
-/* ---------- Text Controls ---------- */
+/* Text Controls */
 function changeColor(){
  if(active?.classList.contains("textBox"))
    active.style.color=colorPicker.value;
@@ -196,7 +213,7 @@ function changeFontSize(){
    active.style.fontSize=fontSizeInput.value+"px";
 }
 
-/* ---------- Download ---------- */
+/* Download */
 function downloadImage(){
  document.fonts.ready.then(()=>{
    html2canvas(canvas,{scale:2}).then(c=>{
@@ -208,10 +225,8 @@ function downloadImage(){
  });
 }
 
-/* ================= DRAFT FIXED ================= */
-
+/* Save Draft */
 function saveDraft(){
-
  const data={
    bg:canvas.style.backgroundImage,
    elements:[]
@@ -239,6 +254,7 @@ function saveDraft(){
  alert("Draft Saved ✅");
 }
 
+/* Load Draft */
 function loadDraft(){
 
  const saved=localStorage.getItem("draft");
@@ -270,7 +286,7 @@ function loadDraft(){
  alert("Draft Loaded ✅");
 }
 
-/* ---------- RGB to HEX ---------- */
+/* RGB to HEX */
 function rgbToHex(rgb){
  const nums=rgb.match(/\d+/g);
  return "#"+((1<<24)+(parseInt(nums[0])<<16)+(parseInt(nums[1])<<8)+parseInt(nums[2])).toString(16).slice(1);
