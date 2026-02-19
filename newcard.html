@@ -312,6 +312,13 @@ function loadDraft(){
     const el=document.createElement("div");
     el.className=item.type==="text"?"textBox":"imgBox";
     el.innerHTML=item.html;
+    if(item.type==="text"){
+    el.ondblclick = () => {
+        let t = prompt("Edit", el.innerText);
+        if(t !== null) el.innerText = t;
+    };
+}
+
 
     el.style.top=item.top;
     el.style.left=item.left;
