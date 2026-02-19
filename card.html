@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Invitation Editor</title>
+<title>Invitation Editor Pro</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
 
@@ -36,24 +36,25 @@ button{
   cursor:pointer;
 }
 
-/* Canvas */
 .canvas{
   width:500px;
   height:700px;
   margin:20px auto;
-  background:url("https://i.imgur.com/7bK9G6v.png") center/cover;
+  background:#ddd;
   position:relative;
   border-radius:12px;
   overflow:hidden;
+  background-size:cover;
+  background-position:center;
 }
 
-/* Text boxes */
+/* Text */
 .textBox{
   position:absolute;
-  color:#fff;
   font-size:24px;
+  color:#fff;
   cursor:move;
-  padding:5px;
+  padding:4px;
   border:1px dashed transparent;
 }
 
@@ -68,6 +69,8 @@ button{
 
 <!-- Toolbar -->
 <div class="toolbar">
+
+<input type="file" id="upload" accept="image/*">
 
 <button onclick="addText()">Add Text</button>
 
@@ -91,7 +94,19 @@ button{
 
 let active = null;
 
-/* Add text */
+/* Upload Background */
+upload.onchange = e=>{
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = ()=>{
+    canvas.style.backgroundImage = `url(${reader.result})`;
+  };
+
+  reader.readAsDataURL(file);
+};
+
+/* Add Text */
 function addText(){
   const div = document.createElement("div");
   div.className="textBox";
@@ -100,42 +115,40 @@ function addText(){
   div.style.left="100px";
 
   canvas.appendChild(div);
-
   select(div);
   makeDraggable(div);
 
-  div.ondblclick = () => {
-    const text = prompt("Enter Text", div.innerText);
-    if(text) div.innerText = text;
+  div.ondblclick = ()=>{
+    const txt = prompt("Edit Text", div.innerText);
+    if(txt) div.innerText = txt;
   };
 }
 
 /* Select */
-function select(el){
-  document.querySelectorAll(".textBox").forEach(b=>b.classList.remove("active"));
-  active = el;
-  el.classList.add("active");
-}
-
-/* Click select */
 canvas.onclick = e=>{
   if(e.target.classList.contains("textBox")){
     select(e.target);
   }
 };
 
-/* Dragging */
+function select(el){
+  document.querySelectorAll(".textBox").forEach(b=>b.classList.remove("active"));
+  active = el;
+  el.classList.add("active");
+}
+
+/* Drag */
 function makeDraggable(el){
-  let offsetX, offsetY;
+  let x,y;
 
   el.onmousedown = e=>{
     select(el);
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
+    x = e.offsetX;
+    y = e.offsetY;
 
     document.onmousemove = e=>{
-      el.style.left = (e.pageX - canvas.offsetLeft - offsetX)+"px";
-      el.style.top = (e.pageY - canvas.offsetTop - offsetY)+"px";
+      el.style.left = (e.pageX - canvas.offsetLeft - x)+"px";
+      el.style.top = (e.pageY - canvas.offsetTop - y)+"px";
     };
 
     document.onmouseup = ()=> document.onmousemove=null;
