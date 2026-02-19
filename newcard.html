@@ -204,7 +204,10 @@ function addDeleteButton(el){
   canvas.addEventListener("click", function(e){
   if(!e.target.closest(".textBox,.imgBox")){
     document.querySelectorAll(".textBox,.imgBox")
-      .forEach(el=>el.classList.remove("active"));
+      .forEach(el=>{el.classList.remove("active");
+                   const btn = el.querySelector(".deleteBtn");
+        if(btn) btn.remove();
+                   });
   }
 });
 }
