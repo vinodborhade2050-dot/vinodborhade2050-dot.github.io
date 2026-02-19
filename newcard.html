@@ -2,27 +2,20 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marathi Wedding Card Builder</title>
-
+<title>Wedding Card Editor</title>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
-
 @font-face{
   font-family: ganesha;
   src:url("fonts/ganesha.ttf");
 }
-
 @font-face{
   font-family: matarani;
   src:url("fonts/matarani.ttf");
 }
 
-body{
-  margin:0;
-  font-family: Arial;
-  background:#f3f3f3;
-}
+body{margin:0;font-family:Arial;background:#eee;}
 
 .controls{
   background:white;
@@ -32,11 +25,8 @@ body{
   z-index:1000;
 }
 
-.controls input, select, button{
-  width:100%;
-  padding:10px;
-  margin:6px 0;
-  font-size:16px;
+.controls input,select,button{
+  width:100%;padding:10px;margin:5px 0;
 }
 
 .card{
@@ -56,11 +46,13 @@ body{
 .textBox{
   position:absolute;
   cursor:move;
-  user-select:none;
   font-weight:bold;
-  color:#000;
+  user-select:none;
 }
 
+.selected{
+  border:2px dashed red;
+}
 </style>
 </head>
 
@@ -68,24 +60,20 @@ body{
 
 <div class="controls">
 
-<label>Upload Card Template</label>
 <input type="file" onchange="loadBackground(event)">
+<input type="text" id="textInput" placeholder="Type Marathi text">
 
-<label>Enter Marathi Text</label>
-<input type="text" id="textInput" placeholder="उदा: शुभ विवाह">
-
-<label>Select Font</label>
 <select id="fontSelect">
-  <option value="ganesha">Ganesha</option>
-  <option value="matarani">Matarani</option>
-  <option value="Arial">Arial</option>
+<option value="ganesha">Ganesha</option>
+<option value="matarani">Matarani</option>
+<option value="Arial">Arial</option>
 </select>
 
-<label>Font Size</label>
-<input type="number" id="fontSize" value="28">
+<input type="number" id="fontSize" value="30">
 
 <button onclick="addText()">Add Text</button>
-<button onclick="downloadCard()">Download Card</button>
+<button onclick="deleteText()">Delete Selected</button>
+<button onclick="downloadCard()">Download</button>
 
 </div>
 
@@ -93,79 +81,125 @@ body{
 
 <script>
 
-function loadBackground(event){
-  const reader = new FileReader();
-  reader.onload = function(){
-    const img = new Image();
-    img.onload = function(){
-      const card = document.getElementById("card");
+let selected = null;
 
-      // Auto adjust card ratio to template
-      card.style.aspectRatio = img.width + "/" + img.height;
-
-      card.style.backgroundImage = "url("+reader.result+")";
-    }
-    img.src = reader.result;
-  }
-  reader.readAsDataURL(event.target.files[0]);
+function loadBackground(e){
+ let reader=new FileReader();
+ reader.onload=function(){
+   let img=new Image();
+   img.onload=function(){
+     card.style.aspectRatio=img.width+"/"+img.height;
+     card.style.backgroundImage="url("+reader.result+")";
+   }
+   img.src=reader.result;
+ }
+ reader.readAsDataURL(e.target.files[0]);
 }
 
 function addText(){
-  const text = document.getElementById("textInput").value;
-  if(!text) return;
+ let div=document.createElement("div");
+ div.className="textBox";
+ div.innerText=textInput.value;
+ div.style.fontFamily=fontSelect.value;
+ div.style.fontSize=fontSize.value+"px";
+ div.style.top="100px";
+ div.style.left="100px";
 
-  const font = document.getElementById("fontSelect").value;
-  const size = document.getElementById("fontSize").value;
+ enableSelect(div);
+ enableDrag(div);
+ enablePinch(div);
 
-  const div = document.createElement("div");
-  div.className="textBox";
-  div.innerText = text;
-  div.style.fontFamily = font;
-  div.style.fontSize = size+"px";
-  div.style.top = "50px";
-  div.style.left = "50px";
-
-  makeDraggable(div);
-
-  document.getElementById("card").appendChild(div);
+ card.appendChild(div);
 }
 
-function makeDraggable(el){
-  let pos1=0,pos2=0,pos3=0,pos4=0;
+function enableSelect(el){
+ el.onclick=function(e){
+   e.stopPropagation();
+   if(selected) selected.classList.remove("selected");
+   selected=el;
+   el.classList.add("selected");
+ }
+}
 
-  el.onpointerdown = dragStart;
+card.onclick=function(){
+ if(selected) selected.classList.remove("selected");
+ selected=null;
+}
 
-  function dragStart(e){
-    e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onpointerup = stopDrag;
-    document.onpointermove = drag;
-  }
+function deleteText(){
+ if(selected){
+   selected.remove();
+   selected=null;
+ }
+}
 
-  function drag(e){
-    e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    el.style.top = (el.offsetTop - pos2) + "px";
-    el.style.left = (el.offsetLeft - pos1) + "px";
-  }
+function enableDrag(el){
+ let startX,startY;
 
-  function stopDrag(){
-    document.onpointerup = null;
-    document.onpointermove = null;
-  }
+ el.addEventListener("touchstart",e=>{
+   if(e.touches.length==1){
+     startX=e.touches[0].clientX-el.offsetLeft;
+     startY=e.touches[0].clientY-el.offsetTop;
+   }
+ });
+
+ el.addEventListener("touchmove",e=>{
+   if(e.touches.length==1 && selected===el){
+     el.style.left=e.touches[0].clientX-startX+"px";
+     el.style.top=e.touches[0].clientY-startY+"px";
+   }
+ });
+
+ // Desktop
+ el.onmousedown=function(e){
+   startX=e.clientX-el.offsetLeft;
+   startY=e.clientY-el.offsetTop;
+
+   document.onmousemove=function(e){
+     if(selected===el){
+       el.style.left=e.clientX-startX+"px";
+       el.style.top=e.clientY-startY+"px";
+     }
+   }
+
+   document.onmouseup=function(){
+     document.onmousemove=null;
+   }
+ }
+}
+
+function enablePinch(el){
+ let initialDistance,initialSize;
+
+ el.addEventListener("touchstart",e=>{
+   if(e.touches.length==2){
+     initialDistance=getDistance(e);
+     initialSize=parseFloat(window.getComputedStyle(el).fontSize);
+   }
+ });
+
+ el.addEventListener("touchmove",e=>{
+   if(e.touches.length==2 && selected===el){
+     let newDistance=getDistance(e);
+     let scale=newDistance/initialDistance;
+     el.style.fontSize=(initialSize*scale)+"px";
+   }
+ });
+}
+
+function getDistance(e){
+ let dx=e.touches[0].clientX-e.touches[1].clientX;
+ let dy=e.touches[0].clientY-e.touches[1].clientY;
+ return Math.sqrt(dx*dx+dy*dy);
 }
 
 function downloadCard(){
-  html2canvas(document.getElementById("card")).then(canvas=>{
-    const link = document.createElement("a");
-    link.download = "marathi_wedding_card.png";
-    link.href = canvas.toDataURL();
-    link.click();
-  });
+ html2canvas(card).then(canvas=>{
+   let link=document.createElement("a");
+   link.download="card.png";
+   link.href=canvas.toDataURL();
+   link.click();
+ });
 }
 
 </script>
