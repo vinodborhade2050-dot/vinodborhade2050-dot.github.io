@@ -6,68 +6,31 @@
 
 <title>Invitation Editor PRO</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
-body{
-  margin:0;
-  font-family:'Noto Sans Devanagari';
-  background:#eee;
-}
+body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
 
 .toolbar{
-  background:white;
-  padding:10px;
-  display:flex;
-  gap:10px;
-  overflow:auto;
-  box-shadow:0 2px 10px rgba(0,0,0,.1);
+  background:white;padding:10px;display:flex;gap:10px;
+  overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-button{
-  padding:8px 12px;
-  border:none;
-  background:#e57373;
-  color:white;
-  cursor:pointer;
-}
+button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointer;}
 
 .canvas{
-  width:500px;
-  height:700px;
-  margin:20px auto;
-  background:#ddd;
-  position:relative;
-  border-radius:12px;
-  overflow:hidden;
-  background-size:cover;
-  background-position:center;
-  touch-action:none;
+  width:500px;height:700px;margin:20px auto;background:#ddd;
+  position:relative;border-radius:12px;overflow:hidden;
+  background-size:cover;background-position:center;touch-action:none;
 }
 
-.textBox, .imgBox{
-  position:absolute;
-  cursor:move;
-  border:1px dashed transparent;
-}
-
-.textBox{
-  font-size:24px;
-  color:#fff;
-  padding:4px;
-}
-
-.imgBox img{
-  width:120px;
-  height:auto;
-}
-
-.active{
-  border-color:red;
-}
+.textBox,.imgBox{position:absolute;cursor:move;border:1px dashed transparent;}
+.textBox{font-size:24px;color:#fff;padding:4px;}
+.imgBox img{width:120px;}
+.active{border-color:red;}
 
 </style>
 </head>
@@ -87,6 +50,16 @@ button{
 <option value="'Noto Sans Devanagari'">Modern</option>
 </select>
 
+<select id="weightPicker" onchange="changeWeight()">
+<option value="300">Light</option>
+<option value="400">Normal</option>
+<option value="700">Bold</option>
+</select>
+
+<button onclick="saveDraft()">💾 Save</button>
+<button onclick="loadDraft()">🔄 Load</button>
+<button onclick="clearDraft()">🗑 Clear</button>
+
 <button onclick="deleteElement()">Delete</button>
 <button onclick="downloadPDF()">Download</button>
 
@@ -96,9 +69,7 @@ button{
 
 <script>
 
-let active=null;
-let startDist=0;
-let startSize=0;
+let active=null,startDist=0,startSize=0;
 
 /* Background Upload */
 bgUpload.onchange=e=>{
@@ -112,53 +83,48 @@ function addText(){
   const d=document.createElement("div");
   d.className="textBox";
   d.innerText="डबल क्लिक करून मजकूर बदला";
-  d.style.top="100px";
-  d.style.left="100px";
+  d.style.top="100px"; d.style.left="100px";
+  canvas.appendChild(d); setupElement(d);
 
-  canvas.appendChild(d);
-  setupElement(d);
-
-  d.ondblclick=()=>{
-    let t=prompt("Edit Text",d.innerText);
-    if(t) d.innerText=t;
-  };
+  d.ondblclick=()=>{ let t=prompt("Edit",d.innerText); if(t)d.innerText=t; };
 }
 
-/* Upload Image Element */
+/* Upload Image */
 imgUpload.onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{
     const box=document.createElement("div");
     box.className="imgBox";
-
     const img=document.createElement("img");
-    img.src=r.result;
-
-    box.appendChild(img);
-    box.style.top="120px";
-    box.style.left="120px";
-
-    canvas.appendChild(box);
-    setupElement(box);
+    img.src=r.result; box.appendChild(img);
+    box.style.top="120px"; box.style.left="120px";
+    canvas.appendChild(box); setupElement(box);
   };
   r.readAsDataURL(e.target.files[0]);
 };
 
-/* Setup drag + resize */
+/* Selection */
+function select(el){
+  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
+  active=el; el.classList.add("active");
+}
+
+canvas.onclick=e=>{
+  const el=e.target.closest(".textBox,.imgBox");
+  if(el) select(el);
+};
+
+/* Drag & Resize */
 function setupElement(el){
-
   select(el);
-
   let offsetX,offsetY;
 
   el.addEventListener("touchstart",e=>{
     select(el);
-
     if(e.touches.length===1){
       offsetX=e.touches[0].clientX-el.offsetLeft;
       offsetY=e.touches[0].clientY-el.offsetTop;
     }
-
     if(e.touches.length===2){
       startDist=getDistance(e.touches);
       startSize=el.offsetWidth;
@@ -167,81 +133,102 @@ function setupElement(el){
 
   el.addEventListener("touchmove",e=>{
     e.preventDefault();
-
     if(e.touches.length===1){
       el.style.left=(e.touches[0].clientX-offsetX)+"px";
       el.style.top=(e.touches[0].clientY-offsetY)+"px";
     }
-
     if(e.touches.length===2){
-      let newDist=getDistance(e.touches);
-      let newSize=startSize+(newDist-startDist);
-
-      if(el.classList.contains("imgBox")){
-        el.querySelector("img").style.width=newSize+"px";
-      } else {
-        el.style.fontSize=newSize/5+"px";
-      }
+      let newSize=startSize+(getDistance(e.touches)-startDist);
+      if(el.classList.contains("imgBox")) el.querySelector("img").style.width=newSize+"px";
+      else el.style.fontSize=newSize/5+"px";
     }
   });
 
   el.onmousedown=e=>{
     select(el);
-    offsetX=e.offsetX;
-    offsetY=e.offsetY;
-
+    offsetX=e.offsetX; offsetY=e.offsetY;
     document.onmousemove=e=>{
       el.style.left=(e.pageX-offsetX)+"px";
       el.style.top=(e.pageY-offsetY)+"px";
     };
-
     document.onmouseup=()=>document.onmousemove=null;
   };
 }
 
-/* Select */
-function select(el){
-  document.querySelectorAll(".textBox,.imgBox")
-  .forEach(e=>e.classList.remove("active"));
-  active=el;
-  el.classList.add("active");
-}
+function getDistance(t){ return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
 
-/* Click select */
-canvas.onclick=e=>{
-  if(e.target.closest(".textBox,.imgBox")){
-    select(e.target.closest(".textBox,.imgBox"));
-  }
-};
-
-/* Distance helper */
-function getDistance(t){
-  return Math.sqrt(
-    Math.pow(t[0].clientX-t[1].clientX,2)+
-    Math.pow(t[0].clientY-t[1].clientY,2)
-  );
-}
-
-/* Color */
-function changeColor(){
-  if(active && active.classList.contains("textBox"))
-    active.style.color=colorPicker.value;
-}
-
-/* Font */
-function changeFont(){
-  if(active && active.classList.contains("textBox"))
-    active.style.fontFamily=fontPicker.value;
-}
+/* Style Controls */
+function changeColor(){ if(active?.classList.contains("textBox")) active.style.color=colorPicker.value; }
+function changeFont(){ if(active?.classList.contains("textBox")) active.style.fontFamily=fontPicker.value; }
+function changeWeight(){ if(active?.classList.contains("textBox")) active.style.fontWeight=weightPicker.value; }
 
 /* Delete */
-function deleteElement(){
-  if(active) active.remove();
+function deleteElement(){ if(active) active.remove(); }
+
+/* PDF */
+function downloadPDF(){ html2pdf().from(canvas).save("invitation.pdf"); }
+
+/* ===================== DRAFT SAVE SYSTEM ===================== */
+
+function saveDraft(){
+
+  const data={
+    bg: canvas.style.backgroundImage,
+    elements:[]
+  };
+
+  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+    const item={
+      type: el.classList.contains("textBox")?"text":"image",
+      html: el.innerHTML,
+      top: el.style.top,
+      left: el.style.left,
+      fontSize: el.style.fontSize,
+      color: el.style.color,
+      fontFamily: el.style.fontFamily,
+      fontWeight: el.style.fontWeight,
+      width: el.querySelector("img")?.style.width
+    };
+    data.elements.push(item);
+  });
+
+  localStorage.setItem("invitationDraft", JSON.stringify(data));
+  alert("Draft Saved ✅");
 }
 
-/* Download */
-function downloadPDF(){
-  html2pdf().from(canvas).save("invitation.pdf");
+function loadDraft(){
+
+  const saved=localStorage.getItem("invitationDraft");
+  if(!saved) return alert("No Draft Found");
+
+  const data=JSON.parse(saved);
+  canvas.innerHTML="";
+  canvas.style.backgroundImage=data.bg;
+
+  data.elements.forEach(item=>{
+    const el=document.createElement("div");
+    el.className=item.type==="text"?"textBox":"imgBox";
+    el.innerHTML=item.html;
+    el.style.top=item.top;
+    el.style.left=item.left;
+    el.style.fontSize=item.fontSize;
+    el.style.color=item.color;
+    el.style.fontFamily=item.fontFamily;
+    el.style.fontWeight=item.fontWeight;
+
+    if(item.type==="image")
+      el.querySelector("img").style.width=item.width;
+
+    canvas.appendChild(el);
+    setupElement(el);
+  });
+
+  alert("Draft Loaded ✅");
+}
+
+function clearDraft(){
+  localStorage.removeItem("invitationDraft");
+  alert("Draft Cleared");
 }
 
 </script>
