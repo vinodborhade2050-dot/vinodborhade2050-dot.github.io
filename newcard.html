@@ -7,10 +7,12 @@
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
+
 @font-face{
   font-family: ganesha;
   src:url("fonts/ganesha.ttf");
 }
+
 @font-face{
   font-family: matarani;
   src:url("fonts/matarani.ttf");
@@ -19,7 +21,7 @@
 body{
   margin:0;
   font-family: Arial;
-  background:#f5f5f5;
+  background:#f3f3f3;
 }
 
 .controls{
@@ -27,6 +29,7 @@ body{
   padding:10px;
   position:sticky;
   top:0;
+  z-index:1000;
 }
 
 .controls input, select, button{
@@ -37,13 +40,17 @@ body{
 }
 
 .card{
-  width:350px;
-  height:600px;
+  width:95%;
+  max-width:400px;
   margin:20px auto;
   border:2px solid #ccc;
   position:relative;
-  background-size:cover;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:center;
+  background-color:white;
   overflow:hidden;
+  aspect-ratio:2/3;
 }
 
 .textBox{
@@ -51,7 +58,9 @@ body{
   cursor:move;
   user-select:none;
   font-weight:bold;
+  color:#000;
 }
+
 </style>
 </head>
 
@@ -87,8 +96,16 @@ body{
 function loadBackground(event){
   const reader = new FileReader();
   reader.onload = function(){
-    document.getElementById("card").style.backgroundImage =
-      "url("+reader.result+")";
+    const img = new Image();
+    img.onload = function(){
+      const card = document.getElementById("card");
+
+      // Auto adjust card ratio to template
+      card.style.aspectRatio = img.width + "/" + img.height;
+
+      card.style.backgroundImage = "url("+reader.result+")";
+    }
+    img.src = reader.result;
   }
   reader.readAsDataURL(event.target.files[0]);
 }
@@ -102,11 +119,11 @@ function addText(){
 
   const div = document.createElement("div");
   div.className="textBox";
-  div.innerText=text;
-  div.style.fontFamily=font;
-  div.style.fontSize=size+"px";
-  div.style.top="50px";
-  div.style.left="50px";
+  div.innerText = text;
+  div.style.fontFamily = font;
+  div.style.fontSize = size+"px";
+  div.style.top = "50px";
+  div.style.left = "50px";
 
   makeDraggable(div);
 
@@ -144,9 +161,9 @@ function makeDraggable(el){
 
 function downloadCard(){
   html2canvas(document.getElementById("card")).then(canvas=>{
-    const link=document.createElement("a");
-    link.download="marathi_wedding_card.png";
-    link.href=canvas.toDataURL();
+    const link = document.createElement("a");
+    link.download = "marathi_wedding_card.png";
+    link.href = canvas.toDataURL();
     link.click();
   });
 }
