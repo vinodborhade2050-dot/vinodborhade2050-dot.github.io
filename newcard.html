@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Invitation Editor PRO</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
@@ -36,22 +35,15 @@ button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointe
 .textBox{
   font-size:24px;
   color:#000;
+  min-width:100px;
 }
 
-.imgBox img{
-  width:150px;
-}
+.imgBox img{ width:150px; }
 
-.active{
-  outline:2px dashed red;
-}
+.active{ outline:2px dashed red; }
 
-/* Center Guide Lines */
 .guideX,.guideY{
-  position:absolute;
-  background:red;
-  pointer-events:none;
-  display:none;
+  position:absolute;background:red;pointer-events:none;display:none;
 }
 .guideX{width:100%;height:1px;}
 .guideY{height:100%;width:1px;}
@@ -76,9 +68,17 @@ button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointe
 
 <input type="number" id="fontSize" placeholder="Font Size" onchange="changeFontSize()" style="width:90px">
 
+<select onchange="changeAlignment(this.value)">
+<option value="left">Left</option>
+<option value="center">Center</option>
+<option value="right">Right</option>
+</select>
+
+<select id="draftList"></select>
 <button onclick="saveDraft()">Save</button>
 <button onclick="loadDraft()">Load</button>
-<button onclick="clearDraft()">Clear</button>
+<button onclick="deleteDraft()">Delete Draft</button>
+
 <button onclick="downloadImage()">Download</button>
 </div>
 
@@ -94,17 +94,14 @@ const canvas=document.getElementById("canvas");
 const guideX=document.getElementById("guideX");
 const guideY=document.getElementById("guideY");
 
+/* ---------- SELECT ---------- */
 function select(el){
   document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
   active=el;
   el.classList.add("active");
-
-  if(el.classList.contains("textBox")){
-    document.getElementById("fontSize").value=parseInt(window.getComputedStyle(el).fontSize);
-    document.getElementById("colorPicker").value=rgbToHex(window.getComputedStyle(el).color);
-  }
 }
 
+/* ---------- ADD TEXT ---------- */
 function addText(){
   const d=document.createElement("div");
   d.className="textBox";
@@ -121,6 +118,7 @@ function addText(){
   };
 }
 
+/* ---------- IMAGE ---------- */
 imgUpload.onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{
@@ -137,17 +135,18 @@ imgUpload.onchange=e=>{
   r.readAsDataURL(e.target.files[0]);
 };
 
+/* ---------- BACKGROUND ---------- */
 bgUpload.onchange=e=>{
   const r=new FileReader();
   r.onload=()=>canvas.style.backgroundImage=`url(${r.result})`;
   r.readAsDataURL(e.target.files[0]);
 };
 
+/* ---------- DRAG ---------- */
 function setupElement(el){
 
   select(el);
 
-  /* Desktop Drag */
   el.onmousedown=function(e){
     select(el);
 
@@ -160,81 +159,18 @@ function setupElement(el){
     function move(ev){
       let x=ev.clientX-rect.left-offsetX;
       let y=ev.clientY-rect.top-offsetY;
-
       el.style.left=x+"px";
       el.style.top=y+"px";
-
-      showGuides(x,y,el);
     }
 
     document.addEventListener("mousemove",move);
     document.addEventListener("mouseup",()=>{
       document.removeEventListener("mousemove",move);
-      hideGuides();
     },{once:true});
   };
-
-  /* Mobile Drag + Pinch */
-  let startDist=0,startWidth=0;
-
-  el.addEventListener("touchstart",e=>{
-    select(el);
-    if(e.touches.length===2){
-      startDist=getDistance(e.touches);
-      if(el.classList.contains("imgBox"))
-        startWidth=el.querySelector("img").offsetWidth;
-    }
-  });
-
-  el.addEventListener("touchmove",e=>{
-    e.preventDefault();
-
-    const rect=canvas.getBoundingClientRect();
-
-    if(e.touches.length===1){
-      let x=e.touches[0].clientX-rect.left-50;
-      let y=e.touches[0].clientY-rect.top-20;
-
-      el.style.left=x+"px";
-      el.style.top=y+"px";
-      showGuides(x,y,el);
-    }
-
-    if(e.touches.length===2 && el.classList.contains("imgBox")){
-      let newWidth=startWidth+(getDistance(e.touches)-startDist);
-      el.querySelector("img").style.width=newWidth+"px";
-    }
-  });
-
-  el.addEventListener("touchend",hideGuides);
 }
 
-function getDistance(t){
-  return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
-}
-
-/* Alignment Guides */
-function showGuides(x,y,el){
-  const centerX=canvas.clientWidth/2;
-  const centerY=canvas.clientHeight/2;
-
-  if(Math.abs(x+el.offsetWidth/2-centerX)<5){
-    guideY.style.left=centerX+"px";
-    guideY.style.display="block";
-  } else guideY.style.display="none";
-
-  if(Math.abs(y+el.offsetHeight/2-centerY)<5){
-    guideX.style.top=centerY+"px";
-    guideX.style.display="block";
-  } else guideX.style.display="none";
-}
-
-function hideGuides(){
-  guideX.style.display="none";
-  guideY.style.display="none";
-}
-
-/* Styling */
+/* ---------- STYLE CONTROLS ---------- */
 function changeColor(){
   if(active && active.classList.contains("textBox"))
     active.style.color=document.getElementById("colorPicker").value;
@@ -250,18 +186,27 @@ function changeFontSize(){
     active.style.fontSize=document.getElementById("fontSize").value+"px";
 }
 
-/* Download Image */
+function changeAlignment(val){
+  if(active && active.classList.contains("textBox"))
+    active.style.textAlign=val;
+}
+
+/* ---------- DOWNLOAD ---------- */
 function downloadImage(){
-  html2canvas(canvas).then(canvasImg=>{
+  html2canvas(canvas).then(c=>{
     const link=document.createElement("a");
     link.download="invitation.png";
-    link.href=canvasImg.toDataURL();
+    link.href=c.toDataURL();
     link.click();
   });
 }
 
-/* Draft System */
+/* ---------- MULTI DRAFT SYSTEM (FIXED) ---------- */
+
 function saveDraft(){
+  let name=prompt("Draft Name?");
+  if(!name) return;
+
   const data={
     bg:canvas.style.backgroundImage,
     elements:[]
@@ -273,23 +218,29 @@ function saveDraft(){
       html:el.innerHTML,
       top:el.style.top,
       left:el.style.left,
-      fontSize:el.style.fontSize,
       color:el.style.color,
+      fontSize:el.style.fontSize,
       fontFamily:el.style.fontFamily,
+      textAlign:el.style.textAlign,
       width:el.querySelector("img")?.style.width
     });
   });
 
-  localStorage.setItem("invitationDraft",JSON.stringify(data));
+  localStorage.setItem("draft_"+name,JSON.stringify(data));
+  loadDraftList();
   alert("Draft Saved");
 }
 
 function loadDraft(){
-  const saved=localStorage.getItem("invitationDraft");
-  if(!saved) return alert("No Draft Found");
+  const name=document.getElementById("draftList").value;
+  if(!name) return alert("Select Draft");
+
+  const saved=localStorage.getItem("draft_"+name);
+  if(!saved) return alert("Draft Not Found");
 
   const data=JSON.parse(saved);
-  canvas.innerHTML='<div class="guideX" id="guideX"></div><div class="guideY" id="guideY"></div>';
+
+  canvas.innerHTML="";
   canvas.style.backgroundImage=data.bg;
 
   data.elements.forEach(item=>{
@@ -298,9 +249,10 @@ function loadDraft(){
     el.innerHTML=item.html;
     el.style.top=item.top;
     el.style.left=item.left;
-    el.style.fontSize=item.fontSize;
     el.style.color=item.color;
+    el.style.fontSize=item.fontSize;
     el.style.fontFamily=item.fontFamily;
+    el.style.textAlign=item.textAlign;
 
     if(item.type==="image")
       el.querySelector("img").style.width=item.width;
@@ -312,15 +264,28 @@ function loadDraft(){
   alert("Draft Loaded");
 }
 
-function clearDraft(){
-  localStorage.removeItem("invitationDraft");
-  alert("Draft Cleared");
+function deleteDraft(){
+  const name=document.getElementById("draftList").value;
+  if(!name) return;
+  localStorage.removeItem("draft_"+name);
+  loadDraftList();
 }
 
-function rgbToHex(rgb){
-  const result=rgb.match(/\d+/g);
-  return "#"+((1<<24)+(parseInt(result[0])<<16)+(parseInt(result[1])<<8)+parseInt(result[2])).toString(16).slice(1);
+function loadDraftList(){
+  const select=document.getElementById("draftList");
+  select.innerHTML="";
+  for(let i=0;i<localStorage.length;i++){
+    let key=localStorage.key(i);
+    if(key.startsWith("draft_")){
+      let option=document.createElement("option");
+      option.value=key.replace("draft_","");
+      option.textContent=key.replace("draft_","");
+      select.appendChild(option);
+    }
+  }
 }
+
+loadDraftList();
 
 </script>
 </body>
