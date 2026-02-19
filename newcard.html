@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marriage Invitation Builder</title>
+<title>Wedding Card Builder</title>
 
 <style>
 
@@ -11,52 +11,49 @@
     src: url('fonts/ams-ganesha.ttf') format('truetype');
 }
 
-/* ===== Page Layout ===== */
+/* ===== PAGE ===== */
 body{
     margin:0;
     font-family: Arial;
     background:#f5f5f5;
 }
 
-/* ===== Toolbar ===== */
+/* ===== TOOLBAR ===== */
 .toolbar{
-    position:sticky;
-    top:0;
-    z-index:1000;
     padding:10px;
     background:#333;
     color:white;
+    position:fixed;
+    top:0;
+    width:100%;
+    z-index:999;
 }
 
 .toolbar button, select{
-    padding:8px;
-    margin:5px;
+    padding:6px;
+    margin:4px;
 }
 
-/* ===== Canvas ===== */
+/* ===== CANVAS ===== */
 #canvas{
-    height:calc(100vh - 70px);
-    overflow:auto;
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
+    margin-top:90px; /* space for toolbar */
     padding:20px;
+    text-align:center;
 }
 
-/* ===== Card ===== */
+/* ===== CARD ===== */
 .template{
     width:600px;
     height:850px;
     background:white;
+    border:3px solid gold;
+    margin:auto;
     position:relative;
-    border:3px solid #caa94c;
 }
 
-/* ===== Text ===== */
+/* ===== TEXT BOX ===== */
 .text-box{
     position:absolute;
-    min-width:80px;
-    min-height:30px;
     padding:5px;
     cursor:move;
     font-size:22px;
@@ -86,8 +83,8 @@ body{
 
 <div class="toolbar">
     <button onclick="addText()">Add Text</button>
-    <button onclick="saveDraft()">💾 Save</button>
-    <button onclick="clearDraft()">🗑 Clear</button>
+    <button onclick="saveDraft()">Save</button>
+    <button onclick="clearDraft()">Clear</button>
 
     Font:
     <select id="fontSelect">
@@ -105,13 +102,11 @@ body{
 
 <script>
 
-let selected=null;
-let offsetX, offsetY;
-let resizing=false;
+let selected=null, offsetX, offsetY, resizing=false;
 
-/* ===== Add Text ===== */
+/* ADD TEXT */
 function addText(){
-    createTextBox({
+    createBox({
         text:"Edit Text",
         left:100,
         top:100,
@@ -120,52 +115,49 @@ function addText(){
     });
 }
 
-function createTextBox(data){
+function createBox(d){
     let box=document.createElement("div");
     box.className="text-box";
     box.contentEditable=true;
-    box.innerText=data.text;
+    box.innerText=d.text;
 
-    box.style.left=data.left+"px";
-    box.style.top=data.top+"px";
-    box.style.fontFamily=data.font;
-    box.style.fontSize=data.size+"px";
+    box.style.left=d.left+"px";
+    box.style.top=d.top+"px";
+    box.style.fontFamily=d.font;
+    box.style.fontSize=d.size+"px";
 
-    let resize=document.createElement("div");
-    resize.className="resize";
-    box.appendChild(resize);
+    let r=document.createElement("div");
+    r.className="resize";
+    box.appendChild(r);
 
-    document.getElementById("template").appendChild(box);
-    box.onclick=()=>selectBox(box);
+    template.appendChild(box);
+    box.onclick=()=>select(box);
 }
 
-/* ===== Select ===== */
-function selectBox(box){
-    document.querySelectorAll(".text-box").forEach(e=>e.classList.remove("active"));
-    selected=box;
-    box.classList.add("active");
+function select(b){
+    document.querySelectorAll(".text-box").forEach(x=>x.classList.remove("active"));
+    selected=b;
+    b.classList.add("active");
 }
 
-/* ===== Drag ===== */
-document.addEventListener("mousedown", e=>{
+/* DRAG */
+document.addEventListener("mousedown",e=>{
     if(e.target.classList.contains("text-box")){
-        selectBox(e.target);
+        select(e.target);
         offsetX=e.clientX-selected.offsetLeft;
         offsetY=e.clientY-selected.offsetTop;
     }
-
     if(e.target.classList.contains("resize")){
         resizing=true;
         selected=e.target.parentElement;
     }
 });
 
-document.addEventListener("mousemove", e=>{
+document.addEventListener("mousemove",e=>{
     if(selected && !resizing && e.buttons===1){
         selected.style.left=(e.clientX-offsetX)+"px";
         selected.style.top=(e.clientY-offsetY)+"px";
     }
-
     if(resizing){
         selected.style.width=e.offsetX+"px";
         selected.style.height=e.offsetY+"px";
@@ -174,47 +166,44 @@ document.addEventListener("mousemove", e=>{
 
 document.addEventListener("mouseup",()=>resizing=false);
 
-/* ===== Delete ===== */
-document.addEventListener("keydown", e=>{
-    if(e.key==="Delete" && selected){
-        selected.remove();
-    }
+/* DELETE */
+document.addEventListener("keydown",e=>{
+    if(e.key==="Delete" && selected) selected.remove();
 });
 
-/* ===== Font & Size ===== */
+/* FONT SIZE */
 fontSelect.onchange=()=>selected && (selected.style.fontFamily=fontSelect.value);
 sizeSlider.oninput=()=>selected && (selected.style.fontSize=sizeSlider.value+"px");
 
-
-/* ===== Save Draft ===== */
+/* SAVE DRAFT */
 function saveDraft(){
     let data=[];
-    document.querySelectorAll(".text-box").forEach(box=>{
+    document.querySelectorAll(".text-box").forEach(b=>{
         data.push({
-            text:box.innerText,
-            left:box.offsetLeft,
-            top:box.offsetTop,
-            font:box.style.fontFamily,
-            size:parseInt(box.style.fontSize)
+            text:b.innerText,
+            left:b.offsetLeft,
+            top:b.offsetTop,
+            font:b.style.fontFamily,
+            size:parseInt(b.style.fontSize)
         });
     });
-    localStorage.setItem("weddingDraft",JSON.stringify(data));
-    alert("Draft Saved");
+    localStorage.setItem("draft",JSON.stringify(data));
+    alert("Saved");
 }
 
-/* ===== Load Draft ===== */
-function loadDraft(){
-    let saved=localStorage.getItem("weddingDraft");
-    if(!saved) return;
-    JSON.parse(saved).forEach(createTextBox);
+/* LOAD */
+function load(){
+    let d=localStorage.getItem("draft");
+    if(!d) return;
+    JSON.parse(d).forEach(createBox);
 }
 
 function clearDraft(){
-    localStorage.removeItem("weddingDraft");
+    localStorage.removeItem("draft");
     location.reload();
 }
 
-window.onload=loadDraft;
+window.onload=load;
 
 </script>
 
