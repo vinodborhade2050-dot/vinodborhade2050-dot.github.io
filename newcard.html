@@ -7,6 +7,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&family=Baloo+2:wght@400;600;800&family=Hind:wght@400;700&family=Mukta:wght@300;400;600;700&family=Rasa:wght@400;700&family=Kalapi&family=Tangerine:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Kalam:wght@300;400;700&family=Mukta+Vaani:wght@400;600;700&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -71,6 +72,16 @@ button{
 
 <input type="color" id="colorPicker" onchange="changeColor()">
 <select id="fontPicker" onchange="changeFont()">
+  <option value="'Yatra One', cursive">Yatra One (Decor)</option>
+  <option value="'Kalam', cursive">Kalam (Stylish)</option>
+  <option value="'Mukta Vaani', sans-serif">Mukta Vaani (Soft)</option>
+
+  <!-- readable but not decorative -->
+  <option value="'Tiro Devanagari Marathi', serif">Tiro Marathi</option>
+  <option value="'Noto Serif Devanagari', serif">Noto Serif Devanagari</option>
+  <option value="'Noto Sans Devanagari', sans-serif">Noto Sans Devanagari</option>
+  <option value="'Hind', sans-serif">Hind (Bold)</option>
+
   <option value="'Tiro Devanagari Marathi', serif">Traditional Marathi</option>
   <option value="'Noto Serif Devanagari', serif">Elegant Serif</option>
   <option value="'Yatra One', cursive">Decorative Script</option>
