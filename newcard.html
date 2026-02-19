@@ -142,14 +142,53 @@ button{
 
 let active=null;
 const canvas=document.getElementById("canvas");
+let selectedElement = null;
 
 /* ================= SELECT ================= */
-
 function select(el){
+
   document.querySelectorAll(".textBox,.imgBox")
-    .forEach(e=>e.classList.remove("active"));
-  active=el;
+    .forEach(e=>{
+      e.classList.remove("active");
+
+      // remove old delete button if exists
+      let btn = e.querySelector(".deleteBtn");
+      if(btn) btn.remove();
+    });
+
+  selectedElement = el;
   el.classList.add("active");
+
+  addDeleteButton(el);
+}
+
+function addDeleteButton(el){
+
+  const btn = document.createElement("div");
+  btn.className = "deleteBtn";
+  btn.innerHTML = "✕";
+
+  btn.style.position = "absolute";
+  btn.style.top = "-12px";
+  btn.style.right = "-12px";
+  btn.style.width = "24px";
+  btn.style.height = "24px";
+  btn.style.background = "red";
+  btn.style.color = "white";
+  btn.style.borderRadius = "50%";
+  btn.style.display = "flex";
+  btn.style.alignItems = "center";
+  btn.style.justifyContent = "center";
+  btn.style.fontSize = "14px";
+  btn.style.cursor = "pointer";
+
+  btn.onclick = function(e){
+    e.stopPropagation();
+    el.remove();
+    selectedElement = null;
+  };
+
+  el.appendChild(btn);
 }
 
 /* ================= ADD TEXT ================= */
