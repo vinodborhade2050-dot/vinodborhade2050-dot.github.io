@@ -17,12 +17,24 @@ body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
   overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointer;}
+button{
+  padding:8px 12px;
+  border:none;
+  background:#e57373;
+  color:white;
+  cursor:pointer;
+}
 
 .canvas{
-  width:500px;height:700px;margin:20px auto;
-  background:#fff;position:relative;border-radius:12px;
-  overflow:hidden;background-size:cover;background-position:center;
+  width:500px;
+  height:700px;
+  margin:20px auto;
+  background:#fff;
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background-size:cover;
+  background-position:center;
 }
 
 .textBox,.imgBox{
@@ -38,21 +50,20 @@ button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointe
   min-width:100px;
 }
 
-.imgBox img{ width:150px; }
-
-.active{ outline:2px dashed red; }
-
-.guideX,.guideY{
-  position:absolute;background:red;pointer-events:none;display:none;
+.imgBox img{
+  width:150px;
 }
-.guideX{width:100%;height:1px;}
-.guideY{height:100%;width:1px;}
+
+.active{
+  outline:2px dashed red;
+}
 </style>
 </head>
 
 <body>
 
 <div class="toolbar">
+
 <input type="file" id="bgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
 <input type="file" id="imgUpload" accept="image/*">
@@ -74,34 +85,36 @@ button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointe
 <option value="right">Right</option>
 </select>
 
+<input type="text" id="draftName" placeholder="Draft Name" style="width:120px">
+
 <select id="draftList"></select>
+
 <button onclick="saveDraft()">Save</button>
 <button onclick="loadDraft()">Load</button>
-<button onclick="deleteDraft()">Delete Draft</button>
+<button onclick="deleteDraft()">Delete</button>
 
 <button onclick="downloadImage()">Download</button>
+
 </div>
 
-<div id="canvas" class="canvas">
-<div class="guideX" id="guideX"></div>
-<div class="guideY" id="guideY"></div>
-</div>
+<div id="canvas" class="canvas"></div>
 
 <script>
 
 let active=null;
 const canvas=document.getElementById("canvas");
-const guideX=document.getElementById("guideX");
-const guideY=document.getElementById("guideY");
 
-/* ---------- SELECT ---------- */
+/* ================= SELECT ================= */
+
 function select(el){
-  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
+  document.querySelectorAll(".textBox,.imgBox")
+    .forEach(e=>e.classList.remove("active"));
   active=el;
   el.classList.add("active");
 }
 
-/* ---------- ADD TEXT ---------- */
+/* ================= ADD TEXT ================= */
+
 function addText(){
   const d=document.createElement("div");
   d.className="textBox";
@@ -109,44 +122,54 @@ function addText(){
   d.style.top="100px";
   d.style.left="100px";
   d.style.color="#000";
+
   canvas.appendChild(d);
   setupElement(d);
 
   d.ondblclick=()=>{
     let t=prompt("Edit",d.innerText);
-    if(t)d.innerText=t;
+    if(t!==null) d.innerText=t;
   };
 }
 
-/* ---------- IMAGE ---------- */
+/* ================= IMAGE ================= */
+
 imgUpload.onchange=e=>{
   const r=new FileReader();
   r.onload=()=>{
     const box=document.createElement("div");
     box.className="imgBox";
+
     const img=document.createElement("img");
     img.src=r.result;
+
     box.appendChild(img);
     box.style.top="120px";
     box.style.left="120px";
+
     canvas.appendChild(box);
     setupElement(box);
   };
   r.readAsDataURL(e.target.files[0]);
 };
 
-/* ---------- BACKGROUND ---------- */
+/* ================= BACKGROUND ================= */
+
 bgUpload.onchange=e=>{
   const r=new FileReader();
-  r.onload=()=>canvas.style.backgroundImage=`url(${r.result})`;
+  r.onload=()=>{
+    canvas.style.backgroundImage=`url(${r.result})`;
+  };
   r.readAsDataURL(e.target.files[0]);
 };
 
-/* ---------- DRAG ---------- */
+/* ================= DRAG (CENTERED) ================= */
+
 function setupElement(el){
 
   select(el);
 
+  // Desktop
   el.onmousedown=function(e){
     select(el);
 
@@ -168,9 +191,23 @@ function setupElement(el){
       document.removeEventListener("mousemove",move);
     },{once:true});
   };
+
+  // Mobile (center under finger)
+  el.addEventListener("touchmove",e=>{
+    e.preventDefault();
+
+    const rect=canvas.getBoundingClientRect();
+
+    let x=e.touches[0].clientX-rect.left-el.offsetWidth/2;
+    let y=e.touches[0].clientY-rect.top-el.offsetHeight/2;
+
+    el.style.left=x+"px";
+    el.style.top=y+"px";
+  });
 }
 
-/* ---------- STYLE CONTROLS ---------- */
+/* ================= STYLE ================= */
+
 function changeColor(){
   if(active && active.classList.contains("textBox"))
     active.style.color=document.getElementById("colorPicker").value;
@@ -191,7 +228,8 @@ function changeAlignment(val){
     active.style.textAlign=val;
 }
 
-/* ---------- DOWNLOAD ---------- */
+/* ================= DOWNLOAD IMAGE ================= */
+
 function downloadImage(){
   html2canvas(canvas).then(c=>{
     const link=document.createElement("a");
@@ -201,11 +239,26 @@ function downloadImage(){
   });
 }
 
-/* ---------- MULTI DRAFT SYSTEM (FIXED) ---------- */
+/* ================= MULTI DRAFT SYSTEM ================= */
+
+function getAllDrafts(){
+  return JSON.parse(localStorage.getItem("allInvitationDrafts") || "{}");
+}
+
+function saveAllDrafts(obj){
+  localStorage.setItem("allInvitationDrafts", JSON.stringify(obj));
+}
 
 function saveDraft(){
-  let name=prompt("Draft Name?");
-  if(!name) return;
+
+  const name=document.getElementById("draftName").value.trim();
+
+  if(!name){
+    alert("Please enter draft name");
+    return;
+  }
+
+  let drafts=getAllDrafts();
 
   const data={
     bg:canvas.style.backgroundImage,
@@ -226,27 +279,40 @@ function saveDraft(){
     });
   });
 
-  localStorage.setItem("draft_"+name,JSON.stringify(data));
+  drafts[name]=data;
+  saveAllDrafts(drafts);
+
   loadDraftList();
-  alert("Draft Saved");
+  document.getElementById("draftList").value=name;
+
+  alert("Draft Saved Successfully ✅");
 }
 
 function loadDraft(){
+
   const name=document.getElementById("draftList").value;
-  if(!name) return alert("Select Draft");
 
-  const saved=localStorage.getItem("draft_"+name);
-  if(!saved) return alert("Draft Not Found");
+  if(!name){
+    alert("Select Draft");
+    return;
+  }
 
-  const data=JSON.parse(saved);
+  let drafts=getAllDrafts();
+  if(!drafts[name]){
+    alert("Draft Not Found");
+    return;
+  }
+
+  const data=drafts[name];
 
   canvas.innerHTML="";
-  canvas.style.backgroundImage=data.bg;
+  canvas.style.backgroundImage=data.bg || "";
 
   data.elements.forEach(item=>{
     const el=document.createElement("div");
     el.className=item.type==="text"?"textBox":"imgBox";
     el.innerHTML=item.html;
+
     el.style.top=item.top;
     el.style.left=item.left;
     el.style.color=item.color;
@@ -254,34 +320,40 @@ function loadDraft(){
     el.style.fontFamily=item.fontFamily;
     el.style.textAlign=item.textAlign;
 
-    if(item.type==="image")
+    if(item.type==="image" && el.querySelector("img"))
       el.querySelector("img").style.width=item.width;
 
     canvas.appendChild(el);
     setupElement(el);
   });
 
-  alert("Draft Loaded");
+  alert("Draft Loaded Successfully ✅");
 }
 
 function deleteDraft(){
+
   const name=document.getElementById("draftList").value;
   if(!name) return;
-  localStorage.removeItem("draft_"+name);
+
+  let drafts=getAllDrafts();
+  delete drafts[name];
+  saveAllDrafts(drafts);
+
   loadDraftList();
 }
 
 function loadDraftList(){
+
   const select=document.getElementById("draftList");
   select.innerHTML="";
-  for(let i=0;i<localStorage.length;i++){
-    let key=localStorage.key(i);
-    if(key.startsWith("draft_")){
-      let option=document.createElement("option");
-      option.value=key.replace("draft_","");
-      option.textContent=key.replace("draft_","");
-      select.appendChild(option);
-    }
+
+  let drafts=getAllDrafts();
+
+  for(let key in drafts){
+    let option=document.createElement("option");
+    option.value=key;
+    option.textContent=key;
+    select.appendChild(option);
   }
 }
 
