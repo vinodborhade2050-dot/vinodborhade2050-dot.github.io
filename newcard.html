@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Invitation Editor Stable</title>
+<title>Invitation Editor PRO</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Hind:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -14,282 +14,312 @@
 body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
 
 .toolbar{
-  background:white;padding:10px;display:flex;
-  gap:8px;flex-wrap:wrap;
-  box-shadow:0 2px 10px rgba(0,0,0,.1);
+  background:white;padding:10px;display:flex;gap:10px;
+  overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-button,input,select{
-  padding:6px;border-radius:6px;border:1px solid #ccc;
-}
-
-button{
-  background:#c62828;color:white;border:none;cursor:pointer;
-}
+button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointer;}
 
 .canvas{
-  width:500px;height:700px;margin:20px auto;background:#ddd;
-  position:relative;border-radius:12px;overflow:hidden;
-  background-size:cover;background-position:center;
-  touch-action:none;
+  width:500px;height:700px;margin:20px auto;
+  background:#fff;position:relative;border-radius:12px;
+  overflow:hidden;background-size:cover;background-position:center;
 }
 
 .textBox,.imgBox{
   position:absolute;
   cursor:move;
-  border:1px dashed transparent;
+  padding:4px;
+  user-select:none;
 }
 
 .textBox{
-  font-size:30px;
+  font-size:24px;
   color:#000;
-  padding:4px;
 }
 
 .imgBox img{
   width:150px;
-  display:block;
 }
 
-.active{border-color:red;}
+.active{
+  outline:2px dashed red;
+}
 
+/* Center Guide Lines */
+.guideX,.guideY{
+  position:absolute;
+  background:red;
+  pointer-events:none;
+  display:none;
+}
+.guideX{width:100%;height:1px;}
+.guideY{height:100%;width:1px;}
 </style>
 </head>
 
 <body>
 
 <div class="toolbar">
-
 <input type="file" id="bgUpload" accept="image/*">
-<input type="file" id="imgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
+<input type="file" id="imgUpload" accept="image/*">
 
 <input type="color" id="colorPicker" onchange="changeColor()">
 
 <select id="fontPicker" onchange="changeFont()">
 <option value="'Tiro Devanagari Marathi', serif">Traditional</option>
-<option value="'Noto Serif Devanagari', serif">Classic</option>
-<option value="'Hind', sans-serif">Bold</option>
+<option value="'Noto Serif Devanagari', serif">Wedding Classic</option>
 <option value="'Yatra One', cursive">Decorative</option>
 <option value="'Noto Sans Devanagari', sans-serif">Modern</option>
 </select>
 
-<input type="number" id="fontSizeInput" value="30" min="10" max="200" onchange="changeFontSize()">
+<input type="number" id="fontSize" placeholder="Font Size" onchange="changeFontSize()" style="width:90px">
 
 <button onclick="saveDraft()">Save</button>
 <button onclick="loadDraft()">Load</button>
+<button onclick="clearDraft()">Clear</button>
 <button onclick="downloadImage()">Download</button>
-
 </div>
 
-<div id="canvas" class="canvas"></div>
+<div id="canvas" class="canvas">
+<div class="guideX" id="guideX"></div>
+<div class="guideY" id="guideY"></div>
+</div>
 
 <script>
 
+let active=null;
 const canvas=document.getElementById("canvas");
+const guideX=document.getElementById("guideX");
+const guideY=document.getElementById("guideY");
 
-let active=null,startDist=0,startWidth=0;
-
-/* Background */
-bgUpload.onchange=e=>{
- const r=new FileReader();
- r.onload=()=>canvas.style.backgroundImage=`url(${r.result})`;
- r.readAsDataURL(e.target.files[0]);
-};
-
-/* Add Text */
-function addText(){
- const d=document.createElement("div");
- d.className="textBox";
- d.innerText="|| शुभ विवाह ||";
- d.style.left="100px";
- d.style.top="100px";
- d.style.fontFamily="'Tiro Devanagari Marathi'";
- canvas.appendChild(d);
- setupDrag(d);
- select(d);
-}
-
-/* Upload Image */
-imgUpload.onchange=e=>{
- const r=new FileReader();
- r.onload=()=>{
-   const box=document.createElement("div");
-   box.className="imgBox";
-   box.style.left="120px";
-   box.style.top="120px";
-
-   const img=document.createElement("img");
-   img.src=r.result;
-   box.appendChild(img);
-
-   canvas.appendChild(box);
-   setupDrag(box);
-   setupPinchResize(box);
-   select(box);
- };
- r.readAsDataURL(e.target.files[0]);
-};
-
-/* Select */
 function select(el){
- document.querySelectorAll(".textBox,.imgBox")
-   .forEach(e=>e.classList.remove("active"));
- active=el;
- el.classList.add("active");
+  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
+  active=el;
+  el.classList.add("active");
 
- if(el.classList.contains("textBox")){
-   fontSizeInput.value=parseInt(window.getComputedStyle(el).fontSize);
-   colorPicker.value=rgbToHex(window.getComputedStyle(el).color);
- }
+  if(el.classList.contains("textBox")){
+    document.getElementById("fontSize").value=parseInt(window.getComputedStyle(el).fontSize);
+    document.getElementById("colorPicker").value=rgbToHex(window.getComputedStyle(el).color);
+  }
 }
 
-canvas.onclick=e=>{
- const el=e.target.closest(".textBox,.imgBox");
- if(el) select(el);
+function addText(){
+  const d=document.createElement("div");
+  d.className="textBox";
+  d.innerText="डबल क्लिक करून मजकूर बदला";
+  d.style.top="100px";
+  d.style.left="100px";
+  d.style.color="#000";
+  canvas.appendChild(d);
+  setupElement(d);
+
+  d.ondblclick=()=>{
+    let t=prompt("Edit",d.innerText);
+    if(t)d.innerText=t;
+  };
+}
+
+imgUpload.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=>{
+    const box=document.createElement("div");
+    box.className="imgBox";
+    const img=document.createElement("img");
+    img.src=r.result;
+    box.appendChild(img);
+    box.style.top="120px";
+    box.style.left="120px";
+    canvas.appendChild(box);
+    setupElement(box);
+  };
+  r.readAsDataURL(e.target.files[0]);
 };
 
-/* Drag */
-function setupDrag(el){
+bgUpload.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=>canvas.style.backgroundImage=`url(${r.result})`;
+  r.readAsDataURL(e.target.files[0]);
+};
 
- el.onmousedown=e=>{
-   select(el);
-   let offsetX=e.offsetX;
-   let offsetY=e.offsetY;
+function setupElement(el){
 
-   document.onmousemove=ev=>{
-     el.style.left=(ev.pageX-offsetX)+"px";
-     el.style.top=(ev.pageY-offsetY)+"px";
-   };
+  select(el);
 
-   document.onmouseup=()=>document.onmousemove=null;
- };
+  /* Desktop Drag */
+  el.onmousedown=function(e){
+    select(el);
 
+    const rect=canvas.getBoundingClientRect();
+    const elRect=el.getBoundingClientRect();
+
+    let offsetX=e.clientX-elRect.left;
+    let offsetY=e.clientY-elRect.top;
+
+    function move(ev){
+      let x=ev.clientX-rect.left-offsetX;
+      let y=ev.clientY-rect.top-offsetY;
+
+      el.style.left=x+"px";
+      el.style.top=y+"px";
+
+      showGuides(x,y,el);
+    }
+
+    document.addEventListener("mousemove",move);
+    document.addEventListener("mouseup",()=>{
+      document.removeEventListener("mousemove",move);
+      hideGuides();
+    },{once:true});
+  };
+
+  /* Mobile Drag + Pinch */
+  let startDist=0,startWidth=0;
+
+  el.addEventListener("touchstart",e=>{
+    select(el);
+    if(e.touches.length===2){
+      startDist=getDistance(e.touches);
+      if(el.classList.contains("imgBox"))
+        startWidth=el.querySelector("img").offsetWidth;
+    }
+  });
+
+  el.addEventListener("touchmove",e=>{
+    e.preventDefault();
+
+    const rect=canvas.getBoundingClientRect();
+
+    if(e.touches.length===1){
+      let x=e.touches[0].clientX-rect.left-50;
+      let y=e.touches[0].clientY-rect.top-20;
+
+      el.style.left=x+"px";
+      el.style.top=y+"px";
+      showGuides(x,y,el);
+    }
+
+    if(e.touches.length===2 && el.classList.contains("imgBox")){
+      let newWidth=startWidth+(getDistance(e.touches)-startDist);
+      el.querySelector("img").style.width=newWidth+"px";
+    }
+  });
+
+  el.addEventListener("touchend",hideGuides);
 }
 
-/* Pinch Resize Image */
-function setupPinchResize(el){
-
- el.addEventListener("touchstart",e=>{
-   if(e.touches.length===2){
-     startDist=getDistance(e.touches);
-     startWidth=el.querySelector("img").offsetWidth;
-   }
- });
-
- el.addEventListener("touchmove",e=>{
-   if(e.touches.length===2){
-     e.preventDefault();
-     let newDist=getDistance(e.touches);
-     let newWidth=startWidth+(newDist-startDist);
-     if(newWidth>30)
-       el.querySelector("img").style.width=newWidth+"px";
-   }
- });
-
-}
-
-/* Helpers */
 function getDistance(t){
- return Math.hypot(
-   t[0].clientX-t[1].clientX,
-   t[0].clientY-t[1].clientY
- );
+  return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
 }
 
-/* Text Controls */
+/* Alignment Guides */
+function showGuides(x,y,el){
+  const centerX=canvas.clientWidth/2;
+  const centerY=canvas.clientHeight/2;
+
+  if(Math.abs(x+el.offsetWidth/2-centerX)<5){
+    guideY.style.left=centerX+"px";
+    guideY.style.display="block";
+  } else guideY.style.display="none";
+
+  if(Math.abs(y+el.offsetHeight/2-centerY)<5){
+    guideX.style.top=centerY+"px";
+    guideX.style.display="block";
+  } else guideX.style.display="none";
+}
+
+function hideGuides(){
+  guideX.style.display="none";
+  guideY.style.display="none";
+}
+
+/* Styling */
 function changeColor(){
- if(active?.classList.contains("textBox"))
-   active.style.color=colorPicker.value;
+  if(active && active.classList.contains("textBox"))
+    active.style.color=document.getElementById("colorPicker").value;
 }
 
 function changeFont(){
- if(active?.classList.contains("textBox"))
-   active.style.fontFamily=fontPicker.value;
+  if(active && active.classList.contains("textBox"))
+    active.style.fontFamily=document.getElementById("fontPicker").value;
 }
 
 function changeFontSize(){
- if(active?.classList.contains("textBox"))
-   active.style.fontSize=fontSizeInput.value+"px";
+  if(active && active.classList.contains("textBox"))
+    active.style.fontSize=document.getElementById("fontSize").value+"px";
 }
 
-/* Download */
+/* Download Image */
 function downloadImage(){
- document.fonts.ready.then(()=>{
-   html2canvas(canvas,{scale:2}).then(c=>{
-     const link=document.createElement("a");
-     link.download="invitation.png";
-     link.href=c.toDataURL();
-     link.click();
-   });
- });
+  html2canvas(canvas).then(canvasImg=>{
+    const link=document.createElement("a");
+    link.download="invitation.png";
+    link.href=canvasImg.toDataURL();
+    link.click();
+  });
 }
 
-/* Save Draft */
+/* Draft System */
 function saveDraft(){
- const data={
-   bg:canvas.style.backgroundImage,
-   elements:[]
- };
+  const data={
+    bg:canvas.style.backgroundImage,
+    elements:[]
+  };
 
- document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
-   const obj={
-     type:el.classList.contains("textBox")?"text":"image",
-     html:el.innerHTML,
-     left:el.style.left,
-     top:el.style.top,
-     font:el.style.fontFamily,
-     size:el.style.fontSize,
-     color:window.getComputedStyle(el).color
-   };
+  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+    data.elements.push({
+      type:el.classList.contains("textBox")?"text":"image",
+      html:el.innerHTML,
+      top:el.style.top,
+      left:el.style.left,
+      fontSize:el.style.fontSize,
+      color:el.style.color,
+      fontFamily:el.style.fontFamily,
+      width:el.querySelector("img")?.style.width
+    });
+  });
 
-   if(obj.type==="image"){
-     obj.width=el.querySelector("img").style.width;
-   }
-
-   data.elements.push(obj);
- });
-
- localStorage.setItem("draft",JSON.stringify(data));
- alert("Draft Saved ✅");
+  localStorage.setItem("invitationDraft",JSON.stringify(data));
+  alert("Draft Saved");
 }
 
-/* Load Draft */
 function loadDraft(){
+  const saved=localStorage.getItem("invitationDraft");
+  if(!saved) return alert("No Draft Found");
 
- const saved=localStorage.getItem("draft");
- if(!saved) return alert("No Draft Found");
+  const data=JSON.parse(saved);
+  canvas.innerHTML='<div class="guideX" id="guideX"></div><div class="guideY" id="guideY"></div>';
+  canvas.style.backgroundImage=data.bg;
 
- const data=JSON.parse(saved);
- canvas.innerHTML="";
- canvas.style.backgroundImage=data.bg;
+  data.elements.forEach(item=>{
+    const el=document.createElement("div");
+    el.className=item.type==="text"?"textBox":"imgBox";
+    el.innerHTML=item.html;
+    el.style.top=item.top;
+    el.style.left=item.left;
+    el.style.fontSize=item.fontSize;
+    el.style.color=item.color;
+    el.style.fontFamily=item.fontFamily;
 
- data.elements.forEach(item=>{
-   const el=document.createElement("div");
-   el.className=item.type==="text"?"textBox":"imgBox";
-   el.innerHTML=item.html;
-   el.style.left=item.left;
-   el.style.top=item.top;
-   el.style.fontFamily=item.font;
-   el.style.fontSize=item.size;
-   el.style.color=item.color;
+    if(item.type==="image")
+      el.querySelector("img").style.width=item.width;
 
-   if(item.type==="image"){
-     el.querySelector("img").style.width=item.width;
-     setupPinchResize(el);
-   }
+    canvas.appendChild(el);
+    setupElement(el);
+  });
 
-   canvas.appendChild(el);
-   setupDrag(el);
- });
-
- alert("Draft Loaded ✅");
+  alert("Draft Loaded");
 }
 
-/* RGB to HEX */
+function clearDraft(){
+  localStorage.removeItem("invitationDraft");
+  alert("Draft Cleared");
+}
+
 function rgbToHex(rgb){
- const nums=rgb.match(/\d+/g);
- return "#"+((1<<24)+(parseInt(nums[0])<<16)+(parseInt(nums[1])<<8)+parseInt(nums[2])).toString(16).slice(1);
+  const result=rgb.match(/\d+/g);
+  return "#"+((1<<24)+(parseInt(result[0])<<16)+(parseInt(result[1])<<8)+parseInt(result[2])).toString(16).slice(1);
 }
 
 </script>
