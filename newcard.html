@@ -83,6 +83,24 @@ button{
 .active{
   outline:2px dashed red;
 }
+
+ .duplicateBtn{
+  position:absolute;
+  bottom:-10px;
+  right:-10px;
+  background:green;
+  color:white;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:1000;
+}
+ 
 </style>
 </head>
 
@@ -156,7 +174,26 @@ function select(el){
             );
   active=el; 
   el.classList.add("active"); 
-  addDeleteButton(el)
+  addDeleteButton(el);
+  // Add Duplicate button (bottom-right)
+  if(!el.querySelector(".duplicateBtn")){
+    const dup = document.createElement("div");
+    dup.className = "duplicateBtn";
+    dup.innerHTML = "⧉"; // duplicate icon
+
+    dup.onclick = function(e){
+      e.stopPropagation();
+
+      const clone = el.cloneNode(true);
+      clone.style.top = (parseInt(el.style.top || 0) + 20) + "px";
+      clone.style.left = (parseInt(el.style.left || 0) + 20) + "px";
+
+      canvas.appendChild(clone);
+      setupElement(clone); // make it movable/selectable
+    };
+
+    el.appendChild(dup);
+  }
   selectedElement = el;
 }
 function addDeleteButton(el){
@@ -207,6 +244,8 @@ function addDeleteButton(el){
       .forEach(el=>{el.classList.remove("active");
                    const btn = el.querySelector(".deleteBtn");
         if(btn) btn.remove();
+                  const dup = el.querySelector(".duplicateBtn");
+      if(dup) dup.remove();  
                    });
   }
 });
