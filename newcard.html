@@ -198,6 +198,12 @@ function addDeleteButton(el){
   });
 
   el.appendChild(btn);
+  canvas.addEventListener("click", function(e){
+  if(!e.target.closest(".textBox,.imgBox")){
+    document.querySelectorAll(".textBox,.imgBox")
+      .forEach(el=>el.classList.remove("active"));
+  }
+});
 }
 function toggleBold(){
 
