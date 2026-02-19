@@ -1,212 +1,297 @@
 <!DOCTYPE html>
-<html lang="mr">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Invitation Card Designer</title>
+<title>Invitation Card Builder</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<!-- Marathi Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{
-  font-family:'Noto Sans Devanagari';
-  background:#f5f5f5;
-  text-align:center;
+  font-family:'Noto Sans Devanagari',sans-serif;
+  margin:0;
+  display:flex;
+  background:#f4f4f4;
+}
+
+.controls{
+  width:280px;
+  background:#fff;
+  padding:15px;
+  box-shadow:0 0 10px #ccc;
+}
+
+.controls input,select,button{
+  width:100%;
+  margin:6px 0;
+  padding:6px;
 }
 
 #canvas{
-  width:800px;
-  height:1100px;
-  margin:auto;
-  border:3px dashed #aaa;
-  background-size:cover;
+  width:600px;
+  height:800px;
+  margin:20px;
+  background:#fff;
+  border:3px solid #aaa;
   position:relative;
   overflow:hidden;
 }
 
-.draggable{
+.textBox{
   position:absolute;
   cursor:move;
+  min-width:60px;
   padding:5px;
   border:1px dashed transparent;
-  user-select:none;
 }
 
-.draggable:hover{
-  border-color:#333;
+.textBox.active{ border-color:red; }
+
+.imgBox{
+  position:absolute;
+  cursor:move;
 }
 
 .resizer{
   width:12px;
   height:12px;
-  background:black;
+  background:red;
   position:absolute;
   right:-6px;
   bottom:-6px;
   cursor:se-resize;
-}
-
-.controls{
-  margin:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🎉 Invitation Card Designer</h2>
-
 <div class="controls">
-Upload Template:
+
+<h3>Template</h3>
 <input type="file" id="bgUpload">
 
-Upload Image:
-<input type="file" id="imgUpload">
-
+<h3>Add Text</h3>
+<input id="textInput" placeholder="Enter text">
 <button onclick="addText()">Add Text</button>
 
-<br><br>
+<h3>Upload Image</h3>
+<input type="file" id="imgUpload">
 
-Font Size:
-<input type="number" id="fontSize" value="30">
+<h3>Style</h3>
 
-Color:
-<input type="color" id="fontColor" value="#000000">
-
-Weight:
-<select id="fontWeight">
-<option value="300">Light</option>
-<option value="400">Normal</option>
-<option value="600">Semi Bold</option>
-<option value="700">Bold</option>
-<option value="900">Extra Bold</option>
+<select id="font" onchange="applyStyle()">
+<option value="Tiro Devanagari Marathi">Marathi Wedding</option>
+<option value="Noto Sans Devanagari">Clean Marathi</option>
+<option value="serif">Serif</option>
+<option value="sans-serif">Sans</option>
 </select>
 
-<button onclick="applyStyle()">Apply Style</button>
+<input type="color" id="color" onchange="applyStyle()">
 
-<br><br>
+<select id="weight" onchange="applyStyle()">
+<option value="normal">Normal</option>
+<option value="bold">Bold</option>
+<option value="bolder">Extra Bold</option>
+</select>
 
-<button onclick="saveDraft()">💾 Save Draft</button>
-<button onclick="loadDraft()">📂 Load Draft</button>
+<input type="number" id="size" value="24" onchange="applyStyle()">
+
+<h3>Drafts</h3>
+
+<input id="draftName" placeholder="Draft name">
+<button onclick="saveDraft()">Save Draft</button>
+
+<select id="draftList" onchange="loadDraft()">
+<option value="">Select Draft</option>
+</select>
+
+<h3>Export</h3>
+<button onclick="downloadPDF()">Download PDF</button>
+
 </div>
 
 <div id="canvas"></div>
 
 <script>
-let selected=null;
+const canvas = document.getElementById("canvas");
+let selected = null;
 
-// BACKGROUND UPLOAD
+/* ---------------- Background Upload ---------------- */
+
 bgUpload.onchange = e=>{
-  const reader = new FileReader();
-  reader.onload = ev=>{
-    canvas.style.backgroundImage=`url(${ev.target.result})`;
-  }
-  reader.readAsDataURL(e.target.files[0]);
-}
+ const reader = new FileReader();
+ reader.onload = ()=>{
+   canvas.style.backgroundImage = `url(${reader.result})`;
+   canvas.style.backgroundSize = "cover";
+ };
+ reader.readAsDataURL(e.target.files[0]);
+};
 
-// ADD TEXT
+/* ---------------- Add Text ---------------- */
+
 function addText(){
-  const div=document.createElement("div");
-  div.className="draggable";
-  div.contentEditable=true;
-  div.innerText="इथे मजकूर लिहा";
-  div.style.fontSize="30px";
-  div.style.color="#000000";
-
-  makeDraggable(div);
-  addResizer(div);
-
-  canvas.appendChild(div);
+ const div = document.createElement("div");
+ div.className="textBox";
+ div.innerText = textInput.value || "Text";
+ div.style.left="100px";
+ div.style.top="100px";
+ canvas.appendChild(div);
+ makeDraggable(div);
+ addResizer(div);
 }
 
-// IMAGE UPLOAD
-imgUpload.onchange=e=>{
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=document.createElement("img");
-    img.src=ev.target.result;
-    img.className="draggable";
-    img.style.width="150px";
+/* ---------------- Upload Image ---------------- */
 
-    makeDraggable(img);
-    addResizer(img);
+imgUpload.onchange = e=>{
+ const reader = new FileReader();
+ reader.onload = ()=>{
+   const img = document.createElement("img");
+   img.src = reader.result;
+   img.className="imgBox";
+   img.style.width="150px";
+   img.style.left="120px";
+   img.style.top="120px";
+   canvas.appendChild(img);
+   makeDraggable(img);
+   addResizer(img);
+ };
+ reader.readAsDataURL(e.target.files[0]);
+};
 
-    canvas.appendChild(img);
-  }
-  reader.readAsDataURL(e.target.files[0]);
-}
+/* ---------------- Drag Logic ---------------- */
 
-// STYLE APPLY FIXED
-function applyStyle(){
-  if(!selected) return;
-
-  selected.style.fontSize=fontSize.value+"px";
-  selected.style.color=fontColor.value;
-  selected.style.fontWeight=fontWeight.value;
-}
-
-// DRAG LOGIC
 function makeDraggable(el){
-  el.onclick=()=> selected=el;
 
-  let offsetX,offsetY;
+ el.onclick = e=>{
+   selected = el;
+   e.stopPropagation();
+ };
 
-  el.onmousedown=e=>{
-    offsetX=e.offsetX;
-    offsetY=e.offsetY;
+ let offsetX, offsetY;
+ let dragging=false;
 
-    document.onmousemove=ev=>{
-      el.style.left=(ev.pageX-canvas.offsetLeft-offsetX)+"px";
-      el.style.top=(ev.pageY-canvas.offsetTop-offsetY)+"px";
-    }
+ el.addEventListener("mousedown", e=>{
+   if(e.target.classList.contains("resizer")) return;
+   dragging=true;
+   offsetX=e.offsetX;
+   offsetY=e.offsetY;
 
-    document.onmouseup=()=> document.onmousemove=null;
-  }
+   document.onmousemove = ev=>{
+     if(!dragging) return;
+     el.style.left = (ev.pageX - canvas.offsetLeft - offsetX) + "px";
+     el.style.top = (ev.pageY - canvas.offsetTop - offsetY) + "px";
+   };
+
+   document.onmouseup = ()=>{
+     dragging=false;
+     document.onmousemove=null;
+   };
+ });
 }
 
-// RESIZE
+/* ---------------- Resize Logic ---------------- */
+
 function addResizer(el){
-  const res=document.createElement("div");
-  res.className="resizer";
-  el.appendChild(res);
+ const r=document.createElement("div");
+ r.className="resizer";
+ el.appendChild(r);
 
-  res.onmousedown=e=>{
-    e.stopPropagation();
+ let resizing=false;
 
-    document.onmousemove=ev=>{
-      el.style.width=ev.pageX-el.offsetLeft+"px";
-    }
+ r.addEventListener("mousedown", e=>{
+   e.stopPropagation();
+   resizing=true;
 
-    document.onmouseup=()=> document.onmousemove=null;
-  }
+   document.onmousemove = ev=>{
+     if(!resizing) return;
+     el.style.width = (ev.pageX - el.offsetLeft) + "px";
+     el.style.height = (ev.pageY - el.offsetTop) + "px";
+   };
+
+   document.onmouseup = ()=>{
+     resizing=false;
+     document.onmousemove=null;
+   };
+ });
 }
 
-// SAVE MULTIPLE DRAFTS
+/* ---------------- Style Apply ---------------- */
+
+function applyStyle(){
+ if(!selected || !selected.classList.contains("textBox")) return;
+
+ selected.style.fontFamily = font.value;
+ selected.style.color = color.value;
+ selected.style.fontWeight = weight.value;
+ selected.style.fontSize = size.value + "px";
+}
+
+/* ---------------- Save Draft ---------------- */
+
 function saveDraft(){
-  const name=prompt("Enter Draft Name:");
-  if(!name) return;
 
-  localStorage.setItem("draft_"+name, canvas.innerHTML);
-  alert("Draft Saved!");
+ const name = draftName.value.trim();
+ if(!name) return alert("Enter draft name");
+
+ const data = {
+   bg: canvas.style.backgroundImage,
+   html: canvas.innerHTML
+ };
+
+ localStorage.setItem("draft_"+name, JSON.stringify(data));
+ updateDraftList();
+ alert("Draft Saved");
 }
 
-// LOAD DRAFT
+/* ---------------- Load Draft ---------------- */
+
 function loadDraft(){
-  let drafts=[];
-  for(let key in localStorage){
-    if(key.startsWith("draft_")) drafts.push(key.replace("draft_",""));
-  }
+ const name = draftList.value;
+ if(!name) return;
 
-  const name=prompt("Available Drafts:\n"+drafts.join("\n")+"\n\nEnter name:");
-  if(!name) return;
+ const data = JSON.parse(localStorage.getItem("draft_"+name));
 
-  canvas.innerHTML=localStorage.getItem("draft_"+name);
+ canvas.innerHTML = data.html;
+ canvas.style.backgroundImage = data.bg;
 
-  // Reattach drag
-  document.querySelectorAll(".draggable").forEach(el=>{
-    makeDraggable(el);
-    addResizer(el);
-  });
+ // re-enable drag & resize
+ document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+   makeDraggable(el);
+   addResizer(el);
+ });
 }
+
+/* ---------------- Draft Dropdown ---------------- */
+
+function updateDraftList(){
+ draftList.innerHTML = "<option>Select Draft</option>";
+ Object.keys(localStorage).forEach(k=>{
+   if(k.startsWith("draft_")){
+     const name=k.replace("draft_","");
+     draftList.innerHTML += `<option value="${name}">${name}</option>`;
+   }
+ });
+}
+updateDraftList();
+
+/* ---------------- PDF Download ---------------- */
+
+async function downloadPDF(){
+ const canvasImg = await html2canvas(canvas);
+ const img = canvasImg.toDataURL("image/png");
+
+ const {jsPDF} = window.jspdf;
+ const pdf = new jsPDF("p","mm","a4");
+
+ pdf.addImage(img,"PNG",10,10,190,270);
+ pdf.save("invitation.pdf");
+}
+
 </script>
 
 </body>
