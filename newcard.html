@@ -162,6 +162,10 @@ function select(el){
 
 function addDeleteButton(el){
 
+  // remove old button if exists
+  let old = el.querySelector(".deleteBtn");
+  if(old) old.remove();
+
   const btn = document.createElement("div");
   btn.className = "deleteBtn";
   btn.innerHTML = "✕";
@@ -169,18 +173,28 @@ function addDeleteButton(el){
   btn.style.position = "absolute";
   btn.style.top = "-12px";
   btn.style.right = "-12px";
-  btn.style.width = "24px";
-  btn.style.height = "24px";
+  btn.style.width = "26px";
+  btn.style.height = "26px";
   btn.style.background = "red";
   btn.style.color = "white";
   btn.style.borderRadius = "50%";
   btn.style.display = "flex";
   btn.style.alignItems = "center";
   btn.style.justifyContent = "center";
-  btn.style.fontSize = "14px";
+  btn.style.fontSize = "16px";
   btn.style.cursor = "pointer";
   btn.style.zIndex = "9999";
+  btn.style.touchAction = "manipulation";
 
+  // MOBILE FIX
+  btn.addEventListener("touchstart", function(e){
+    e.stopPropagation();
+    e.preventDefault();
+    el.remove();
+    selectedElement = null;
+  });
+
+  // DESKTOP SUPPORT
   btn.addEventListener("click", function(e){
     e.stopPropagation();
     el.remove();
@@ -189,7 +203,6 @@ function addDeleteButton(el){
 
   el.appendChild(btn);
 }
-
 
 /* ================= ADD TEXT ================= */
 
