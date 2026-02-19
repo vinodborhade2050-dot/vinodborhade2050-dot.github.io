@@ -9,7 +9,7 @@
 body{
   margin:0;
   font-family:sans-serif;
-  background:#f3f3f3;
+  background:#f2f2f2;
 }
 
 #toolbar{
@@ -38,11 +38,16 @@ body{
   background-position:center;
 }
 
-.textBox, .imgBox{
+.textBox,.imgBox{
   position:absolute;
   cursor:move;
   user-select:none;
   touch-action:none;
+}
+
+.textBox{
+  min-width:60px;
+  text-align:center;
 }
 
 .selected{
@@ -56,19 +61,28 @@ body{
   pointer-events:none;
 }
 
-.guide.vertical{
+.guide.v{
   width:1px;
   height:100%;
 }
 
-.guide.horizontal{
+.guide.h{
   height:1px;
   width:100%;
 }
 
-.textBox{
-  min-width:50px;
-  text-align:center;
+#templateGallery{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:white;
+  display:none;
+  overflow-x:auto;
+  padding:10px;
+  box-shadow:0 -3px 10px rgba(0,0,0,0.2);
+  white-space:nowrap;
+  z-index:2000;
 }
 </style>
 </head>
@@ -78,6 +92,7 @@ body{
 <div id="toolbar">
 
 <button onclick="addText()">Add Text</button>
+
 <input type="color" id="colorPicker">
 <input type="number" id="fontSize" placeholder="Size" style="width:60px">
 <button onclick="applyStyle()">Apply</button>
@@ -88,6 +103,9 @@ body{
 
 <input type="file" onchange="addImage(event)">
 
+<input type="file" onchange="setBackground(event)">
+<button onclick="openTemplateGallery()">Browse Template</button>
+
 <input type="text" id="draftName" placeholder="Draft Name" style="width:100px">
 <select id="draftList"></select>
 <button onclick="saveDraft()">Save</button>
@@ -97,9 +115,12 @@ body{
 
 <div id="canvas"></div>
 
+<div id="templateGallery"></div>
+
 <script>
-const canvas = document.getElementById("canvas");
-let selected = null;
+
+const canvas=document.getElementById("canvas");
+let selected=null;
 
 /* ================= ADD TEXT ================= */
 function addText(){
@@ -110,7 +131,7 @@ function addText(){
   div.style.top="200px";
   div.style.left="100px";
   div.style.fontSize="20px";
-  div.style.color="#000";
+  div.style.color="#000000";
   canvas.appendChild(div);
   setupElement(div);
 }
@@ -130,33 +151,42 @@ function addImage(e){
   reader.readAsDataURL(e.target.files[0]);
 }
 
+/* ================= BACKGROUND UPLOAD ================= */
+function setBackground(e){
+  const reader=new FileReader();
+  reader.onload=function(){
+    canvas.style.backgroundImage=`url(${reader.result})`;
+  };
+  reader.readAsDataURL(e.target.files[0]);
+}
+
 /* ================= SELECT ================= */
 function selectElement(el){
-  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("selected"));
+  document.querySelectorAll(".textBox,.imgBox")
+  .forEach(e=>e.classList.remove("selected"));
   selected=el;
   el.classList.add("selected");
 }
 
-/* ================= MOVE WITH CENTER ================= */
+/* ================= MOVE CENTERED ================= */
 function setupElement(el){
 
-  let offsetX, offsetY;
+  let offsetX,offsetY;
 
-  el.addEventListener("pointerdown", e=>{
+  el.addEventListener("pointerdown",e=>{
     selectElement(el);
     const rect=el.getBoundingClientRect();
-    offsetX = rect.width/2;
-    offsetY = rect.height/2;
+    offsetX=rect.width/2;
+    offsetY=rect.height/2;
     el.setPointerCapture(e.pointerId);
   });
 
-  el.addEventListener("pointermove", e=>{
+  el.addEventListener("pointermove",e=>{
     if(!el.hasPointerCapture(e.pointerId)) return;
 
     const canvasRect=canvas.getBoundingClientRect();
-
-    let x=e.clientX - canvasRect.left - offsetX;
-    let y=e.clientY - canvasRect.top - offsetY;
+    let x=e.clientX-canvasRect.left-offsetX;
+    let y=e.clientY-canvasRect.top-offsetY;
 
     el.style.left=x+"px";
     el.style.top=y+"px";
@@ -164,23 +194,22 @@ function setupElement(el){
     showGuides(el);
   });
 
-  el.addEventListener("pointerup", e=>{
+  el.addEventListener("pointerup",e=>{
     el.releasePointerCapture(e.pointerId);
     removeGuides();
   });
 
-  /* Pinch resize */
+  /* pinch resize image */
   let startDist=0;
 
-  el.addEventListener("touchstart", e=>{
-    if(e.touches.length===2){
-      startDist=getDistance(e.touches);
-    }
+  el.addEventListener("touchstart",e=>{
+    if(e.touches.length===2)
+      startDist=getDist(e.touches);
   });
 
-  el.addEventListener("touchmove", e=>{
+  el.addEventListener("touchmove",e=>{
     if(e.touches.length===2){
-      const dist=getDistance(e.touches);
+      const dist=getDist(e.touches);
       const scale=dist/startDist;
       const img=el.querySelector("img");
       if(img){
@@ -191,41 +220,41 @@ function setupElement(el){
   });
 }
 
-function getDistance(t){
+function getDist(t){
   return Math.hypot(
-    t[0].clientX - t[1].clientX,
-    t[0].clientY - t[1].clientY
+    t[0].clientX-t[1].clientX,
+    t[0].clientY-t[1].clientY
   );
 }
 
-/* ================= ALIGNMENT GUIDES ================= */
+/* ================= ALIGNMENT GUIDE ================= */
 function showGuides(el){
   removeGuides();
 
   const rect=el.getBoundingClientRect();
   const canvasRect=canvas.getBoundingClientRect();
 
-  const centerX = rect.left - canvasRect.left + rect.width/2;
-  const centerY = rect.top - canvasRect.top + rect.height/2;
+  const centerX=rect.left-canvasRect.left+rect.width/2;
+  const centerY=rect.top-canvasRect.top+rect.height/2;
 
   document.querySelectorAll(".textBox,.imgBox").forEach(other=>{
     if(other===el) return;
 
     const r=other.getBoundingClientRect();
-    const oCenterX=r.left - canvasRect.left + r.width/2;
-    const oCenterY=r.top - canvasRect.top + r.height/2;
+    const oX=r.left-canvasRect.left+r.width/2;
+    const oY=r.top-canvasRect.top+r.height/2;
 
-    if(Math.abs(centerX - oCenterX)<5){
+    if(Math.abs(centerX-oX)<5){
       const v=document.createElement("div");
-      v.className="guide vertical";
-      v.style.left=oCenterX+"px";
+      v.className="guide v";
+      v.style.left=oX+"px";
       canvas.appendChild(v);
     }
 
-    if(Math.abs(centerY - oCenterY)<5){
+    if(Math.abs(centerY-oY)<5){
       const h=document.createElement("div");
-      h.className="guide horizontal";
-      h.style.top=oCenterY+"px";
+      h.className="guide h";
+      h.style.top=oY+"px";
       canvas.appendChild(h);
     }
   });
@@ -238,27 +267,64 @@ function removeGuides(){
 /* ================= TEXT STYLE ================= */
 function applyStyle(){
   if(!selected) return;
-  selected.style.color=document.getElementById("colorPicker").value;
+
+  selected.style.color=
+    document.getElementById("colorPicker").value;
+
   const size=document.getElementById("fontSize").value;
-  if(size) selected.style.fontSize=size+"px";
+  if(size)
+    selected.style.fontSize=size+"px";
 }
 
 function alignLeft(){ if(selected) selected.style.textAlign="left"; }
 function alignCenter(){ if(selected) selected.style.textAlign="center"; }
 function alignRight(){ if(selected) selected.style.textAlign="right"; }
 
+/* ================= TEMPLATE GALLERY ================= */
+const templateImages=[
+  "https://i.imgur.com/1Xq9BiB.jpg",
+  "https://i.imgur.com/4NJlR7F.jpg",
+  "https://i.imgur.com/Vp5F3mM.jpg",
+  "https://i.imgur.com/lW8QG3m.jpg"
+];
+
+function openTemplateGallery(){
+  const gallery=document.getElementById("templateGallery");
+  gallery.innerHTML="";
+
+  templateImages.forEach(src=>{
+    const img=document.createElement("img");
+    img.src=src;
+    img.style.width="120px";
+    img.style.marginRight="10px";
+    img.style.borderRadius="8px";
+    img.style.cursor="pointer";
+
+    img.onclick=()=>{
+      canvas.style.backgroundImage=`url(${src})`;
+      gallery.style.display="none";
+    };
+
+    gallery.appendChild(img);
+  });
+
+  gallery.style.display="block";
+}
+
 /* ================= DRAFT SYSTEM ================= */
+
 function getDrafts(){
-  return JSON.parse(localStorage.getItem("invDrafts")||"{}");
+  return JSON.parse(localStorage.getItem("cardDrafts")||"{}");
 }
 
 function saveDrafts(obj){
-  localStorage.setItem("invDrafts",JSON.stringify(obj));
+  localStorage.setItem("cardDrafts",JSON.stringify(obj));
 }
 
 function saveDraft(){
+
   const name=document.getElementById("draftName").value.trim();
-  if(!name){ alert("Enter draft name"); return;}
+  if(!name){ alert("Enter draft name"); return; }
 
   const drafts=getDrafts();
 
@@ -267,7 +333,8 @@ function saveDraft(){
     elements:[]
   };
 
-  document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+  document.querySelectorAll(".textBox,.imgBox")
+  .forEach(el=>{
     data.elements.push({
       type:el.classList.contains("textBox")?"text":"image",
       html:el.innerHTML,
@@ -276,17 +343,20 @@ function saveDraft(){
       color:el.style.color,
       fontSize:el.style.fontSize,
       textAlign:el.style.textAlign,
-      width:el.querySelector("img")?.style.width
+      width:el.querySelector("img")?
+        el.querySelector("img").style.width:null
     });
   });
 
   drafts[name]=data;
   saveDrafts(drafts);
   loadDraftList();
-  alert("Saved ✅");
+
+  alert("Draft Saved ✅");
 }
 
 function loadDraft(){
+
   const name=document.getElementById("draftList").value;
   if(!name) return;
 
@@ -306,6 +376,7 @@ function loadDraft(){
     el.style.color=item.color;
     el.style.fontSize=item.fontSize;
     el.style.textAlign=item.textAlign;
+
     if(item.type==="image" && el.querySelector("img"))
       el.querySelector("img").style.width=item.width;
 
@@ -313,7 +384,7 @@ function loadDraft(){
     setupElement(el);
   });
 
-  alert("Loaded ✅");
+  alert("Draft Loaded ✅");
 }
 
 function loadDraftList(){
@@ -329,7 +400,7 @@ function loadDraftList(){
 }
 
 loadDraftList();
-</script>
 
+</script>
 </body>
 </html>
