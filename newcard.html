@@ -1,79 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="mr">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Card Builder</title>
+
+<title>Invitation Editor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
-@font-face {
-    font-family: 'ganesha';
-    src: url('fonts/ams-ganesha.ttf') format('truetype');
-}
-
-/* ===== PAGE ===== */
 body{
-    margin:0;
-    font-family: Arial;
-    background:#f5f5f5;
+  margin:0;
+  font-family:'Noto Sans Devanagari';
+  background:#eee;
 }
 
-/* ===== TOOLBAR ===== */
+/* Toolbar */
 .toolbar{
-    padding:10px;
-    background:#333;
-    color:white;
-    position:fixed;
-    top:0;
-    width:100%;
-    z-index:999;
+  background:white;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  overflow:auto;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-.toolbar button, select{
-    padding:6px;
-    margin:4px;
+button{
+  padding:8px 12px;
+  border:none;
+  background:#e57373;
+  color:white;
+  cursor:pointer;
 }
 
-/* ===== CANVAS ===== */
-#canvas{
-    margin-top:90px; /* space for toolbar */
-    padding:20px;
-    text-align:center;
+.canvas{
+  width:500px;
+  height:700px;
+  margin:20px auto;
+  background:#ddd;
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background-size:cover;
+  background-position:center;
+  touch-action:none;
 }
 
-/* ===== CARD ===== */
-.template{
-    width:600px;
-    height:850px;
-    background:white;
-    border:3px solid gold;
-    margin:auto;
-    position:relative;
+/* Text */
+.textBox{
+  position:absolute;
+  font-size:24px;
+  color:#fff;
+  cursor:move;
+  padding:4px;
+  border:1px dashed transparent;
 }
 
-/* ===== TEXT BOX ===== */
-.text-box{
-    position:absolute;
-    padding:5px;
-    cursor:move;
-    font-size:22px;
-    font-family:'ganesha';
-    border:1px dashed transparent;
-    user-select:none;
-}
-
-.text-box.active{
-    border:1px dashed red;
-}
-
-.resize{
-    width:10px;
-    height:10px;
-    background:red;
-    position:absolute;
-    right:-5px;
-    bottom:-5px;
-    cursor:se-resize;
+.textBox.active{
+  border-color:red;
 }
 
 </style>
@@ -81,129 +68,152 @@ body{
 
 <body>
 
+<!-- Toolbar -->
 <div class="toolbar">
-    <button onclick="addText()">Add Text</button>
-    <button onclick="saveDraft()">Save</button>
-    <button onclick="clearDraft()">Clear</button>
 
-    Font:
-    <select id="fontSelect">
-        <option value="ganesha">Marathi</option>
-        <option value="Arial">Arial</option>
-    </select>
+<input type="file" id="upload" accept="image/*">
 
-    Size:
-    <input type="range" min="16" max="80" value="22" id="sizeSlider">
+<button onclick="addText()">Add Text</button>
+
+<input type="color" id="colorPicker" onchange="changeColor()">
+
+<select id="fontPicker" onchange="changeFont()">
+<option value="'Tiro Devanagari Marathi'">Traditional</option>
+<option value="'Noto Sans Devanagari'">Modern</option>
+</select>
+
+<button onclick="deleteText()">Delete</button>
+
+<button onclick="downloadPDF()">Download</button>
+
 </div>
 
-<div id="canvas">
-    <div class="template" id="template"></div>
-</div>
+<!-- Canvas -->
+<div id="canvas" class="canvas"></div>
 
 <script>
 
-let selected=null, offsetX, offsetY, resizing=false;
+let active = null;
+let startDist = 0;
+let startSize = 24;
 
-/* ADD TEXT */
+/* Upload Template */
+upload.onchange = e=>{
+  const reader = new FileReader();
+  reader.onload = ()=> canvas.style.backgroundImage = `url(${reader.result})`;
+  reader.readAsDataURL(e.target.files[0]);
+};
+
+/* Add Text */
 function addText(){
-    createBox({
-        text:"Edit Text",
-        left:100,
-        top:100,
-        font:"ganesha",
-        size:22
-    });
+  const div = document.createElement("div");
+  div.className="textBox";
+  div.innerText="डबल क्लिक करून मजकूर बदला";
+  div.style.top="100px";
+  div.style.left="100px";
+
+  canvas.appendChild(div);
+  select(div);
+  makeDraggable(div);
+
+  div.ondblclick = ()=>{
+    const txt = prompt("Edit Text", div.innerText);
+    if(txt) div.innerText = txt;
+  };
 }
 
-function createBox(d){
-    let box=document.createElement("div");
-    box.className="text-box";
-    box.contentEditable=true;
-    box.innerText=d.text;
-
-    box.style.left=d.left+"px";
-    box.style.top=d.top+"px";
-    box.style.fontFamily=d.font;
-    box.style.fontSize=d.size+"px";
-
-    let r=document.createElement("div");
-    r.className="resize";
-    box.appendChild(r);
-
-    template.appendChild(box);
-    box.onclick=()=>select(box);
+/* Select Text */
+function select(el){
+  document.querySelectorAll(".textBox").forEach(b=>b.classList.remove("active"));
+  active = el;
+  el.classList.add("active");
 }
 
-function select(b){
-    document.querySelectorAll(".text-box").forEach(x=>x.classList.remove("active"));
-    selected=b;
-    b.classList.add("active");
-}
+/* Click Select */
+canvas.onclick = e=>{
+  if(e.target.classList.contains("textBox")){
+    select(e.target);
+  }
+};
 
-/* DRAG */
-document.addEventListener("mousedown",e=>{
-    if(e.target.classList.contains("text-box")){
-        select(e.target);
-        offsetX=e.clientX-selected.offsetLeft;
-        offsetY=e.clientY-selected.offsetTop;
+/* Drag + Pinch Resize */
+function makeDraggable(el){
+
+  let offsetX=0, offsetY=0;
+
+  /* Touch Start */
+  el.addEventListener("touchstart", e=>{
+    select(el);
+
+    if(e.touches.length===1){
+      offsetX = e.touches[0].clientX - el.offsetLeft;
+      offsetY = e.touches[0].clientY - el.offsetTop;
     }
-    if(e.target.classList.contains("resize")){
-        resizing=true;
-        selected=e.target.parentElement;
+
+    if(e.touches.length===2){
+      startDist = getDistance(e.touches);
+      startSize = parseInt(window.getComputedStyle(el).fontSize);
     }
-});
+  });
 
-document.addEventListener("mousemove",e=>{
-    if(selected && !resizing && e.buttons===1){
-        selected.style.left=(e.clientX-offsetX)+"px";
-        selected.style.top=(e.clientY-offsetY)+"px";
+  /* Touch Move */
+  el.addEventListener("touchmove", e=>{
+    e.preventDefault();
+
+    if(e.touches.length===1){
+      el.style.left = (e.touches[0].clientX - offsetX) + "px";
+      el.style.top = (e.touches[0].clientY - offsetY) + "px";
     }
-    if(resizing){
-        selected.style.width=e.offsetX+"px";
-        selected.style.height=e.offsetY+"px";
+
+    if(e.touches.length===2){
+      let newDist = getDistance(e.touches);
+      let newSize = startSize + (newDist - startDist)/2;
+      el.style.fontSize = newSize + "px";
     }
-});
+  });
 
-document.addEventListener("mouseup",()=>resizing=false);
+  /* Mouse Drag */
+  el.onmousedown = e=>{
+    select(el);
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
 
-/* DELETE */
-document.addEventListener("keydown",e=>{
-    if(e.key==="Delete" && selected) selected.remove();
-});
+    document.onmousemove = e=>{
+      el.style.left = (e.pageX - offsetX) + "px";
+      el.style.top = (e.pageY - offsetY) + "px";
+    };
 
-/* FONT SIZE */
-fontSelect.onchange=()=>selected && (selected.style.fontFamily=fontSelect.value);
-sizeSlider.oninput=()=>selected && (selected.style.fontSize=sizeSlider.value+"px");
-
-/* SAVE DRAFT */
-function saveDraft(){
-    let data=[];
-    document.querySelectorAll(".text-box").forEach(b=>{
-        data.push({
-            text:b.innerText,
-            left:b.offsetLeft,
-            top:b.offsetTop,
-            font:b.style.fontFamily,
-            size:parseInt(b.style.fontSize)
-        });
-    });
-    localStorage.setItem("draft",JSON.stringify(data));
-    alert("Saved");
+    document.onmouseup = ()=> document.onmousemove=null;
+  };
 }
 
-/* LOAD */
-function load(){
-    let d=localStorage.getItem("draft");
-    if(!d) return;
-    JSON.parse(d).forEach(createBox);
+/* Distance helper */
+function getDistance(touches){
+  return Math.sqrt(
+    Math.pow(touches[0].clientX - touches[1].clientX,2) +
+    Math.pow(touches[0].clientY - touches[1].clientY,2)
+  );
 }
 
-function clearDraft(){
-    localStorage.removeItem("draft");
-    location.reload();
+/* Change Color */
+function changeColor(){
+  if(active) active.style.color = colorPicker.value;
 }
 
-window.onload=load;
+/* Change Font */
+function changeFont(){
+  if(active) active.style.fontFamily = fontPicker.value;
+}
+
+/* Delete */
+function deleteText(){
+  if(active) active.remove();
+}
+
+/* Download PDF */
+function downloadPDF(){
+  html2pdf().from(canvas).save("invitation.pdf");
+}
 
 </script>
 
