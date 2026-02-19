@@ -205,13 +205,20 @@ function addDeleteButton(el){
 
   el.appendChild(btn);
 }
+
 function toggleBold(){
-  if(active && active.classList.contains("textBox")){
-    if(active.style.fontWeight === "bold"){
-      active.style.fontWeight = "normal";
-    } else {
-      active.style.fontWeight = "bold";
-    }
+
+  if(!active) return;
+
+  if(!active.classList.contains("textBox")) return;
+
+  // If no fontWeight set, browser returns ""
+  let currentWeight = window.getComputedStyle(active).fontWeight;
+
+  if(currentWeight === "700" || currentWeight === "bold"){
+    active.style.fontWeight = "400";
+  } else {
+    active.style.fontWeight = "700";
   }
 }
 
