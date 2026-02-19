@@ -8,29 +8,65 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&display=swap" rel="stylesheet">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
 
-body{margin:0;font-family:'Noto Sans Devanagari';background:#eee;}
+body{
+  margin:0;
+  font-family:'Noto Sans Devanagari';
+  background:#eee;
+}
 
 .toolbar{
-  background:white;padding:10px;display:flex;gap:10px;
-  overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.1);
+  background:white;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  overflow:auto;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
 }
 
-button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointer;}
+button{
+  padding:8px 12px;
+  border:none;
+  background:#e57373;
+  color:white;
+  cursor:pointer;
+}
 
 .canvas{
-  width:500px;height:700px;margin:20px auto;background:#ddd;
-  position:relative;border-radius:12px;overflow:hidden;
-  background-size:cover;background-position:center;touch-action:none;
+  width:500px;
+  height:700px;
+  margin:20px auto;
+  background:#ddd;
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background-size:cover;
+  background-position:center;
+  touch-action:none;
 }
 
-.textBox,.imgBox{position:absolute;cursor:move;border:1px dashed transparent;}
-.textBox{font-size:24px;color:#fff;padding:4px;}
-.imgBox img{width:120px;}
-.active{border-color:red;}
+.textBox,.imgBox{
+  position:absolute;
+  cursor:move;
+  border:1px dashed transparent;
+}
+
+.textBox{
+  font-size:24px;
+  color:#000; /* default black */
+  padding:4px;
+}
+
+.imgBox img{
+  width:120px;
+}
+
+.active{
+  border-color:red;
+}
 
 </style>
 </head>
@@ -61,7 +97,7 @@ button{padding:8px 12px;border:none;background:#e57373;color:white;cursor:pointe
 <button onclick="clearDraft()">🗑 Clear</button>
 
 <button onclick="deleteElement()">Delete</button>
-<button onclick="downloadPDF()">Download</button>
+<button onclick="downloadImage()">Download Image</button>
 
 </div>
 
@@ -83,10 +119,16 @@ function addText(){
   const d=document.createElement("div");
   d.className="textBox";
   d.innerText="डबल क्लिक करून मजकूर बदला";
-  d.style.top="100px"; d.style.left="100px";
-  canvas.appendChild(d); setupElement(d);
+  d.style.top="100px"; 
+  d.style.left="100px";
+  d.style.color="#000"; // default black
+  canvas.appendChild(d); 
+  setupElement(d);
 
-  d.ondblclick=()=>{ let t=prompt("Edit",d.innerText); if(t)d.innerText=t; };
+  d.ondblclick=()=>{
+    let t=prompt("Edit",d.innerText); 
+    if(t)d.innerText=t; 
+  };
 }
 
 /* Upload Image */
@@ -96,17 +138,22 @@ imgUpload.onchange=e=>{
     const box=document.createElement("div");
     box.className="imgBox";
     const img=document.createElement("img");
-    img.src=r.result; box.appendChild(img);
-    box.style.top="120px"; box.style.left="120px";
-    canvas.appendChild(box); setupElement(box);
+    img.src=r.result; 
+    box.appendChild(img);
+    box.style.top="120px"; 
+    box.style.left="120px";
+    canvas.appendChild(box); 
+    setupElement(box);
   };
   r.readAsDataURL(e.target.files[0]);
 };
 
 /* Selection */
 function select(el){
-  document.querySelectorAll(".textBox,.imgBox").forEach(e=>e.classList.remove("active"));
-  active=el; el.classList.add("active");
+  document.querySelectorAll(".textBox,.imgBox")
+    .forEach(e=>e.classList.remove("active"));
+  active=el; 
+  el.classList.add("active");
 }
 
 canvas.onclick=e=>{
@@ -139,14 +186,17 @@ function setupElement(el){
     }
     if(e.touches.length===2){
       let newSize=startSize+(getDistance(e.touches)-startDist);
-      if(el.classList.contains("imgBox")) el.querySelector("img").style.width=newSize+"px";
-      else el.style.fontSize=newSize/5+"px";
+      if(el.classList.contains("imgBox"))
+        el.querySelector("img").style.width=newSize+"px";
+      else
+        el.style.fontSize=newSize/5+"px";
     }
   });
 
   el.onmousedown=e=>{
     select(el);
-    offsetX=e.offsetX; offsetY=e.offsetY;
+    offsetX=e.offsetX; 
+    offsetY=e.offsetY;
     document.onmousemove=e=>{
       el.style.left=(e.pageX-offsetX)+"px";
       el.style.top=(e.pageY-offsetY)+"px";
@@ -155,18 +205,45 @@ function setupElement(el){
   };
 }
 
-function getDistance(t){ return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY); }
+function getDistance(t){ 
+  return Math.hypot(
+    t[0].clientX-t[1].clientX,
+    t[0].clientY-t[1].clientY
+  ); 
+}
 
 /* Style Controls */
-function changeColor(){ if(active?.classList.contains("textBox")) active.style.color=colorPicker.value; }
-function changeFont(){ if(active?.classList.contains("textBox")) active.style.fontFamily=fontPicker.value; }
-function changeWeight(){ if(active?.classList.contains("textBox")) active.style.fontWeight=weightPicker.value; }
+function changeColor(){
+  if(active && active.classList.contains("textBox")){
+    active.style.color = colorPicker.value;
+  }
+}
+
+function changeFont(){
+  if(active?.classList.contains("textBox"))
+    active.style.fontFamily=fontPicker.value;
+}
+
+function changeWeight(){
+  if(active?.classList.contains("textBox"))
+    active.style.fontWeight=weightPicker.value;
+}
 
 /* Delete */
-function deleteElement(){ if(active) active.remove(); }
+function deleteElement(){ 
+  if(active) active.remove(); 
+}
 
-/* PDF */
-function downloadPDF(){ html2pdf().from(canvas).save("invitation.pdf"); }
+/* ================= IMAGE DOWNLOAD ================= */
+
+function downloadImage(){
+  html2canvas(canvas,{scale:2}).then(canvasImage=>{
+    const link=document.createElement("a");
+    link.download="invitation.png";
+    link.href=canvasImage.toDataURL("image/png");
+    link.click();
+  });
+}
 
 /* ===================== DRAFT SAVE SYSTEM ===================== */
 
