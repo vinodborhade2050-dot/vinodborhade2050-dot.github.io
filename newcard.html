@@ -53,14 +53,28 @@ button{
 .textBox{
   font-size:24px;
   color:#000;
-  min-width:50px;
-  min-height:30px;
-  resize: horizontal;      /* ✅ Allow manual width resize */
-  overflow: auto;        /* Clean look */
-  white-space: pre-wrap;   /* ✅ Allow wrapping */
-  word-break: break-word;  /* Prevent overflow */
-  display:inline-block;
+  min-width:100px;
+  max-width:90%;
+  word-wrap:break-word;
+  white-space:normal;
+  resize:none;
+  position:absolute;
 }
+
+.resizeHandle{
+  position:absolute;
+  right:-6px;
+  top:0;
+  width:12px;
+  height:100%;
+  cursor:ew-resize;
+  background:transparent;
+}
+
+.textBox.active .resizeHandle{
+  background:rgba(255,0,0,0.3);
+}
+
 
 .imgBox img{
   width:150px;
@@ -141,22 +155,61 @@ function select(el){
 /* ================= ADD TEXT ================= */
 
 function addText(){
+
   const d=document.createElement("div");
   d.className="textBox";
-  d.contentEditable=true;
   d.innerText="डबल क्लिक करून मजकूर बदला";
-  
   d.style.top="100px";
   d.style.left="100px";
+  d.style.width="200px";
   d.style.color="#000";
+
+  // Create resize handle
+  const handle=document.createElement("div");
+  handle.className="resizeHandle";
+  d.appendChild(handle);
 
   canvas.appendChild(d);
   setupElement(d);
 
   d.ondblclick=()=>{
-    let t=prompt("Edit",d.innerText);
-    if(t!==null) d.innerText=t;
+    let t=prompt("Edit",d.firstChild.textContent);
+    if(t!==null) d.childNodes[0].textContent=t;
   };
+
+  setupResize(d,handle);
+}
+
+function setupResize(box, handle){
+
+  handle.addEventListener("mousedown", function(e){
+    e.stopPropagation();
+
+    let startX = e.clientX;
+    let startWidth = box.offsetWidth;
+
+    function resize(e2){
+      let newWidth = startWidth + (e2.clientX - startX);
+      if(newWidth > 50){
+        box.style.width = newWidth + "px";
+      }
+    }
+
+    document.addEventListener("mousemove", resize);
+    document.addEventListener("mouseup", ()=>{
+      document.removeEventListener("mousemove", resize);
+    }, {once:true});
+  });
+
+  // Mobile
+  handle.addEventListener("touchmove", function(e){
+    e.stopPropagation();
+    let touch = e.touches[0];
+    let newWidth = touch.clientX - box.getBoundingClientRect().left;
+    if(newWidth > 50){
+      box.style.width = newWidth + "px";
+    }
+  });
 }
 
 /* ================= IMAGE ================= */
