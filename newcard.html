@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Invitation Editor PRO</title>
+<title>Invitation Editor PRO - Wedding Edition</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&display=swap" rel="stylesheet">
+<!-- Wedding Marathi Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi:wght@400;700&family=Noto+Sans+Devanagari:wght@300;400;700&family=Noto+Serif+Devanagari:wght@400;700&family=Hind:wght@400;700&family=Yatra+One&display=swap" rel="stylesheet">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -14,7 +15,7 @@
 
 body{
   margin:0;
-  font-family:'Noto Sans Devanagari';
+  font-family:'Noto Sans Devanagari', sans-serif;
   background:#eee;
 }
 
@@ -30,9 +31,10 @@ body{
 button{
   padding:8px 12px;
   border:none;
-  background:#e57373;
+  background:#c62828;
   color:white;
   cursor:pointer;
+  border-radius:6px;
 }
 
 .canvas{
@@ -56,8 +58,9 @@ button{
 
 .textBox{
   font-size:24px;
-  color:#000; /* default black */
+  color:#000;
   padding:4px;
+  font-family:'Tiro Devanagari Marathi', serif;
 }
 
 .imgBox img{
@@ -82,8 +85,11 @@ button{
 <input type="color" id="colorPicker" onchange="changeColor()">
 
 <select id="fontPicker" onchange="changeFont()">
-<option value="'Tiro Devanagari Marathi'">Traditional</option>
-<option value="'Noto Sans Devanagari'">Modern</option>
+<option value="'Tiro Devanagari Marathi', serif">Traditional Wedding</option>
+<option value="'Noto Serif Devanagari', serif">Wedding Classic</option>
+<option value="'Hind', sans-serif">Royal Bold</option>
+<option value="'Yatra One', cursive">Decorative Wedding</option>
+<option value="'Noto Sans Devanagari', sans-serif">Modern Simple</option>
 </select>
 
 <select id="weightPicker" onchange="changeWeight()">
@@ -118,15 +124,15 @@ bgUpload.onchange=e=>{
 function addText(){
   const d=document.createElement("div");
   d.className="textBox";
-  d.innerText="डबल क्लिक करून मजकूर बदला";
+  d.innerText="|| शुभ विवाह ||";
   d.style.top="100px"; 
   d.style.left="100px";
-  d.style.color="#000"; // default black
+  d.style.color="#000";
   canvas.appendChild(d); 
   setupElement(d);
 
   d.ondblclick=()=>{
-    let t=prompt("Edit",d.innerText); 
+    let t=prompt("Edit Text",d.innerText); 
     if(t)d.innerText=t; 
   };
 }
@@ -220,13 +226,15 @@ function changeColor(){
 }
 
 function changeFont(){
-  if(active?.classList.contains("textBox"))
-    active.style.fontFamily=fontPicker.value;
+  if(active && active.classList.contains("textBox")){
+    active.style.fontFamily = fontPicker.value;
+  }
 }
 
 function changeWeight(){
-  if(active?.classList.contains("textBox"))
-    active.style.fontWeight=weightPicker.value;
+  if(active && active.classList.contains("textBox")){
+    active.style.fontWeight = weightPicker.value;
+  }
 }
 
 /* Delete */
@@ -234,21 +242,20 @@ function deleteElement(){
   if(active) active.remove(); 
 }
 
-/* ================= IMAGE DOWNLOAD ================= */
-
+/* Download Image */
 function downloadImage(){
-  html2canvas(canvas,{scale:2}).then(canvasImage=>{
-    const link=document.createElement("a");
-    link.download="invitation.png";
-    link.href=canvasImage.toDataURL("image/png");
-    link.click();
+  document.fonts.ready.then(()=>{
+    html2canvas(canvas,{scale:2,useCORS:true}).then(canvasImage=>{
+      const link=document.createElement("a");
+      link.download="marathi-wedding-invitation.png";
+      link.href=canvasImage.toDataURL("image/png");
+      link.click();
+    });
   });
 }
 
-/* ===================== DRAFT SAVE SYSTEM ===================== */
-
+/* Draft Save System */
 function saveDraft(){
-
   const data={
     bg: canvas.style.backgroundImage,
     elements:[]
@@ -274,7 +281,6 @@ function saveDraft(){
 }
 
 function loadDraft(){
-
   const saved=localStorage.getItem("invitationDraft");
   if(!saved) return alert("No Draft Found");
 
