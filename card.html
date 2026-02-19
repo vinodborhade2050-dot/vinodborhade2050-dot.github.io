@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Invitation Editor</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+
+body{
+  margin:0;
+  font-family:'Noto Sans Devanagari';
+  background:#eee;
+}
+
+/* Toolbar */
+.toolbar{
+  background:white;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  overflow:auto;
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
+}
+
+button{
+  padding:8px 12px;
+  border:none;
+  background:#e57373;
+  color:white;
+  cursor:pointer;
+}
+
+/* Canvas */
+.canvas{
+  width:500px;
+  height:700px;
+  margin:20px auto;
+  background:url("https://i.imgur.com/7bK9G6v.png") center/cover;
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+/* Text boxes */
+.textBox{
+  position:absolute;
+  color:#fff;
+  font-size:24px;
+  cursor:move;
+  padding:5px;
+  border:1px dashed transparent;
+}
+
+.textBox.active{
+  border-color:red;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+
+<button onclick="addText()">Add Text</button>
+
+<input type="color" id="colorPicker" onchange="changeColor()">
+
+<select id="fontPicker" onchange="changeFont()">
+<option value="'Tiro Devanagari Marathi'">Traditional</option>
+<option value="'Noto Sans Devanagari'">Modern</option>
+</select>
+
+<button onclick="deleteText()">Delete</button>
+
+<button onclick="downloadPDF()">Download</button>
+
+</div>
+
+<!-- Canvas -->
+<div id="canvas" class="canvas"></div>
+
+<script>
+
+let active = null;
+
+/* Add text */
+function addText(){
+  const div = document.createElement("div");
+  div.className="textBox";
+  div.innerText="डबल क्लिक करून मजकूर बदला";
+  div.style.top="100px";
+  div.style.left="100px";
+
+  canvas.appendChild(div);
+
+  select(div);
+  makeDraggable(div);
+
+  div.ondblclick = () => {
+    const text = prompt("Enter Text", div.innerText);
+    if(text) div.innerText = text;
+  };
+}
+
+/* Select */
+function select(el){
+  document.querySelectorAll(".textBox").forEach(b=>b.classList.remove("active"));
+  active = el;
+  el.classList.add("active");
+}
+
+/* Click select */
+canvas.onclick = e=>{
+  if(e.target.classList.contains("textBox")){
+    select(e.target);
+  }
+};
+
+/* Dragging */
+function makeDraggable(el){
+  let offsetX, offsetY;
+
+  el.onmousedown = e=>{
+    select(el);
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+
+    document.onmousemove = e=>{
+      el.style.left = (e.pageX - canvas.offsetLeft - offsetX)+"px";
+      el.style.top = (e.pageY - canvas.offsetTop - offsetY)+"px";
+    };
+
+    document.onmouseup = ()=> document.onmousemove=null;
+  };
+}
+
+/* Color */
+function changeColor(){
+  if(active) active.style.color = colorPicker.value;
+}
+
+/* Font */
+function changeFont(){
+  if(active) active.style.fontFamily = fontPicker.value;
+}
+
+/* Delete */
+function deleteText(){
+  if(active) active.remove();
+}
+
+/* PDF */
+function downloadPDF(){
+  html2pdf().from(canvas).save("invitation.pdf");
+}
+
+</script>
+
+</body>
+</html>
