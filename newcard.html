@@ -147,14 +147,12 @@ let selectedElement = null;
 /* ================= SELECT ================= */
 function select(el){
 
-  document.querySelectorAll(".textBox,.imgBox")
-    .forEach(e=>{
-      e.classList.remove("active");
+  document.querySelectorAll(".textBox,.imgBox").forEach(e=>{
+    e.classList.remove("active");
 
-      // remove old delete button if exists
-      let btn = e.querySelector(".deleteBtn");
-      if(btn) btn.remove();
-    });
+    let oldBtn = e.querySelector(".deleteBtn");
+    if(oldBtn) oldBtn.remove();
+  });
 
   selectedElement = el;
   el.classList.add("active");
@@ -181,15 +179,17 @@ function addDeleteButton(el){
   btn.style.justifyContent = "center";
   btn.style.fontSize = "14px";
   btn.style.cursor = "pointer";
+  btn.style.zIndex = "9999";
 
-  btn.onclick = function(e){
+  btn.addEventListener("click", function(e){
     e.stopPropagation();
     el.remove();
     selectedElement = null;
-  };
+  });
 
   el.appendChild(btn);
 }
+
 
 /* ================= ADD TEXT ================= */
 
