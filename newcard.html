@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Invitation Editor</title>
+<title>Invitation Editor PRO</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
 
@@ -18,7 +18,6 @@ body{
   background:#eee;
 }
 
-/* Toolbar */
 .toolbar{
   background:white;
   padding:10px;
@@ -49,17 +48,24 @@ button{
   touch-action:none;
 }
 
-/* Text */
-.textBox{
+.textBox, .imgBox{
   position:absolute;
-  font-size:24px;
-  color:#fff;
   cursor:move;
-  padding:4px;
   border:1px dashed transparent;
 }
 
-.textBox.active{
+.textBox{
+  font-size:24px;
+  color:#fff;
+  padding:4px;
+}
+
+.imgBox img{
+  width:120px;
+  height:auto;
+}
+
+.active{
   border-color:red;
 }
 
@@ -68,12 +74,11 @@ button{
 
 <body>
 
-<!-- Toolbar -->
 <div class="toolbar">
 
-<input type="file" id="upload" accept="image/*">
-
+<input type="file" id="bgUpload" accept="image/*">
 <button onclick="addText()">Add Text</button>
+<input type="file" id="imgUpload" accept="image/*">
 
 <input type="color" id="colorPicker" onchange="changeColor()">
 
@@ -82,140 +87,163 @@ button{
 <option value="'Noto Sans Devanagari'">Modern</option>
 </select>
 
-<button onclick="deleteText()">Delete</button>
-
+<button onclick="deleteElement()">Delete</button>
 <button onclick="downloadPDF()">Download</button>
 
 </div>
 
-<!-- Canvas -->
 <div id="canvas" class="canvas"></div>
 
 <script>
 
-let active = null;
-let startDist = 0;
-let startSize = 24;
+let active=null;
+let startDist=0;
+let startSize=0;
 
-/* Upload Template */
-upload.onchange = e=>{
-  const reader = new FileReader();
-  reader.onload = ()=> canvas.style.backgroundImage = `url(${reader.result})`;
-  reader.readAsDataURL(e.target.files[0]);
+/* Background Upload */
+bgUpload.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=> canvas.style.backgroundImage=`url(${r.result})`;
+  r.readAsDataURL(e.target.files[0]);
 };
 
 /* Add Text */
 function addText(){
-  const div = document.createElement("div");
-  div.className="textBox";
-  div.innerText="डबल क्लिक करून मजकूर बदला";
-  div.style.top="100px";
-  div.style.left="100px";
+  const d=document.createElement("div");
+  d.className="textBox";
+  d.innerText="डबल क्लिक करून मजकूर बदला";
+  d.style.top="100px";
+  d.style.left="100px";
 
-  canvas.appendChild(div);
-  select(div);
-  makeDraggable(div);
+  canvas.appendChild(d);
+  setupElement(d);
 
-  div.ondblclick = ()=>{
-    const txt = prompt("Edit Text", div.innerText);
-    if(txt) div.innerText = txt;
+  d.ondblclick=()=>{
+    let t=prompt("Edit Text",d.innerText);
+    if(t) d.innerText=t;
   };
 }
 
-/* Select Text */
-function select(el){
-  document.querySelectorAll(".textBox").forEach(b=>b.classList.remove("active"));
-  active = el;
-  el.classList.add("active");
-}
+/* Upload Image Element */
+imgUpload.onchange=e=>{
+  const r=new FileReader();
+  r.onload=()=>{
+    const box=document.createElement("div");
+    box.className="imgBox";
 
-/* Click Select */
-canvas.onclick = e=>{
-  if(e.target.classList.contains("textBox")){
-    select(e.target);
-  }
+    const img=document.createElement("img");
+    img.src=r.result;
+
+    box.appendChild(img);
+    box.style.top="120px";
+    box.style.left="120px";
+
+    canvas.appendChild(box);
+    setupElement(box);
+  };
+  r.readAsDataURL(e.target.files[0]);
 };
 
-/* Drag + Pinch Resize */
-function makeDraggable(el){
+/* Setup drag + resize */
+function setupElement(el){
 
-  let offsetX=0, offsetY=0;
+  select(el);
 
-  /* Touch Start */
-  el.addEventListener("touchstart", e=>{
+  let offsetX,offsetY;
+
+  el.addEventListener("touchstart",e=>{
     select(el);
 
     if(e.touches.length===1){
-      offsetX = e.touches[0].clientX - el.offsetLeft;
-      offsetY = e.touches[0].clientY - el.offsetTop;
+      offsetX=e.touches[0].clientX-el.offsetLeft;
+      offsetY=e.touches[0].clientY-el.offsetTop;
     }
 
     if(e.touches.length===2){
-      startDist = getDistance(e.touches);
-      startSize = parseInt(window.getComputedStyle(el).fontSize);
+      startDist=getDistance(e.touches);
+      startSize=el.offsetWidth;
     }
   });
 
-  /* Touch Move */
-  el.addEventListener("touchmove", e=>{
+  el.addEventListener("touchmove",e=>{
     e.preventDefault();
 
     if(e.touches.length===1){
-      el.style.left = (e.touches[0].clientX - offsetX) + "px";
-      el.style.top = (e.touches[0].clientY - offsetY) + "px";
+      el.style.left=(e.touches[0].clientX-offsetX)+"px";
+      el.style.top=(e.touches[0].clientY-offsetY)+"px";
     }
 
     if(e.touches.length===2){
-      let newDist = getDistance(e.touches);
-      let newSize = startSize + (newDist - startDist)/2;
-      el.style.fontSize = newSize + "px";
+      let newDist=getDistance(e.touches);
+      let newSize=startSize+(newDist-startDist);
+
+      if(el.classList.contains("imgBox")){
+        el.querySelector("img").style.width=newSize+"px";
+      } else {
+        el.style.fontSize=newSize/5+"px";
+      }
     }
   });
 
-  /* Mouse Drag */
-  el.onmousedown = e=>{
+  el.onmousedown=e=>{
     select(el);
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
+    offsetX=e.offsetX;
+    offsetY=e.offsetY;
 
-    document.onmousemove = e=>{
-      el.style.left = (e.pageX - offsetX) + "px";
-      el.style.top = (e.pageY - offsetY) + "px";
+    document.onmousemove=e=>{
+      el.style.left=(e.pageX-offsetX)+"px";
+      el.style.top=(e.pageY-offsetY)+"px";
     };
 
-    document.onmouseup = ()=> document.onmousemove=null;
+    document.onmouseup=()=>document.onmousemove=null;
   };
 }
 
+/* Select */
+function select(el){
+  document.querySelectorAll(".textBox,.imgBox")
+  .forEach(e=>e.classList.remove("active"));
+  active=el;
+  el.classList.add("active");
+}
+
+/* Click select */
+canvas.onclick=e=>{
+  if(e.target.closest(".textBox,.imgBox")){
+    select(e.target.closest(".textBox,.imgBox"));
+  }
+};
+
 /* Distance helper */
-function getDistance(touches){
+function getDistance(t){
   return Math.sqrt(
-    Math.pow(touches[0].clientX - touches[1].clientX,2) +
-    Math.pow(touches[0].clientY - touches[1].clientY,2)
+    Math.pow(t[0].clientX-t[1].clientX,2)+
+    Math.pow(t[0].clientY-t[1].clientY,2)
   );
 }
 
-/* Change Color */
+/* Color */
 function changeColor(){
-  if(active) active.style.color = colorPicker.value;
+  if(active && active.classList.contains("textBox"))
+    active.style.color=colorPicker.value;
 }
 
-/* Change Font */
+/* Font */
 function changeFont(){
-  if(active) active.style.fontFamily = fontPicker.value;
+  if(active && active.classList.contains("textBox"))
+    active.style.fontFamily=fontPicker.value;
 }
 
 /* Delete */
-function deleteText(){
+function deleteElement(){
   if(active) active.remove();
 }
 
-/* Download PDF */
+/* Download */
 function downloadPDF(){
   html2pdf().from(canvas).save("invitation.pdf");
 }
 
 </script>
-
 </body>
 </html>
