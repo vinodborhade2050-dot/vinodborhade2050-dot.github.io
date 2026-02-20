@@ -306,12 +306,9 @@ function addText(){
   d.appendChild(handle);
 
   canvas.appendChild(d);
-  setupElement(d);
+  setupElement(d,0);
 
-  d.ondblclick=()=>{
-    let t=prompt("Edit",d.firstChild.textContent);
-    if(t!==null) d.childNodes[0].textContent=t;
-  };
+  
 
   setupResize(d,handle);
 }
@@ -364,7 +361,7 @@ imgUpload.onchange=e=>{
     box.style.left="120px";
 
     canvas.appendChild(box);
-    setupElement(box);
+    setupElement(box,0);
   };
   r.readAsDataURL(e.target.files[0]);
 };
@@ -381,11 +378,11 @@ bgUpload.onchange=e=>{
 
 /* ================= DRAG (CENTERED) ================= */
 
-function setupElement(el){
+function setupElement(el,load){
   // 🔥 CREATE RESIZE HANDLE IF NOT EXISTS
   let handle = el.querySelector(".resizeHandle");
 
-  if(!handle){
+  if(!handle && load!=1){
     handle = document.createElement("div");
     handle.className = "resizeHandle";
     handle.style.width = "15px";
@@ -647,7 +644,7 @@ function loadDraftFromFile(event){
 
     // 🔥 Re-enable drag + resize + duplicate
     setupElement(el);
-    document.querySelectorAll('.resizeHandle').forEach(el => el.remove());
+    
 
   });
 
