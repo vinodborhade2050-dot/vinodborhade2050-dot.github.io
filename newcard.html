@@ -306,7 +306,7 @@ function addText(){
   d.appendChild(handle);
 
   canvas.appendChild(d);
-  setupElement(d,0);
+  setupElement(d);
 
   
 
@@ -378,11 +378,11 @@ bgUpload.onchange=e=>{
 
 /* ================= DRAG (CENTERED) ================= */
 
-function setupElement(el,load){
+function setupElement(el){
   // 🔥 CREATE RESIZE HANDLE IF NOT EXISTS
   let handle = el.querySelector(".resizeHandle");
 
-  if(!handle && load!=1){
+  if(!handle){
     handle = document.createElement("div");
     handle.className = "resizeHandle";
     handle.style.width = "15px";
@@ -643,7 +643,7 @@ function loadDraftFromFile(event){
     canvas.appendChild(el);
 
     // 🔥 Re-enable drag + resize + duplicate
-    setupElement(el,1);
+    setupElement(el);
     
 
   });
