@@ -373,6 +373,11 @@ bgUpload.onchange=e=>{
 /* ================= DRAG (CENTERED) ================= */
 
 function setupElement(el){
+  // 🔥 RESIZE SETUP HERE
+  const handle = el.querySelector('[data-type="resize"]');
+  if (handle) {
+    setupResize(el, handle);
+  }
 el.addEventListener("touchstart", function(){
   select(el);
 });
@@ -474,11 +479,7 @@ el.addEventListener("click", function(){
     }
 
   }, { passive:false });
-// 🔥 RESIZE SETUP HERE
-  const handle = el.querySelector('[data-type="resize"]');
-  if (handle) {
-    setupResize(el, handle);
-  }
+
 }
 
 function getDistance(touch1, touch2){
