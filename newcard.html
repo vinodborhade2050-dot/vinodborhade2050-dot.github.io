@@ -373,13 +373,27 @@ bgUpload.onchange=e=>{
 /* ================= DRAG (CENTERED) ================= */
 
 function setupElement(el){
-  // 🔥 RESIZE SETUP HERE
-  const handle = el.querySelector('[data-type="resize"]');
-  if (handle) {
-    setupResize(el, handle);
+  // 🔥 CREATE RESIZE HANDLE IF NOT EXISTS
+  let handle = el.querySelector(".resizeHandle");
+
+  if(!handle){
+    handle = document.createElement("div");
+    handle.className = "resizeHandle";
+    handle.style.width = "15px";
+    handle.style.height = "15px";
+    handle.style.position = "absolute";
+    handle.style.right = "0";
+    handle.style.bottom = "0";
+    handle.style.background = "red";
+    handle.style.cursor = "se-resize";
+
+    el.appendChild(handle);
   }
+
+  // 🔥 Setup resize
+  setupResize(el, handle);
 el.addEventListener("touchstart", function(e){
-  if (e.target.closest('[data-type="resize"]')) return;
+
     select(el);
 });
 
