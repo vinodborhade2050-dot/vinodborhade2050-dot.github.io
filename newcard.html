@@ -170,6 +170,14 @@ button{
 
 <script>
 console.log("card");
+  $(document).on("click", "*", function (e) {
+    e.stopPropagation();
+
+    let tag = this.tagName;
+    let className = $(this).attr("class");
+
+    alert("Tag: " + tag + "\nClass: " + (className || "No class"));
+});
 let active=null;
 const canvas=document.getElementById("canvas");
 let selectedElement = null;
