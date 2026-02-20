@@ -569,28 +569,7 @@ function saveDraft(){
   };
 document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
 
-  // Clone element to remove controls before saving
-  const clone = el.cloneNode(true);
-
-  // Remove resize handle
-  clone.querySelectorAll(".resizeHandle").forEach(h => h.remove());
-
-  // Remove delete button (if you have class like deleteBtn)
-  clone.querySelectorAll(".deleteBtn").forEach(b => b.remove());
-
-  data.elements.push({
-    type: el.classList.contains("textBox") ? "text" : "image",
-    html: clone.innerHTML,   // 🔥 save CLEAN html
-    top: el.style.top,
-    left: el.style.left,
-    color: el.style.color,
-    fontSize: el.style.fontSize,
-    fontFamily: el.style.fontFamily,
-    textAlign: el.style.textAlign,
-    width: el.querySelector("img")?.style.width
-  });
-
-});
+  
     let cleanHTML = el.cloneNode(true);
     cleanHTML.querySelectorAll(
   ".resizeHandle,.duplicateBtn,.deleteBtn"
