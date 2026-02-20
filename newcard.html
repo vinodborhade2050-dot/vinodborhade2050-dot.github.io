@@ -200,6 +200,7 @@ function select(el){
 
       canvas.appendChild(clone);
       setupElement(clone); // make it movable/selectable
+      setupResize(dip,clone);
     };
 
     el.appendChild(dup);
