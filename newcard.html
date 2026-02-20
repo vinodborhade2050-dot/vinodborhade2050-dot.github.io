@@ -378,8 +378,9 @@ function setupElement(el){
   if (handle) {
     setupResize(el, handle);
   }
-el.addEventListener("touchstart", function(){
-  select(el);
+el.addEventListener("touchstart", function(e){
+  if (e.target.closest('[data-type="resize"]')) return;
+    select(el);
 });
 
 el.addEventListener("click", function(){
