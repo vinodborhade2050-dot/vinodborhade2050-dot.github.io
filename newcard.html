@@ -159,7 +159,7 @@ button{
 <select id="draftList"></select>
 
 <button onclick="saveDraft()">Save</button>
-<button onclick="loadDraft()">Load</button>
+<input type="file" id="loadDraftFile" accept=".json" onchange="loadDraftFromFile(event)">
 
 
 <button onclick="downloadImage()">Download</button>
@@ -545,7 +545,6 @@ function getAllDrafts(){
 function saveAllDrafts(obj){
   localStorage.setItem("allInvitationDrafts", JSON.stringify(obj));
 }
-
 function saveDraft(){
 
   const name=document.getElementById("draftName").value.trim();
@@ -555,17 +554,20 @@ function saveDraft(){
     return;
   }
 
-  let drafts=getAllDrafts();
-
   const data={
     bg:canvas.style.backgroundImage,
     elements:[]
   };
 
   document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
+
+    let cleanHTML = el.cloneNode(true);
+    cleanHTML.querySelectorAll(".resizeHandle,.duplicateBtn")
+      .forEach(e => e.remove());
+
     data.elements.push({
       type:el.classList.contains("textBox")?"text":"image",
-      html:el.innerHTML,
+      html:cleanHTML.innerHTML,
       top:el.style.top,
       left:el.style.left,
       color:el.style.color,
@@ -576,15 +578,30 @@ function saveDraft(){
     });
   });
 
-  drafts[name]=data;
-  saveAllDrafts(drafts);
+  const blob = new Blob([JSON.stringify(data)], {type:"application/json"});
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = name + ".json";
+  link.click();
 
-  loadDraftList();
-  document.getElementById("draftList").value=name;
-
-  alert("Draft Saved Successfully ✅");
+  alert("Draft Downloaded ✅");
 }
 
+function loadDraftFromFile(event){
+
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    const data = JSON.parse(e.target.result);
+    applyDraft(data);
+  };
+
+  reader.readAsText(file);
+}
+  
 function loadDraft(){
 
   const name=document.getElementById("draftList").value;
