@@ -241,6 +241,14 @@ function addDeleteButton(el){
     selectedElement = null;
   });
 
+  btn.addEventListener("pointerdown", function(e){
+    e.stopPropagation();
+    e.preventDefault();
+
+    el.remove();
+    selectedElement = null;
+});
+
   // DESKTOP SUPPORT
   btn.addEventListener("click", function(e){
     e.stopPropagation();
