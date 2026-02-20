@@ -200,7 +200,7 @@ function select(el){
 
       canvas.appendChild(clone);
       setupElement(clone); // make it movable/selectable
-      setupResize(dip,clone);
+      
     };
 
     el.appendChild(dup);
@@ -474,7 +474,11 @@ el.addEventListener("click", function(){
     }
 
   }, { passive:false });
-
+// 🔥 RESIZE SETUP HERE
+  const handle = el.querySelector('[data-type="resize"]');
+  if (handle) {
+    setupResize(el, handle);
+  }
 }
 
 function getDistance(touch1, touch2){
