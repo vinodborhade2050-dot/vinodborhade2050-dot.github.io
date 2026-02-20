@@ -156,7 +156,7 @@ button{
 
 <input type="text" id="draftName" placeholder="Draft Name" style="width:120px">
 
-<select id="draftList"></select>
+
 
 <button onclick="saveDraft()">Save</button>
 <input type="file" id="loadDraftFile" accept=".json" onchange="loadDraftFromFile(event)">
@@ -543,9 +543,7 @@ function downloadImage(){
 
 /* ================= MULTI DRAFT SYSTEM ================= */
 
-function getAllDrafts(){
-  return JSON.parse(localStorage.getItem("allInvitationDrafts") || "{}");
-}
+
 
 function saveAllDrafts(obj){
   localStorage.setItem("allInvitationDrafts", JSON.stringify(obj));
@@ -648,66 +646,8 @@ addresizebtn(el);
   });
 
   }
-function loadDraft(){
-
-  const name=document.getElementById("draftList").value;
-
-  if(!name){
-    alert("Select Draft");
-    return;
-  }
-
-  let drafts=getAllDrafts();
-  if(!drafts[name]){
-    alert("Draft Not Found");
-    return;
-  }
-
-  const data=drafts[name];
-
-  canvas.innerHTML="";
-  canvas.style.backgroundImage=data.bg || "";
-
-  data.elements.forEach(item=>{
-    const el=document.createElement("div");
-    el.className=item.type==="text"?"textBox":"imgBox";
-    el.innerHTML=item.html;
-    if(item.type==="text"){
-    el.ondblclick = () => {
-        let t = prompt("Edit", el.innerText);
-        if(t !== null) el.innerText = t;
-    };
-}
 
 
-    el.style.top=item.top;
-    el.style.left=item.left;
-    el.style.color=item.color;
-    el.style.fontSize=item.fontSize;
-    el.style.fontFamily=item.fontFamily;
-    el.style.textAlign=item.textAlign;
-
-    if(item.type==="image" && el.querySelector("img"))
-      el.querySelector("img").style.width=item.width;
-
-    canvas.appendChild(el);
-    setupElement(el);
-  });
-
-  alert("Draft Loaded Successfully ✅");
-}
-
-function deleteDraft(){
-
-  const name=document.getElementById("draftList").value;
-  if(!name) return;
-
-  let drafts=getAllDrafts();
-  delete drafts[name];
-  saveAllDrafts(drafts);
-
-  loadDraftList();
-}
 
 function loadDraftList(){
 
