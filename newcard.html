@@ -610,7 +610,7 @@ function loadDraftFromFile(event){
   };
 
   reader.readAsText(file);
-  document.querySelectorAll('.resizeHandle').forEach(el => el.remove());
+  
 }
   function applyDraft(data){
 
@@ -647,6 +647,7 @@ function loadDraftFromFile(event){
 
     // 🔥 Re-enable drag + resize + duplicate
     setupElement(el);
+    document.querySelectorAll('.resizeHandle').forEach(el => el.remove());
 
   });
 
