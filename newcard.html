@@ -646,6 +646,7 @@ function loadDraftFromFile(event){
 
     if(item.type === "text"){
       el = document.createElement("div");
+      el.contentEditable = true;
       el.className = "textBox";
       el.innerHTML = item.html;
     }
