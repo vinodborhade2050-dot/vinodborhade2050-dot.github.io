@@ -610,6 +610,7 @@ function loadDraftFromFile(event){
   };
 
   reader.readAsText(file);
+  document.querySelectorAll('.resizeHandle').forEach(el => el.remove());
 }
   function applyDraft(data){
 
