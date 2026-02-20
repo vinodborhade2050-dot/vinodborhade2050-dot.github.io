@@ -108,7 +108,25 @@ button{
   z-index:1000;
 }
 
+.colorWrapper{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  background:#fff;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  font-size:14px;
+}
 
+#colorPicker{
+  width:40px;
+  height:40px;
+  border:none;
+  padding:0;
+  cursor:pointer;
+  background:none;
+}
  
 </style>
 </head>
@@ -116,14 +134,19 @@ button{
 <body>
 
 <div class="toolbar">
+<input type="file" id="bgUpload" accept="image/*" hidden>
+<button onclick="bgUpload.click()">🖼 Change Background</button>
 
-<input type="file" id="bgUpload" accept="image/*">
+
 <button onclick="addText()">Add Text</button>
   
 
 <input type="file" id="imgUpload" accept="image/*">
 
-<input type="color" id="colorPicker" onchange="changeColor()">
+<div class="colorWrapper">
+  🎨 Text Color
+  <input type="color" id="colorPicker" onchange="changeColor()">
+</div>
 <select id="fontPicker" onchange="changeFont()">
   <option value="'Baloo2 ExtraBold', cursive">Baloo 2 Extra Bold</option>
   <option value="'Tiro Devanagari Marathi', serif">Traditional</option>
@@ -159,7 +182,8 @@ button{
 
 
 <button onclick="saveDraft()">Save</button>
-<input type="file" id="loadDraftFile" accept=".json" onchange="loadDraftFromFile(event)">
+<input type="file" id="loadDraftFile" accept=".json" onchange="loadDraftFromFile(event)" hidden>
+<button onclick="loadDraftFile.click()">📂 Load Draft</button>
 
 
 <button onclick="downloadImage()">Download</button>
