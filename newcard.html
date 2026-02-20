@@ -186,6 +186,7 @@ function select(el){
   active=el; 
   el.classList.add("active"); 
   addDeleteButton(el);
+  addresizebtn((el);
   // Add Duplicate button (bottom-right)
   if(!el.querySelector(".duplicateBtn")){
     const dup = document.createElement("div");
@@ -208,6 +209,26 @@ function select(el){
   }
   selectedElement = el;
 }
+  function addresizebtn(el){
+    let handle = el.querySelector(".resizeHandle");
+
+  if(!handle){
+    handle = document.createElement("div");
+    handle.className = "resizeHandle";
+    handle.style.width = "15px";
+    handle.style.height = "15px";
+    handle.style.position = "absolute";
+    handle.style.right = "0";
+    handle.style.bottom = "0";
+    handle.style.background = "red";
+    handle.style.cursor = "se-resize";
+
+    el.appendChild(handle);
+  }
+
+  // 🔥 Setup resize
+  setupResize(el, handle);
+  }
 function addDeleteButton(el){
 
   // remove old button if exists
@@ -361,7 +382,7 @@ imgUpload.onchange=e=>{
     box.style.left="120px";
 
     canvas.appendChild(box);
-    setupElement(box,0);
+    setupElement(box);
   };
   r.readAsDataURL(e.target.files[0]);
 };
@@ -380,27 +401,10 @@ bgUpload.onchange=e=>{
 
 function setupElement(el){
   // 🔥 CREATE RESIZE HANDLE IF NOT EXISTS
-  let handle = el.querySelector(".resizeHandle");
-
-  if(!handle){
-    handle = document.createElement("div");
-    handle.className = "resizeHandle";
-    handle.style.width = "15px";
-    handle.style.height = "15px";
-    handle.style.position = "absolute";
-    handle.style.right = "0";
-    handle.style.bottom = "0";
-    handle.style.background = "red";
-    handle.style.cursor = "se-resize";
-
-    el.appendChild(handle);
-  }
-
-  // 🔥 Setup resize
-  setupResize(el, handle);
+  
 el.addEventListener("touchstart", function(e){
 
-    select(el);
+select(el);
 });
 
 el.addEventListener("click", function(){
