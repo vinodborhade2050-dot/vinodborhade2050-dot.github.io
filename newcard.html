@@ -215,12 +215,7 @@ function select(el){
   if(!handle){
     handle = document.createElement("div");
     handle.className = "resizeHandle";
-    handle.style.width = "15px";
-    handle.style.height = "15px";
-    handle.style.position = "absolute";
-    handle.style.right = "0";
-    handle.style.bottom = "0";
-    handle.style.background = "red";
+    
     handle.style.cursor = "se-resize";
 
     el.appendChild(handle);
