@@ -601,7 +601,45 @@ function loadDraftFromFile(event){
 
   reader.readAsText(file);
 }
-  
+  function applyDraft(data){
+
+  // 🔥 Clear old elements
+  document.querySelectorAll(".textBox,.imgBox").forEach(el=>el.remove());
+
+  // 🔥 Restore background
+  canvas.style.backgroundImage = data.bg || "";
+
+  // 🔥 Recreate elements
+  data.elements.forEach(item=>{
+
+    let el;
+
+    if(item.type === "text"){
+      el = document.createElement("div");
+      el.className = "textBox";
+      el.innerHTML = item.html;
+    }
+    else{
+      el = document.createElement("div");
+      el.className = "imgBox";
+      el.innerHTML = item.html;
+    }
+
+    el.style.top = item.top;
+    el.style.left = item.left;
+    el.style.color = item.color;
+    el.style.fontSize = item.fontSize;
+    el.style.fontFamily = item.fontFamily;
+    el.style.textAlign = item.textAlign;
+
+    canvas.appendChild(el);
+
+    // 🔥 Re-enable drag + resize + duplicate
+    setupElement(el);
+
+  });
+
+  }
 function loadDraft(){
 
   const name=document.getElementById("draftList").value;
