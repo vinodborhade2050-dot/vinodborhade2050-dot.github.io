@@ -546,7 +546,7 @@ let recentColors = [];
 function changeColor(){
   if(active && active.classList.contains("textBox"))
     active.style.color=document.getElementById("colorPicker").value;
-  saveRecentColor(color);
+  saveRecentColor(document.getElementById("colorPicker").value);
 }
 function saveRecentColor(color){
 
@@ -632,7 +632,8 @@ function saveDraft(){
 
   const data={
     bg:canvas.style.backgroundImage,
-    elements:[]
+    elements:[],
+    recentColors: recentColors
   };
 document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
 
@@ -651,7 +652,8 @@ document.querySelectorAll(".textBox,.imgBox").forEach(el=>{
       fontSize:el.style.fontSize,
       fontFamily:el.style.fontFamily,
       textAlign:el.style.textAlign,
-      width:el.style.width
+      width: window.getComputedStyle(el).width,
+
     });
   });
 
@@ -677,8 +679,35 @@ function loadDraftFromFile(event){
   };
 
   reader.readAsText(file);
-  
+  // 🔥 VERY IMPORTANT – Restore recent colors
+  recentColors = data.recentColors || [];
+  renderRecentColors();
 }
+  function renderRecentColors(){
+
+  const container = document.getElementById("recentColors");
+
+  if(!container) return;   // safety check
+
+  container.innerHTML = "";
+
+  recentColors.forEach(color => {
+
+    const box = document.createElement("div");
+    box.className = "colorBox";
+    box.style.background = color;
+
+    box.onclick = function(){
+      document.getElementById("colorPicker").value = color;
+
+      if(active && active.classList.contains("textBox")){
+        active.style.color = color;
+      }
+    };
+
+    container.appendChild(box);
+  });
+  }
   function applyDraft(data){
 
   // 🔥 Clear old elements
