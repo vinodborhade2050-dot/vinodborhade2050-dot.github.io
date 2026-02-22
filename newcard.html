@@ -202,14 +202,32 @@ const canvas=document.getElementById("canvas");
 let selectedElement = null;
 const picker = document.getElementById("colorPicker");
 
-let recentColors = [];
-
+let recentColors = JSON.parse(localStorage.getItem("recentColors")) || [];
 // Force apply when picker clicked (fix same color issue)
 picker.addEventListener("click", function () {
     changeColor();
 });
+
+  const colorPicker = document.getElementById("colorPicker");
+
+colorPicker.addEventListener("input", function(){
+
+  if(!active) return;
+
+  const color = this.value;
+  active.style.color = color;
+
+  if(!recentColors.includes(color)){
+    recentColors.unshift(color);
+    if(recentColors.length > 10) recentColors.pop();
+  }
+
+  localStorage.setItem("recentColors", JSON.stringify(recentColors));
+  renderRecentColors();
+});
 /* ================= SELECT ================= */
 
+ 
 function select(el){ 
   document.querySelectorAll(".textBox,.imgBox") 
     .forEach(e=>{e.classList.remove("active");
@@ -572,12 +590,13 @@ function renderRecentColors(){
   recentColors.forEach(color => {
 
     const box = document.createElement("div");
-    box.className = "colorBox";
+    box.className = "recentColorBox";
     box.style.background = color;
 
     box.onclick = function(){
-      document.getElementById("colorPicker").value = color;
-      active.style.color = color;
+      if(active){
+        active.style.color = color;
+      }
     };
 
     container.appendChild(box);
@@ -740,6 +759,9 @@ function loadDraftFromFile(event){
     el.style.fontFamily = item.fontFamily;
     el.style.textAlign = item.textAlign;
 
+if(item.width){
+  el.style.width = item.width;
+}
     canvas.appendChild(el);
 
     // 🔥 Re-enable drag + resize + duplicate
