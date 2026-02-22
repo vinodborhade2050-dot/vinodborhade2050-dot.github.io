@@ -177,7 +177,7 @@ button{
 </select>
 
 <input type="number" id="fontSize" placeholder="Font Size" onchange="changeFontSize()" style="width:90px">
-
+<button onclick="toggleStyleMode()">🎨 Copy Style</button>
 
 <input type="text" id="draftName" placeholder="Draft Name" style="width:120px">
 
@@ -201,7 +201,8 @@ let active=null;
 const canvas=document.getElementById("canvas");
 let selectedElement = null;
 const picker = document.getElementById("colorPicker");
-
+let styleMode = false;
+let copiedStyle = null;
 let recentColors = JSON.parse(localStorage.getItem("recentColors")) || [];
 // Force apply when picker clicked (fix same color issue)
 picker.addEventListener("click", function () {
@@ -227,8 +228,27 @@ colorPicker.addEventListener("input", function(){
 });
 /* ================= SELECT ================= */
 
- 
+ function toggleStyleMode(){
+  styleMode = !styleMode;
+
+  if(styleMode){
+    alert("Copy Style Mode ON\nSelect element to copy style from.");
+  }else{
+    alert("Copy Style Mode OFF");
+  }
+ }
 function select(el){ 
+if(!copiedStyle){
+    // First click → copy style
+    copiedStyle = {
+      color: el.style.color,
+      fontSize: el.style.fontSize,
+      fontFamily: el.style.fontFamily,
+      textAlign: el.style.textAlign,
+      fontWeight: el.style.fontWeight,
+      width: el.style.width
+    };}
+  
   document.querySelectorAll(".textBox,.imgBox") 
     .forEach(e=>{e.classList.remove("active");
                 const oldBtn = e.querySelector(".deleteBtn");
@@ -236,6 +256,19 @@ function select(el){
             );
   active=el; 
   el.classList.add("active"); 
+if(styleMode){
+  el.style.color = copiedStyle.color;
+    el.style.fontSize = copiedStyle.fontSize;
+    el.style.fontFamily = copiedStyle.fontFamily;
+    el.style.textAlign = copiedStyle.textAlign;
+    el.style.fontWeight = copiedStyle.fontWeight;
+    el.style.width = copiedStyle.width;
+
+    alert("Style Applied ✅");
+
+    copiedStyle = null;
+    styleMode = false;
+}
   addDeleteButton(el);
   
   // Add Duplicate button (bottom-right)
