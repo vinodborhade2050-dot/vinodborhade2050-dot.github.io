@@ -149,6 +149,7 @@ button{
   <input type="color" id="colorPicker" onchange="changeColor()">
   <div id="recentColors" class="recentColors"></div>
 </div>
+  <button id="matchTopBtn">Match Top</button>
 <select id="fontPicker" onchange="changeFont()">
   <option value="'Baloo2 ExtraBold', cursive">Baloo 2 Extra Bold</option>
   <option value="'Tiro Devanagari Marathi', serif">Traditional</option>
@@ -203,6 +204,20 @@ let selectedElement = null;
 const picker = document.getElementById("colorPicker");
 let styleMode = false;
 let copiedStyle = null;
+
+  let referenceElement = null;
+
+document.getElementById("matchTopBtn").addEventListener("click", () => {
+  
+  if (!active) {
+    alert("Select a reference element first!");
+    return;
+  }
+
+  referenceElement = active;
+  alert("Reference element selected! Now click another element to match top.");
+});
+  
 let recentColors = JSON.parse(localStorage.getItem("recentColors")) || [];
 // Force apply when picker clicked (fix same color issue)
 picker.addEventListener("click", function () {
@@ -248,7 +263,13 @@ if(!copiedStyle){
       fontWeight: el.style.fontWeight,
       width: el.style.width
     };}
-  
+  if (referenceElement && el !== referenceElement) {
+    // Match top
+    el.style.top = referenceElement.style.top;
+
+    // Optional: reset reference after one match
+    referenceElement = null;
+  }
   document.querySelectorAll(".textBox,.imgBox") 
     .forEach(e=>{e.classList.remove("active");
                 const oldBtn = e.querySelector(".deleteBtn");
