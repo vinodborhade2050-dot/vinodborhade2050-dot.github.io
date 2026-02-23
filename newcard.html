@@ -802,4 +802,49 @@ function loadDraftFromFile(event){
     }
     else{
       el = document.createElement("div");
+      el.className = "imgBox";
+      el.innerHTML = item.html;
+    }
+
+    el.style.top = item.top;
+    el.style.left = item.left;
+    el.style.color = item.color;
+    el.style.fontSize = item.fontSize;
+    el.style.fontFamily = item.fontFamily;
+    el.style.textAlign = item.textAlign;
+
+if(item.width){
+  el.style.width = item.width;
+}
+    canvas.appendChild(el);
+
+    // 🔥 Re-enable drag + resize + duplicate
+    setupElement(el);
     
+addresizebtn(el);
+  });
+
+  }
+
+
+
+function loadDraftList(){
+
+  const select=document.getElementById("draftList");
+  select.innerHTML="";
+
+  let drafts=getAllDrafts();
+
+  for(let key in drafts){
+    let option=document.createElement("option");
+    option.value=key;
+    option.textContent=key;
+    select.appendChild(option);
+  }
+}
+
+loadDraftList();
+
+</script>
+</body>
+</html>
