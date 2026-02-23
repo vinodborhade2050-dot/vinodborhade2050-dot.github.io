@@ -3,342 +3,215 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shubh Invitation Studio</title>
+<title>Wedding Invitation Maker</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&family=Yatra+One&display=swap" rel="stylesheet">
 
 <style>
 
-/* ===== GLOBAL ===== */
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:'Poppins', sans-serif;
-}
-body{
-  margin:0;
-  font-family:'Poppins', sans-serif;
-  background:#f4f1ed;
-  display:flex;
-  min-height:100vh;
+  font-family:'Noto Serif Devanagari', serif;
 }
 
-/* Sidebar Fix */
-/* ==== ICON SIDEBAR ==== */
-.sidebar{
-  width:70px;
-  background:#8b5e3c;
+/* Top Bar */
+.topbar{
+  height:60px;
+  background:#8b0000;
   color:white;
   display:flex;
-  flex-direction:column;
   align-items:center;
-  padding:15px 5px;
-  gap:15px;
+  justify-content:space-between;
+  padding:0 15px;
+  position:fixed;
+  width:100%;
+  top:0;
+  z-index:1001;
+}
+
+.topbar h2{
+  font-size:18px;
+}
+
+.menu-btn{
+  font-size:24px;
+  cursor:pointer;
+}
+
+/* Sidebar */
+.sidebar{
+  position:fixed;
+  top:60px;
+  left:-250px;
+  width:240px;
+  height:100%;
+  background:#fff;
+  box-shadow:2px 0 10px rgba(0,0,0,0.1);
+  padding:15px;
+  transition:0.3s;
+  z-index:1000;
   overflow-y:auto;
 }
 
-.sidebar .logo{
-  font-size:22px;
-  margin-bottom:20px;
+.sidebar.active{
+  left:0;
 }
 
-.sidebar button{
-  width:45px;
-  height:45px;
-  border-radius:12px;
-  border:none;
-  background:rgba(255,255,255,0.15);
-  color:white;
-  font-size:18px;
-  cursor:pointer;
-  transition:0.3s;
+.sidebar h3{
+  margin-bottom:10px;
+  font-size:16px;
+  color:#8b0000;
 }
 
-.sidebar button:hover{
-  background:white;
-  color:#8b5e3c;
-}
-
-/* ===== MAIN CONTENT ===== */
-.main{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-}
-
-/* ===== TOPBAR ===== */
-.topbar{
-  height:60px;
-  background:white;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 20px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-.topbar h3{
-  font-weight:500;
-}
-
-.topbar .actions{
-  display:flex;
-  gap:10px;
-}
-
-.topbar button{
-  padding:6px 12px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.save-btn{
-  background:#d4af37;
-  color:white;
-}
-
-.download-btn{
-  background:#b22222;
-  color:white;
-}
-
-/* ===== EDITOR AREA ===== */
-.editor{
-  flex:1;
-  display:flex;
-  padding:20px;
-  gap:20px;
-}
-
-/* ===== TOOL PANEL ===== */
-.tool-panel{
-  width:250px;
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.05);
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.tool-panel input,
-.tool-panel select,
-.tool-panel button{
+.sidebar button,
+.sidebar select,
+.sidebar input{
+  width:100%;
+  margin-bottom:10px;
   padding:8px;
   border-radius:6px;
   border:1px solid #ddd;
 }
 
-.tool-panel button{
-  background:#8b5e3c;
+.sidebar button{
+  background:#8b0000;
   color:white;
   border:none;
   cursor:pointer;
 }
 
-/* ===== CANVAS AREA ===== */
-.canvas-area{
-  flex:1;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+/* Overlay */
+.overlay{
+  position:fixed;
+  top:60px;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.3);
+  display:none;
+  z-index:999;
 }
 
-.invite-canvas{
-  width:600px;
-  height:700px;
+.overlay.active{
+  display:block;
+}
+
+/* Main Content */
+.main{
+  margin-top:60px;
+  padding:15px;
+  display:flex;
+  justify-content:center;
+}
+
+/* Canvas Area */
+.canvas-wrapper{
+  background:#f4f4f4;
+  padding:10px;
+  border-radius:10px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Fixed Invitation Size */
+#canvas{
+  width:550px;
+  height:800px;
   background:white;
-  border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.12);
-  padding:30px;
-  text-align:center;
+  position:relative;
   overflow:hidden;
 }
-/* ===== MOBILE ===== */
-@media(max-width:900px){
 
-  body{
-    flex-direction:column;
+/* Responsive */
+@media(max-width:600px){
+  #canvas{
+    width:95vw;
+    height:calc(95vw * 1.45);
   }
-
-  .sidebar{
-    flex-direction:row;
-    width:100%;
-    overflow-x:auto;
-  }
-
-  .editor{
-    flex-direction:column;
-  }
-
-
-}
-  /* ===== HAMBURGER ===== */
-.menu-toggle{
-  font-size:22px;
-  cursor:pointer;
-  display:none;
 }
 
-/* ===== MOBILE SIDEBAR BEHAVIOR ===== */
-@media(max-width:900px){
-
-  .menu-toggle{
-    display:block;
-  }
-
-  .sidebar{
-    position:fixed;
-    top:0;
-    left:-250px;
-    height:100%;
-    width:200px;
-    transition:0.3s;
-    z-index:1000;
-  }
-
-  .sidebar.active{
-    left:0;
-  }
-
-}
-.tool-panel{
-  width:250px;
-  background:white;
-  padding:15px;
-  border-radius:12px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.06);
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
-}
-
-.tool-panel button{
-  background:#f4f1ed;
-  border:none;
-  border-radius:12px;
-  padding:15px 10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  cursor:pointer;
-  transition:0.3s;
-  font-size:13px;
-  color:#444;
-}
-
-.tool-panel button i{
-  font-size:18px;
-  color:#8b5e3c;
-}
-
-.tool-panel button:hover{
-  background:#8b5e3c;
-  color:white;
-}
-
-.tool-panel button:hover i{
-  color:white;
-  }
 </style>
 </head>
-
 <body>
 
-<!-- ===== SIDEBAR ===== -->
-<div class="sidebar">
+<!-- Topbar -->
+<div class="topbar">
+  <div class="menu-btn" onclick="toggleMenu()">☰</div>
+  <h2>Wedding Invitation Maker</h2>
+</div>
 
-  <h2 class="logo">💍</h2>
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
 
-  <button onclick="bgUpload.click()" title="Change Background">
-    🖼
-  </button>
+  <h3>Design Tools</h3>
 
-  <button onclick="addText()" title="Add Text">
-    ✏
-  </button>
+  <button onclick="addText()">✍ Add Text</button>
+  <button onclick="document.getElementById('bgUpload').click()">🖼 Change Background</button>
+  <button onclick="document.getElementById('imgUpload').click()">📷 Add Image</button>
 
-  <button onclick="imgUpload.click()" title="Add Image">
-    🖼➕
-  </button>
+  <input type="color" id="colorPicker" onchange="changeColor()">
 
-  <button onclick="toggleStyleMode()" title="Copy Style">
-    🎨
-  </button>
+  <select onchange="changeFont(this.value)">
+    <option value="'Baloo 2', cursive">Baloo 2</option>
+    <option value="'Noto Serif Devanagari', serif">Classic</option>
+    <option value="'Yatra One', cursive">Decorative</option>
+  </select>
 
-  <button onclick="matchTop()" title="Match Top">
-    📌
-  </button>
+  <input type="number" placeholder="Font Size" onchange="changeFontSize(this.value)">
+
+  <button onclick="saveDraft()">💾 Save Draft</button>
+  <button onclick="downloadImage()">⬇ Download</button>
 
 </div>
 
-<!-- ===== MAIN AREA ===== -->
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<!-- Main -->
 <div class="main">
-
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <h3>Wedding Invitation Editor</h3>
-    <div class="menu-toggle" onclick="toggleSidebar()">
-  ☰
-</div></div>
-    
-
-  <!-- EDITOR -->
-  <div class="editor">
-
-    <!-- TOOL PANEL -->
-    <div class="tool-panel">
-
-  <button onclick="addText()" title="Add Text">
-    <i class="fa-solid fa-font"></i>
-    <span>Text</span>
-  </button>
-
-  <button onclick="imgUpload.click()" title="Add Image">
-    <i class="fa-solid fa-image"></i>
-    <span>Image</span>
-  </button>
-
-  <button onclick="bgUpload.click()" title="Change Background">
-    <i class="fa-solid fa-panorama"></i>
-    <span>Background</span>
-  </button>
-
-  <button onclick="toggleStyleMode()" title="Copy Style">
-    <i class="fa-solid fa-brush"></i>
-    <span>Style</span>
-  </button>
-
-  <button onclick="matchTop()" title="Align Top">
-    <i class="fa-solid fa-arrow-up"></i>
-    <span>Top</span>
-  </button>
-
-    </div>
-
-    <!-- CANVAS -->
-    <div class="canvas-area">
-      <div class="invite-canvas">
-        <h2>सस्नेह निमंत्रण</h2>
-        <p>रोहित ♥ पूजा</p>
-        <p>दिनांक: 25 डिसेंबर 2026</p>
-        <p>स्थळ: मुंबई</p>
-      </div>
-    </div>
-
+  <div class="canvas-wrapper">
+    <div id="canvas"></div>
   </div>
-
 </div>
+
+<!-- Hidden Inputs -->
+<input type="file" id="bgUpload" accept="image/*" hidden>
+<input type="file" id="imgUpload" accept="image/*" hidden>
+
+<script>
+
+function toggleMenu(){
+  document.getElementById("sidebar").classList.toggle("active");
+  document.getElementById("overlay").classList.toggle("active");
+}
+
+/* Keep your existing logic below */
+function addText(){
+  alert("Attach your existing addText() logic");
+}
+
+function changeColor(){
+  alert("Attach your existing changeColor() logic");
+}
+
+function changeFont(font){
+  alert("Attach your existing changeFont() logic");
+}
+
+function changeFontSize(size){
+  alert("Attach your existing changeFontSize() logic");
+}
+
+function saveDraft(){
+  alert("Attach your existing saveDraft() logic");
+}
+
+function downloadImage(){
+  alert("Attach your existing downloadImage() logic");
+}
+
+</script>
 
 </body>
-  <script>
-function toggleSidebar(){
-  document.querySelector(".sidebar").classList.toggle("active");
-}
-  </script>
 </html>
