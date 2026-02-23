@@ -174,9 +174,6 @@ body{
     flex-direction:column;
   }
 
-  .tool-panel{
-    width:100%;
-  }
 
 }
   /* ===== HAMBURGER ===== */
@@ -208,7 +205,46 @@ body{
   }
 
 }
+.tool-panel{
+  width:250px;
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.06);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
 
+.tool-panel button{
+  background:#f4f1ed;
+  border:none;
+  border-radius:12px;
+  padding:15px 10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:0.3s;
+  font-size:13px;
+  color:#444;
+}
+
+.tool-panel button i{
+  font-size:18px;
+  color:#8b5e3c;
+}
+
+.tool-panel button:hover{
+  background:#8b5e3c;
+  color:white;
+}
+
+.tool-panel button:hover i{
+  color:white;
+  }
 </style>
 </head>
 
@@ -261,22 +297,31 @@ body{
 
     <!-- TOOL PANEL -->
     <div class="tool-panel">
-      <button>Add Text</button>
-      <button>Add Image</button>
-      <button>Change Background</button>
 
-      <label>Font</label>
-      <select>
-        <option>Traditional Marathi</option>
-        <option>Elegant Serif</option>
-        <option>Decorative Script</option>
-      </select>
+  <button onclick="addText()" title="Add Text">
+    <i class="fa-solid fa-font"></i>
+    <span>Text</span>
+  </button>
 
-      <label>Font Size</label>
-      <input type="number" placeholder="Font Size">
+  <button onclick="imgUpload.click()" title="Add Image">
+    <i class="fa-solid fa-image"></i>
+    <span>Image</span>
+  </button>
 
-      <label>Text Color</label>
-      <input type="color">
+  <button onclick="bgUpload.click()" title="Change Background">
+    <i class="fa-solid fa-panorama"></i>
+    <span>Background</span>
+  </button>
+
+  <button onclick="toggleStyleMode()" title="Copy Style">
+    <i class="fa-solid fa-brush"></i>
+    <span>Style</span>
+  </button>
+
+  <button onclick="matchTop()" title="Align Top">
+    <i class="fa-solid fa-arrow-up"></i>
+    <span>Top</span>
+  </button>
 
     </div>
 
