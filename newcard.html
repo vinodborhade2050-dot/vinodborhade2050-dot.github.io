@@ -142,13 +142,13 @@ select, input[type="number"], input[type="text"]{
 
 <div class="toolbar">
 
+<input type="file" id="bgUpload" accept="image/*" hidden>
+<button onclick="bgUpload.click()">🖼 Background</button>
+
 <button onclick="addText()">➕ Text</button>
 
-<button onclick="bgUpload.click()">🖼 Background</button>
-<input type="file" id="bgUpload" accept="image/*" hidden>
-
-<button onclick="imgUpload.click()">🖼 Image</button>
 <input type="file" id="imgUpload" accept="image/*" hidden>
+<button onclick="imgUpload.click()">🖼 Image</button>
 
 <div class="colorWrapper">
   🎨 <input type="color" id="colorPicker" onchange="changeColor()">
@@ -163,12 +163,18 @@ select, input[type="number"], input[type="text"]{
 
 <input type="number" id="fontSize" placeholder="Size" onchange="changeFontSize()" style="width:70px">
 
-<button onclick="toggleStyleMode()">🎨 Copy</button>
+<button onclick="toggleStyleMode()">🎨 Copy Style</button>
+
+<input type="text" id="draftName" placeholder="Draft Name" style="width:120px">
+
+<button onclick="saveDraft()">💾 Save</button>
+
+<input type="file" id="loadDraftFile" accept=".json" onchange="loadDraftFromFile(event)" hidden>
+<button onclick="loadDraftFile.click()">📂 Load</button>
 
 <button onclick="downloadImage()">⬇ Download</button>
 
 </div>
-
 <div id="canvas" class="canvas"></div>
 
 <script>
