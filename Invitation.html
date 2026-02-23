@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Invitation Maker</title>
+<title>Invitation Card Maker</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&family=Yatra+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari&display=swap" rel="stylesheet">
 
 <style>
 
@@ -16,49 +16,93 @@
 }
 
 body{
-  background:#f7f3ef;
   font-family:'Noto Serif Devanagari', serif;
+  background:#f6f4f1;
 }
 
 /* Header */
 .header{
   background:#8b0000;
   color:white;
-  padding:12px;
+  padding:14px;
   text-align:center;
   font-size:18px;
   font-weight:bold;
 }
 
+/* Category Menu */
+.category-menu{
+  background:white;
+  display:flex;
+  gap:15px;
+  padding:10px;
+  overflow-x:auto;
+  border-bottom:1px solid #ddd;
+}
+
+.category-menu button{
+  background:#eee;
+  border:none;
+  padding:8px 15px;
+  border-radius:20px;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.category-menu button.active{
+  background:#8b0000;
+  color:white;
+}
+
+/* Template Section */
+.template-section{
+  padding:10px;
+  background:#fff;
+  overflow-x:auto;
+  display:flex;
+  gap:10px;
+  border-bottom:1px solid #ddd;
+}
+
+.template-card{
+  min-width:100px;
+  height:140px;
+  background:#ddd;
+  border-radius:10px;
+  cursor:pointer;
+  overflow:hidden;
+  border:2px solid transparent;
+}
+
+.template-card img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.template-card:hover{
+  border-color:#8b0000;
+}
+
 /* Toolbar */
 .toolbar{
-  background:white;
-  padding:10px;
   display:flex;
   gap:10px;
   overflow-x:auto;
-  border-bottom:1px solid #eee;
-  position:sticky;
-  top:0;
-  z-index:100;
+  padding:10px;
+  background:white;
+  border-bottom:1px solid #ddd;
 }
 
 .tool-btn{
-  min-width:90px;
+  min-width:85px;
   padding:8px;
-  border-radius:8px;
   border:none;
   background:#8b0000;
   color:white;
+  border-radius:8px;
   font-size:13px;
   cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-.tool-btn span{
-  font-size:18px;
 }
 
 /* Canvas Area */
@@ -81,7 +125,7 @@ body{
   background:white;
   position:relative;
   overflow:hidden;
-  border:1px solid #ddd;
+  border:1px solid #ccc;
 }
 
 /* Responsive */
@@ -97,65 +141,61 @@ body{
 <body>
 
 <div class="header">
-  Wedding Invitation Card Maker
+  Invitation Card Maker
 </div>
 
-<!-- Design Tools Above Canvas -->
+<!-- Category Menu -->
+<div class="category-menu">
+  <button class="active">Wedding Templates</button>
+  <button>Birthday Templates</button>
+  <button>Engagement</button>
+  <button>Baby Shower</button>
+</div>
+
+<!-- Template Preview Scroll -->
+<div class="template-section">
+
+  <div class="template-card">
+    <img src="https://picsum.photos/200/300?1">
+  </div>
+
+  <div class="template-card">
+    <img src="https://picsum.photos/200/300?2">
+  </div>
+
+  <div class="template-card">
+    <img src="https://picsum.photos/200/300?3">
+  </div>
+
+  <div class="template-card">
+    <img src="https://picsum.photos/200/300?4">
+  </div>
+
+</div>
+
+<!-- Design Tools -->
 <div class="toolbar">
-
-  <button class="tool-btn" onclick="addText()">
-    <span>✍</span>
-    Text
-  </button>
-
-  <button class="tool-btn" onclick="document.getElementById('bgUpload').click()">
-    <span>🖼</span>
-    Background
-  </button>
-
-  <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">
-    <span>📷</span>
-    Image
-  </button>
-
-  <button class="tool-btn" onclick="changeColor()">
-    <span>🎨</span>
-    Color
-  </button>
-
-  <button class="tool-btn" onclick="changeFont()">
-    <span>🔤</span>
-    Font
-  </button>
-
-  <button class="tool-btn" onclick="saveDraft()">
-    <span>💾</span>
-    Save
-  </button>
-
-  <button class="tool-btn" onclick="downloadImage()">
-    <span>⬇</span>
-    Download
-  </button>
-
+  <button class="tool-btn" onclick="addText()">Text</button>
+  <button class="tool-btn" onclick="bgUpload.click()">Background</button>
+  <button class="tool-btn" onclick="imgUpload.click()">Image</button>
+  <button class="tool-btn" onclick="saveDraft()">Save</button>
+  <button class="tool-btn" onclick="downloadImage()">Download</button>
 </div>
 
-<!-- Canvas Section -->
+<!-- Canvas -->
 <div class="editor-area">
   <div class="canvas-wrapper">
     <div id="canvas"></div>
   </div>
 </div>
 
-<input type="file" id="bgUpload" accept="image/*" hidden>
-<input type="file" id="imgUpload" accept="image/*" hidden>
+<input type="file" id="bgUpload" hidden>
+<input type="file" id="imgUpload" hidden>
 
 <script>
-function addText(){ alert("Connect your addText logic"); }
-function changeColor(){ alert("Connect color logic"); }
-function changeFont(){ alert("Connect font logic"); }
-function saveDraft(){ alert("Connect save logic"); }
-function downloadImage(){ alert("Connect download logic"); }
+function addText(){ alert("Attach text logic"); }
+function saveDraft(){ alert("Attach save logic"); }
+function downloadImage(){ alert("Attach download logic"); }
 </script>
 
 </body>
