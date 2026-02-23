@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wedding Invitation Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&family=Yatra+One&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
@@ -83,10 +83,10 @@ body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
 
 <!-- Toolbar -->
 <div class="toolbar">
-  <button class="tool-btn" onclick="addText()">Text</button>
-  <button class="tool-btn" onclick="document.getElementById('bgUpload').click()">Background</button>
-  <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">Image</button>
-  <button class="tool-btn" onclick="saveDraft()">Save</button>
+  <button class="tool-btn" onclick="addText()">Add Text</button>
+  <button class="tool-btn" onclick="document.getElementById('bgUpload').click()">Upload Background</button>
+  <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">Add Image</button>
+  <button class="tool-btn" onclick="saveDraft()">Save Draft</button>
   <button class="tool-btn" onclick="downloadImage()">Download</button>
 </div>
 
@@ -101,50 +101,51 @@ body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
 <input type="file" id="imgUpload" accept="image/*" hidden>
 
 <script>
-// === Templates Metadata ===
+// ===== Templates Metadata =====
 const templates = {
-  wedding:[
+  wedding: [
     {
-      id:"wedding1",
-      name:"Royal Red Wedding",
-      image:"https://picsum.photos/400/600?1",
-      fields:[
-        {name:"groom", x:50, y:100, fontSize:24, color:"#8b0000", fontFamily:"'Baloo 2', cursive"},
-        {name:"bride", x:50, y:150, fontSize:24, color:"#8b0000", fontFamily:"'Baloo 2', cursive"},
-        {name:"date", x:50, y:300, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
-        {name:"venue", x:50, y:350, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
+      id: "wedding1",
+      name: "Royal Red Wedding",
+      image: "https://picsum.photos/400/600?1",
+      fields: [
+        {name:"groom", label:"Groom Name", x:50, y:100, fontSize:24, color:"#8b0000", fontFamily:"'Baloo 2', cursive"},
+        {name:"bride", label:"Bride Name", x:50, y:150, fontSize:24, color:"#8b0000", fontFamily:"'Baloo 2', cursive"},
+        {name:"date", label:"Wedding Date", x:50, y:300, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
+        {name:"venue", label:"Venue", x:50, y:350, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
+        {name:"time", label:"Time", x:50, y:400, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
       ]
     },
     {
-      id:"wedding2",
-      name:"Floral Wedding",
-      image:"https://picsum.photos/400/600?2",
-      fields:[
-        {name:"groom", x:40, y:80, fontSize:22, color:"#4b0082", fontFamily:"'Yatra One', cursive"},
-        {name:"bride", x:40, y:130, fontSize:22, color:"#4b0082", fontFamily:"'Yatra One', cursive"},
-        {name:"date", x:40, y:280, fontSize:16, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
-        {name:"venue", x:40, y:320, fontSize:16, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
+      id: "wedding2",
+      name: "Floral Wedding",
+      image: "https://picsum.photos/400/600?2",
+      fields: [
+        {name:"groom", label:"Groom Name", x:40, y:80, fontSize:22, color:"#4b0082", fontFamily:"'Yatra One', cursive"},
+        {name:"bride", label:"Bride Name", x:40, y:130, fontSize:22, color:"#4b0082", fontFamily:"'Yatra One', cursive"},
+        {name:"date", label:"Wedding Date", x:40, y:280, fontSize:16, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
+        {name:"venue", label:"Venue", x:40, y:320, fontSize:16, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
       ]
     }
   ],
-  birthday:[
+  birthday: [
     {
-      id:"birthday1",
-      name:"Birthday Fun",
-      image:"https://picsum.photos/400/600?3",
-      fields:[
-        {name:"name", x:50, y:100, fontSize:24, color:"#ff4500", fontFamily:"'Baloo 2', cursive"},
-        {name:"age", x:50, y:150, fontSize:20, color:"#ff4500", fontFamily:"'Baloo 2', cursive"},
-        {name:"date", x:50, y:300, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
+      id: "birthday1",
+      name: "Birthday Fun",
+      image: "https://picsum.photos/400/600?3",
+      fields: [
+        {name:"name", label:"Name", x:50, y:100, fontSize:24, color:"#ff4500", fontFamily:"'Baloo 2', cursive"},
+        {name:"age", label:"Age", x:50, y:150, fontSize:20, color:"#ff4500", fontFamily:"'Baloo 2', cursive"},
+        {name:"date", label:"Date", x:50, y:300, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
       ]
     }
   ]
 };
 
-// Current selected template
+// ===== Variables =====
 let currentTemplate;
 
-// === Functions ===
+// ===== Functions =====
 function selectCategory(cat){
   document.querySelectorAll('.category-menu button').forEach(b=>b.classList.remove('active'));
   document.querySelector(`.category-menu button[onclick="selectCategory('${cat}')"]`).classList.add('active');
@@ -162,48 +163,74 @@ function selectCategory(cat){
       renderForm(temp);
       document.getElementById('canvas').style.backgroundImage=`url(${temp.image})`;
       document.getElementById('canvas').style.backgroundSize="cover";
-      document.getElementById('canvas').innerHTML=""; // Clear previous text
+      document.getElementById('canvas').innerHTML="";
     };
     section.appendChild(div);
   });
 }
 
-// Render dynamic form based on template fields
+// Render dynamic form
 function renderForm(template){
   const formDiv = document.getElementById("templateForm");
   formDiv.innerHTML="";
   template.fields.forEach(f=>{
+    const wrapper = document.createElement("div");
+    wrapper.style.display="flex";
+    wrapper.style.flexDirection="column";
+    wrapper.style.marginBottom="6px";
+
+    const label = document.createElement("label");
+    label.innerText = f.label;
+    label.style.fontWeight="bold";
+    wrapper.appendChild(label);
+
     const input = document.createElement("input");
     input.type="text";
     input.id="field_"+f.name;
-    input.placeholder=f.name.charAt(0).toUpperCase()+f.name.slice(1);
-    formDiv.appendChild(input);
+    input.placeholder=f.label;
+    input.style.padding="6px";
+    input.style.border="1px solid #ccc";
+    input.style.borderRadius="6px";
+
+    wrapper.appendChild(input);
+    formDiv.appendChild(wrapper);
   });
+
   const btn = document.createElement("button");
   btn.innerText="Fill Template";
+  btn.style.marginTop="8px";
+  btn.style.padding="8px";
+  btn.style.background="#8b0000";
+  btn.style.color="white";
+  btn.style.border="none";
+  btn.style.borderRadius="6px";
+  btn.style.cursor="pointer";
   btn.onclick = ()=>fillTemplate(template);
   formDiv.appendChild(btn);
 }
 
-// Fill canvas with form data
+// Fill canvas with form values
 function fillTemplate(template){
   const canvas = document.getElementById("canvas");
-  canvas.innerHTML=""; // Clear previous text
+  canvas.innerHTML="";
 
   template.fields.forEach(f=>{
     const val = document.getElementById("field_"+f.name).value || "";
     const div = document.createElement("div");
     div.innerText = val;
     div.style.position="absolute";
-    div.style.left = f.x+"px";
-    div.style.top = f.y+"px";
-    div.style.fontSize = f.fontSize+"px";
+    div.style.left = f.x + "px";
+    div.style.top = f.y + "px";
+    div.style.fontSize = f.fontSize + "px";
     div.style.color = f.color;
     div.style.fontFamily = f.fontFamily;
     div.style.cursor="move";
     canvas.appendChild(div);
     makeDraggable(div);
   });
+
+  canvas.style.backgroundImage = `url(${template.image})`;
+  canvas.style.backgroundSize="cover";
 }
 
 // Add manual text
@@ -263,11 +290,11 @@ document.getElementById('imgUpload').addEventListener('change', function(e){
   }
 });
 
-// Save / Download (basic)
-function saveDraft(){ alert("Attach save logic if needed"); }
-function downloadImage(){ alert("Attach download logic if needed"); }
+// Save / Download
+function saveDraft(){ alert("Save draft logic here"); }
+function downloadImage(){ alert("Download logic here"); }
 
-// Initialize default category
+// Initialize
 selectCategory('wedding');
 </script>
 
