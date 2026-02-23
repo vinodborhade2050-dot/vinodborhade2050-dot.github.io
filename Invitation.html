@@ -4,52 +4,62 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wedding Invitation Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&family=Yatra+One&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&display=swap" rel="stylesheet">
 <style>
-*{margin:0; padding:0; box-sizing:border-box;}
+*{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
 
 /* Header */
 .header{
-  background:#8b0000; color:white;
-  padding:14px; text-align:center; font-size:18px; font-weight:bold;
+  background:#8b0000;color:white;
+  padding:14px;text-align:center;font-size:18px;font-weight:bold;
 }
 
 /* Category Menu */
 .category-menu{
-  display:flex; gap:10px; padding:10px; overflow-x:auto; background:white; border-bottom:1px solid #ddd;
+  display:flex;gap:10px;padding:10px;overflow-x:auto;background:white;border-bottom:1px solid #ddd;
 }
 .category-menu button{
-  background:#eee; border:none; padding:8px 15px; border-radius:20px; cursor:pointer;
+  background:#eee;border:none;padding:8px 15px;border-radius:20px;cursor:pointer;
 }
-.category-menu button.active{background:#8b0000; color:white;}
+.category-menu button.active{background:#8b0000;color:white;}
 
 /* Template Section */
 .template-section{
-  display:flex; gap:10px; padding:10px; overflow-x:auto; background:white; border-bottom:1px solid #ddd;
+  display:flex;gap:10px;padding:10px;overflow-x:auto;background:white;border-bottom:1px solid #ddd;
 }
 .template-card{
-  min-width:100px; height:140px; border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent;
+  min-width:100px;height:140px;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;
 }
-.template-card img{width:100%; height:100%; object-fit:cover;}
+.template-card img{width:100%;height:100%;object-fit:cover;}
 .template-card:hover{border-color:#8b0000;}
+
+/* Form Section */
+#templateForm{
+  background:white;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  border-bottom:1px solid #ddd;
+}
 
 /* Toolbar */
 .toolbar{
-  display:flex; gap:10px; overflow-x:auto; padding:10px; background:white; border-bottom:1px solid #ddd;
+  display:flex;gap:10px;overflow-x:auto;padding:10px;background:white;border-bottom:1px solid #ddd;
 }
 .tool-btn{
-  min-width:85px; padding:8px; border:none; background:#8b0000; color:white; border-radius:8px; font-size:13px; cursor:pointer;
+  min-width:85px;padding:8px;border:none;background:#8b0000;color:white;border-radius:8px;font-size:13px;cursor:pointer;
 }
 
 /* Canvas Area */
-.editor-area{display:flex; justify-content:center; padding:15px;}
-.canvas-wrapper{background:white; padding:10px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);}
-#canvas{width:550px; height:800px; background:white; position:relative; overflow:hidden; border:1px solid #ccc;}
+.editor-area{display:flex;justify-content:center;padding:15px;}
+.canvas-wrapper{background:white;padding:10px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+#canvas{width:550px;height:800px;background:white;position:relative;overflow:hidden;border:1px solid #ccc;}
 
 /* Responsive */
 @media(max-width:600px){
-  #canvas{width:95vw; height:calc(95vw * 1.45);}
+  #canvas{width:95vw;height:calc(95vw * 1.45);}
 }
 </style>
 </head>
@@ -59,24 +69,23 @@ body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
 
 <!-- Category Menu -->
 <div class="category-menu">
-  <button class="active" onclick="selectCategory('wedding')">Wedding Templates</button>
-  <button onclick="selectCategory('birthday')">Birthday Templates</button>
+  <button class="active" onclick="selectCategory('wedding')">Wedding</button>
+  <button onclick="selectCategory('birthday')">Birthday</button>
   <button onclick="selectCategory('engagement')">Engagement</button>
   <button onclick="selectCategory('baby')">Baby Shower</button>
 </div>
 
-<!-- Template Preview -->
-<div class="template-section" id="templateSection">
-  <!-- Templates will appear here -->
-</div>
+<!-- Template Section -->
+<div class="template-section" id="templateSection"></div>
+
+<!-- Form Section -->
+<div id="templateForm"></div>
 
 <!-- Toolbar -->
 <div class="toolbar">
   <button class="tool-btn" onclick="addText()">Text</button>
   <button class="tool-btn" onclick="document.getElementById('bgUpload').click()">Background</button>
   <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">Image</button>
-  <button class="tool-btn" onclick="changeColor()">Color</button>
-  <button class="tool-btn" onclick="changeFont()">Font</button>
   <button class="tool-btn" onclick="saveDraft()">Save</button>
   <button class="tool-btn" onclick="downloadImage()">Download</button>
 </div>
@@ -92,44 +101,112 @@ body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
 <input type="file" id="imgUpload" accept="image/*" hidden>
 
 <script>
-// Templates by category
+// === Templates Metadata ===
 const templates = {
   wedding:[
-    "https://picsum.photos/200/300?1",
-    "https://picsum.photos/200/300?2",
-    "https://picsum.photos/200/300?3"
+    {
+      id:"wedding1",
+      name:"Royal Red Wedding",
+      image:"https://picsum.photos/400/600?1",
+      fields:[
+        {name:"groom", x:50, y:100, fontSize:24, color:"#8b0000", fontFamily:"'Baloo 2', cursive"},
+        {name:"bride", x:50, y:150, fontSize:24, color:"#8b0000", fontFamily:"'Baloo 2', cursive"},
+        {name:"date", x:50, y:300, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
+        {name:"venue", x:50, y:350, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
+      ]
+    },
+    {
+      id:"wedding2",
+      name:"Floral Wedding",
+      image:"https://picsum.photos/400/600?2",
+      fields:[
+        {name:"groom", x:40, y:80, fontSize:22, color:"#4b0082", fontFamily:"'Yatra One', cursive"},
+        {name:"bride", x:40, y:130, fontSize:22, color:"#4b0082", fontFamily:"'Yatra One', cursive"},
+        {name:"date", x:40, y:280, fontSize:16, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"},
+        {name:"venue", x:40, y:320, fontSize:16, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
+      ]
+    }
   ],
   birthday:[
-    "https://picsum.photos/200/300?4",
-    "https://picsum.photos/200/300?5"
-  ],
-  engagement:[
-    "https://picsum.photos/200/300?6",
-    "https://picsum.photos/200/300?7"
-  ],
-  baby:[
-    "https://picsum.photos/200/300?8",
-    "https://picsum.photos/200/300?9"
+    {
+      id:"birthday1",
+      name:"Birthday Fun",
+      image:"https://picsum.photos/400/600?3",
+      fields:[
+        {name:"name", x:50, y:100, fontSize:24, color:"#ff4500", fontFamily:"'Baloo 2', cursive"},
+        {name:"age", x:50, y:150, fontSize:20, color:"#ff4500", fontFamily:"'Baloo 2', cursive"},
+        {name:"date", x:50, y:300, fontSize:18, color:"#555", fontFamily:"'Noto Serif Devanagari', serif"}
+      ]
+    }
   ]
 };
 
+// Current selected template
+let currentTemplate;
+
+// === Functions ===
 function selectCategory(cat){
   document.querySelectorAll('.category-menu button').forEach(b=>b.classList.remove('active'));
   document.querySelector(`.category-menu button[onclick="selectCategory('${cat}')"]`).classList.add('active');
+
   const section = document.getElementById('templateSection');
   section.innerHTML="";
-  templates[cat].forEach(url=>{
+  templates[cat].forEach(temp=>{
     const div = document.createElement('div');
     div.classList.add('template-card');
     const img = document.createElement('img');
-    img.src=url;
+    img.src = temp.image;
     div.appendChild(img);
-    div.onclick = ()=>{document.getElementById('canvas').style.backgroundImage=`url(${url})`; document.getElementById('canvas').style.backgroundSize="cover";}
+    div.onclick = ()=>{
+      currentTemplate = temp;
+      renderForm(temp);
+      document.getElementById('canvas').style.backgroundImage=`url(${temp.image})`;
+      document.getElementById('canvas').style.backgroundSize="cover";
+      document.getElementById('canvas').innerHTML=""; // Clear previous text
+    };
     section.appendChild(div);
   });
 }
 
-// Toolbar Functions (Add your logic)
+// Render dynamic form based on template fields
+function renderForm(template){
+  const formDiv = document.getElementById("templateForm");
+  formDiv.innerHTML="";
+  template.fields.forEach(f=>{
+    const input = document.createElement("input");
+    input.type="text";
+    input.id="field_"+f.name;
+    input.placeholder=f.name.charAt(0).toUpperCase()+f.name.slice(1);
+    formDiv.appendChild(input);
+  });
+  const btn = document.createElement("button");
+  btn.innerText="Fill Template";
+  btn.onclick = ()=>fillTemplate(template);
+  formDiv.appendChild(btn);
+}
+
+// Fill canvas with form data
+function fillTemplate(template){
+  const canvas = document.getElementById("canvas");
+  canvas.innerHTML=""; // Clear previous text
+
+  template.fields.forEach(f=>{
+    const val = document.getElementById("field_"+f.name).value || "";
+    const div = document.createElement("div");
+    div.innerText = val;
+    div.style.position="absolute";
+    div.style.left = f.x+"px";
+    div.style.top = f.y+"px";
+    div.style.fontSize = f.fontSize+"px";
+    div.style.color = f.color;
+    div.style.fontFamily = f.fontFamily;
+    div.style.cursor="move";
+    canvas.appendChild(div);
+    makeDraggable(div);
+  });
+}
+
+// Add manual text
 function addText(){
   const text = prompt("Enter text:");
   if(text){
@@ -146,18 +223,14 @@ function addText(){
     makeDraggable(div);
   }
 }
-function changeColor(){ alert("Add color logic"); }
-function changeFont(){ alert("Add font logic"); }
-function saveDraft(){ alert("Add save logic"); }
-function downloadImage(){ alert("Add download logic"); }
 
-// Make text draggable
+// Draggable function
 function makeDraggable(el){
   let offsetX, offsetY;
-  el.onmousedown = (e)=>{
+  el.onmousedown = e=>{
     offsetX = e.offsetX;
     offsetY = e.offsetY;
-    document.onmousemove = (e)=>{
+    document.onmousemove = e=>{
       el.style.left = e.pageX - offsetX - document.getElementById('canvas').getBoundingClientRect().left + 'px';
       el.style.top = e.pageY - offsetY - document.getElementById('canvas').getBoundingClientRect().top + 'px';
     }
@@ -165,9 +238,37 @@ function makeDraggable(el){
   }
 }
 
+// Background / Image Upload
+document.getElementById('bgUpload').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(file){
+    const url = URL.createObjectURL(file);
+    document.getElementById('canvas').style.backgroundImage=`url(${url})`;
+    document.getElementById('canvas').style.backgroundSize="cover";
+  }
+});
+document.getElementById('imgUpload').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(file){
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    img.style.position="absolute";
+    img.style.top="100px";
+    img.style.left="100px";
+    img.style.width="150px";
+    img.style.height="150px";
+    img.style.cursor="move";
+    document.getElementById('canvas').appendChild(img);
+    makeDraggable(img);
+  }
+});
+
+// Save / Download (basic)
+function saveDraft(){ alert("Attach save logic if needed"); }
+function downloadImage(){ alert("Attach download logic if needed"); }
+
 // Initialize default category
 selectCategory('wedding');
-
 </script>
 
 </body>
