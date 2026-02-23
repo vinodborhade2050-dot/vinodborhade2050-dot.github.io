@@ -16,15 +16,15 @@
   box-sizing:border-box;
   font-family:'Poppins', sans-serif;
 }
-
 body{
+  margin:0;
+  font-family:'Poppins', sans-serif;
   background:#f4f1ed;
   display:flex;
-  height:100vh;
-  overflow:hidden;
+  min-height:100vh;
 }
 
-/* ===== SIDEBAR ===== */
+/* Sidebar Fix */
 .sidebar{
   width:240px;
   background:#8b5e3c;
@@ -32,6 +32,7 @@ body{
   display:flex;
   flex-direction:column;
   padding:20px 15px;
+  overflow-y:auto;   /* IMPORTANT */
 }
 
 .sidebar h2{
@@ -144,15 +145,15 @@ body{
 }
 
 .invite-canvas{
-  width:350px;
-  height:600px;
+  width:600px;
+  height:700px;
   background:white;
-  border-radius:10px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.1);
-  padding:20px;
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.12);
+  padding:30px;
   text-align:center;
+  overflow:hidden;
 }
-
 /* ===== MOBILE ===== */
 @media(max-width:900px){
 
