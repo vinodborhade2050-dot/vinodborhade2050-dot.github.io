@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shubh Invitation Studio</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* ===== GLOBAL ===== */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins', sans-serif;
+}
+
+body{
+  background:#f4f1ed;
+  display:flex;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:240px;
+  background:#8b5e3c;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  padding:20px 15px;
+}
+
+.sidebar h2{
+  margin-bottom:30px;
+  font-size:20px;
+  font-weight:600;
+}
+
+.sidebar button{
+  background:none;
+  border:none;
+  color:white;
+  text-align:left;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:8px;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.sidebar button:hover{
+  background:rgba(255,255,255,0.2);
+}
+
+/* ===== MAIN CONTENT ===== */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  height:60px;
+  background:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.topbar h3{
+  font-weight:500;
+}
+
+.topbar .actions{
+  display:flex;
+  gap:10px;
+}
+
+.topbar button{
+  padding:6px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.save-btn{
+  background:#d4af37;
+  color:white;
+}
+
+.download-btn{
+  background:#b22222;
+  color:white;
+}
+
+/* ===== EDITOR AREA ===== */
+.editor{
+  flex:1;
+  display:flex;
+  padding:20px;
+  gap:20px;
+}
+
+/* ===== TOOL PANEL ===== */
+.tool-panel{
+  width:250px;
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.tool-panel input,
+.tool-panel select,
+.tool-panel button{
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #ddd;
+}
+
+.tool-panel button{
+  background:#8b5e3c;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+/* ===== CANVAS AREA ===== */
+.canvas-area{
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.invite-canvas{
+  width:350px;
+  height:600px;
+  background:white;
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.1);
+  padding:20px;
+  text-align:center;
+}
+
+/* ===== MOBILE ===== */
+@media(max-width:900px){
+
+  body{
+    flex-direction:column;
+  }
+
+  .sidebar{
+    flex-direction:row;
+    width:100%;
+    overflow-x:auto;
+  }
+
+  .editor{
+    flex-direction:column;
+  }
+
+  .tool-panel{
+    width:100%;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar">
+  <h2>💍 Shubh Studio</h2>
+  <button>Dashboard</button>
+  <button>Templates</button>
+  <button>My Designs</button>
+  <button>AI Generator</button>
+  <button>Settings</button>
+</div>
+
+<!-- ===== MAIN AREA ===== -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <h3>Wedding Invitation Editor</h3>
+    <div class="actions">
+      <button class="save-btn">Save</button>
+      <button class="download-btn">Download</button>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor">
+
+    <!-- TOOL PANEL -->
+    <div class="tool-panel">
+      <button>Add Text</button>
+      <button>Add Image</button>
+      <button>Change Background</button>
+
+      <label>Font</label>
+      <select>
+        <option>Traditional Marathi</option>
+        <option>Elegant Serif</option>
+        <option>Decorative Script</option>
+      </select>
+
+      <label>Font Size</label>
+      <input type="number" placeholder="Font Size">
+
+      <label>Text Color</label>
+      <input type="color">
+
+    </div>
+
+    <!-- CANVAS -->
+    <div class="canvas-area">
+      <div class="invite-canvas">
+        <h2>सस्नेह निमंत्रण</h2>
+        <p>रोहित ♥ पूजा</p>
+        <p>दिनांक: 25 डिसेंबर 2026</p>
+        <p>स्थळ: मुंबई</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
