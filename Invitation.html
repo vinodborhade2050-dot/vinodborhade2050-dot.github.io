@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wedding Invitation Maker</title>
 
-<!-- Google Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&family=Yatra+One&display=swap" rel="stylesheet">
 
 <style>
@@ -14,114 +13,75 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
+}
+
+body{
+  background:#f7f3ef;
   font-family:'Noto Serif Devanagari', serif;
 }
 
-/* Top Bar */
-.topbar{
-  height:60px;
+/* Header */
+.header{
   background:#8b0000;
   color:white;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 15px;
-  position:fixed;
-  width:100%;
-  top:0;
-  z-index:1001;
+  padding:12px;
+  text-align:center;
+  font-size:18px;
+  font-weight:bold;
 }
 
-.topbar h2{
+/* Toolbar */
+.toolbar{
+  background:white;
+  padding:10px;
+  display:flex;
+  gap:10px;
+  overflow-x:auto;
+  border-bottom:1px solid #eee;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.tool-btn{
+  min-width:90px;
+  padding:8px;
+  border-radius:8px;
+  border:none;
+  background:#8b0000;
+  color:white;
+  font-size:13px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.tool-btn span{
   font-size:18px;
 }
 
-.menu-btn{
-  font-size:24px;
-  cursor:pointer;
-}
-
-/* Sidebar */
-.sidebar{
-  position:fixed;
-  top:60px;
-  left:-250px;
-  width:240px;
-  height:100%;
-  background:#fff;
-  box-shadow:2px 0 10px rgba(0,0,0,0.1);
-  padding:15px;
-  transition:0.3s;
-  z-index:1000;
-  overflow-y:auto;
-}
-
-.sidebar.active{
-  left:0;
-}
-
-.sidebar h3{
-  margin-bottom:10px;
-  font-size:16px;
-  color:#8b0000;
-}
-
-.sidebar button,
-.sidebar select,
-.sidebar input{
-  width:100%;
-  margin-bottom:10px;
-  padding:8px;
-  border-radius:6px;
-  border:1px solid #ddd;
-}
-
-.sidebar button{
-  background:#8b0000;
-  color:white;
-  border:none;
-  cursor:pointer;
-}
-
-/* Overlay */
-.overlay{
-  position:fixed;
-  top:60px;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.3);
-  display:none;
-  z-index:999;
-}
-
-.overlay.active{
-  display:block;
-}
-
-/* Main Content */
-.main{
-  margin-top:60px;
-  padding:15px;
+/* Canvas Area */
+.editor-area{
   display:flex;
   justify-content:center;
+  padding:15px;
 }
 
-/* Canvas Area */
 .canvas-wrapper{
-  background:#f4f4f4;
+  background:white;
   padding:10px;
-  border-radius:10px;
+  border-radius:12px;
   box-shadow:0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* Fixed Invitation Size */
 #canvas{
   width:550px;
   height:800px;
   background:white;
   position:relative;
   overflow:hidden;
+  border:1px solid #ddd;
 }
 
 /* Responsive */
@@ -136,81 +96,66 @@
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-  <div class="menu-btn" onclick="toggleMenu()">☰</div>
-  <h2>Wedding Invitation Maker</h2>
+<div class="header">
+  Wedding Invitation Card Maker
 </div>
 
-<!-- Sidebar -->
-<div class="sidebar" id="sidebar">
+<!-- Design Tools Above Canvas -->
+<div class="toolbar">
 
-  <h3>Design Tools</h3>
+  <button class="tool-btn" onclick="addText()">
+    <span>✍</span>
+    Text
+  </button>
 
-  <button onclick="addText()">✍ Add Text</button>
-  <button onclick="document.getElementById('bgUpload').click()">🖼 Change Background</button>
-  <button onclick="document.getElementById('imgUpload').click()">📷 Add Image</button>
+  <button class="tool-btn" onclick="document.getElementById('bgUpload').click()">
+    <span>🖼</span>
+    Background
+  </button>
 
-  <input type="color" id="colorPicker" onchange="changeColor()">
+  <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">
+    <span>📷</span>
+    Image
+  </button>
 
-  <select onchange="changeFont(this.value)">
-    <option value="'Baloo 2', cursive">Baloo 2</option>
-    <option value="'Noto Serif Devanagari', serif">Classic</option>
-    <option value="'Yatra One', cursive">Decorative</option>
-  </select>
+  <button class="tool-btn" onclick="changeColor()">
+    <span>🎨</span>
+    Color
+  </button>
 
-  <input type="number" placeholder="Font Size" onchange="changeFontSize(this.value)">
+  <button class="tool-btn" onclick="changeFont()">
+    <span>🔤</span>
+    Font
+  </button>
 
-  <button onclick="saveDraft()">💾 Save Draft</button>
-  <button onclick="downloadImage()">⬇ Download</button>
+  <button class="tool-btn" onclick="saveDraft()">
+    <span>💾</span>
+    Save
+  </button>
+
+  <button class="tool-btn" onclick="downloadImage()">
+    <span>⬇</span>
+    Download
+  </button>
 
 </div>
 
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
-<!-- Main -->
-<div class="main">
+<!-- Canvas Section -->
+<div class="editor-area">
   <div class="canvas-wrapper">
     <div id="canvas"></div>
   </div>
 </div>
 
-<!-- Hidden Inputs -->
 <input type="file" id="bgUpload" accept="image/*" hidden>
 <input type="file" id="imgUpload" accept="image/*" hidden>
 
 <script>
-
-function toggleMenu(){
-  document.getElementById("sidebar").classList.toggle("active");
-  document.getElementById("overlay").classList.toggle("active");
-}
-
-/* Keep your existing logic below */
-function addText(){
-  alert("Attach your existing addText() logic");
-}
-
-function changeColor(){
-  alert("Attach your existing changeColor() logic");
-}
-
-function changeFont(font){
-  alert("Attach your existing changeFont() logic");
-}
-
-function changeFontSize(size){
-  alert("Attach your existing changeFontSize() logic");
-}
-
-function saveDraft(){
-  alert("Attach your existing saveDraft() logic");
-}
-
-function downloadImage(){
-  alert("Attach your existing downloadImage() logic");
-}
-
+function addText(){ alert("Connect your addText logic"); }
+function changeColor(){ alert("Connect color logic"); }
+function changeFont(){ alert("Connect font logic"); }
+function saveDraft(){ alert("Connect save logic"); }
+function downloadImage(){ alert("Connect download logic"); }
 </script>
 
 </body>
