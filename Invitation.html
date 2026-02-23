@@ -1,183 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Invitation Card Maker</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari&display=swap" rel="stylesheet">
-
+<title>Wedding Invitation Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Noto+Serif+Devanagari&family=Yatra+One&display=swap" rel="stylesheet">
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
-
-body{
-  font-family:'Noto Serif Devanagari', serif;
-  background:#f6f4f1;
-}
+*{margin:0; padding:0; box-sizing:border-box;}
+body{font-family:'Noto Serif Devanagari', serif; background:#f6f4f1;}
 
 /* Header */
 .header{
-  background:#8b0000;
-  color:white;
-  padding:14px;
-  text-align:center;
-  font-size:18px;
-  font-weight:bold;
+  background:#8b0000; color:white;
+  padding:14px; text-align:center; font-size:18px; font-weight:bold;
 }
 
 /* Category Menu */
 .category-menu{
-  background:white;
-  display:flex;
-  gap:15px;
-  padding:10px;
-  overflow-x:auto;
-  border-bottom:1px solid #ddd;
+  display:flex; gap:10px; padding:10px; overflow-x:auto; background:white; border-bottom:1px solid #ddd;
 }
-
 .category-menu button{
-  background:#eee;
-  border:none;
-  padding:8px 15px;
-  border-radius:20px;
-  font-size:14px;
-  cursor:pointer;
+  background:#eee; border:none; padding:8px 15px; border-radius:20px; cursor:pointer;
 }
-
-.category-menu button.active{
-  background:#8b0000;
-  color:white;
-}
+.category-menu button.active{background:#8b0000; color:white;}
 
 /* Template Section */
 .template-section{
-  padding:10px;
-  background:#fff;
-  overflow-x:auto;
-  display:flex;
-  gap:10px;
-  border-bottom:1px solid #ddd;
+  display:flex; gap:10px; padding:10px; overflow-x:auto; background:white; border-bottom:1px solid #ddd;
 }
-
 .template-card{
-  min-width:100px;
-  height:140px;
-  background:#ddd;
-  border-radius:10px;
-  cursor:pointer;
-  overflow:hidden;
-  border:2px solid transparent;
+  min-width:100px; height:140px; border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent;
 }
-
-.template-card img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.template-card:hover{
-  border-color:#8b0000;
-}
+.template-card img{width:100%; height:100%; object-fit:cover;}
+.template-card:hover{border-color:#8b0000;}
 
 /* Toolbar */
 .toolbar{
-  display:flex;
-  gap:10px;
-  overflow-x:auto;
-  padding:10px;
-  background:white;
-  border-bottom:1px solid #ddd;
+  display:flex; gap:10px; overflow-x:auto; padding:10px; background:white; border-bottom:1px solid #ddd;
 }
-
 .tool-btn{
-  min-width:85px;
-  padding:8px;
-  border:none;
-  background:#8b0000;
-  color:white;
-  border-radius:8px;
-  font-size:13px;
-  cursor:pointer;
+  min-width:85px; padding:8px; border:none; background:#8b0000; color:white; border-radius:8px; font-size:13px; cursor:pointer;
 }
 
 /* Canvas Area */
-.editor-area{
-  display:flex;
-  justify-content:center;
-  padding:15px;
-}
-
-.canvas-wrapper{
-  background:white;
-  padding:10px;
-  border-radius:12px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.1);
-}
-
-#canvas{
-  width:550px;
-  height:800px;
-  background:white;
-  position:relative;
-  overflow:hidden;
-  border:1px solid #ccc;
-}
+.editor-area{display:flex; justify-content:center; padding:15px;}
+.canvas-wrapper{background:white; padding:10px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);}
+#canvas{width:550px; height:800px; background:white; position:relative; overflow:hidden; border:1px solid #ccc;}
 
 /* Responsive */
 @media(max-width:600px){
-  #canvas{
-    width:95vw;
-    height:calc(95vw * 1.45);
-  }
+  #canvas{width:95vw; height:calc(95vw * 1.45);}
 }
-
 </style>
 </head>
 <body>
 
-<div class="header">
-  Invitation Card Maker
-</div>
+<div class="header">Invitation Card Maker</div>
 
 <!-- Category Menu -->
 <div class="category-menu">
-  <button class="active">Wedding Templates</button>
-  <button>Birthday Templates</button>
-  <button>Engagement</button>
-  <button>Baby Shower</button>
+  <button class="active" onclick="selectCategory('wedding')">Wedding Templates</button>
+  <button onclick="selectCategory('birthday')">Birthday Templates</button>
+  <button onclick="selectCategory('engagement')">Engagement</button>
+  <button onclick="selectCategory('baby')">Baby Shower</button>
 </div>
 
-<!-- Template Preview Scroll -->
-<div class="template-section">
-
-  <div class="template-card">
-    <img src="https://picsum.photos/200/300?1">
-  </div>
-
-  <div class="template-card">
-    <img src="https://picsum.photos/200/300?2">
-  </div>
-
-  <div class="template-card">
-    <img src="https://picsum.photos/200/300?3">
-  </div>
-
-  <div class="template-card">
-    <img src="https://picsum.photos/200/300?4">
-  </div>
-
+<!-- Template Preview -->
+<div class="template-section" id="templateSection">
+  <!-- Templates will appear here -->
 </div>
 
-<!-- Design Tools -->
+<!-- Toolbar -->
 <div class="toolbar">
   <button class="tool-btn" onclick="addText()">Text</button>
-  <button class="tool-btn" onclick="bgUpload.click()">Background</button>
-  <button class="tool-btn" onclick="imgUpload.click()">Image</button>
+  <button class="tool-btn" onclick="document.getElementById('bgUpload').click()">Background</button>
+  <button class="tool-btn" onclick="document.getElementById('imgUpload').click()">Image</button>
+  <button class="tool-btn" onclick="changeColor()">Color</button>
+  <button class="tool-btn" onclick="changeFont()">Font</button>
   <button class="tool-btn" onclick="saveDraft()">Save</button>
   <button class="tool-btn" onclick="downloadImage()">Download</button>
 </div>
@@ -189,13 +88,86 @@ body{
   </div>
 </div>
 
-<input type="file" id="bgUpload" hidden>
-<input type="file" id="imgUpload" hidden>
+<input type="file" id="bgUpload" accept="image/*" hidden>
+<input type="file" id="imgUpload" accept="image/*" hidden>
 
 <script>
-function addText(){ alert("Attach text logic"); }
-function saveDraft(){ alert("Attach save logic"); }
-function downloadImage(){ alert("Attach download logic"); }
+// Templates by category
+const templates = {
+  wedding:[
+    "https://picsum.photos/200/300?1",
+    "https://picsum.photos/200/300?2",
+    "https://picsum.photos/200/300?3"
+  ],
+  birthday:[
+    "https://picsum.photos/200/300?4",
+    "https://picsum.photos/200/300?5"
+  ],
+  engagement:[
+    "https://picsum.photos/200/300?6",
+    "https://picsum.photos/200/300?7"
+  ],
+  baby:[
+    "https://picsum.photos/200/300?8",
+    "https://picsum.photos/200/300?9"
+  ]
+};
+
+function selectCategory(cat){
+  document.querySelectorAll('.category-menu button').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.category-menu button[onclick="selectCategory('${cat}')"]`).classList.add('active');
+  const section = document.getElementById('templateSection');
+  section.innerHTML="";
+  templates[cat].forEach(url=>{
+    const div = document.createElement('div');
+    div.classList.add('template-card');
+    const img = document.createElement('img');
+    img.src=url;
+    div.appendChild(img);
+    div.onclick = ()=>{document.getElementById('canvas').style.backgroundImage=`url(${url})`; document.getElementById('canvas').style.backgroundSize="cover";}
+    section.appendChild(div);
+  });
+}
+
+// Toolbar Functions (Add your logic)
+function addText(){
+  const text = prompt("Enter text:");
+  if(text){
+    const div = document.createElement('div');
+    div.innerText=text;
+    div.style.position="absolute";
+    div.style.top="50px";
+    div.style.left="30px";
+    div.style.fontFamily="'Baloo 2', cursive";
+    div.style.color="#8b0000";
+    div.style.fontSize="18px";
+    div.style.cursor="move";
+    document.getElementById('canvas').appendChild(div);
+    makeDraggable(div);
+  }
+}
+function changeColor(){ alert("Add color logic"); }
+function changeFont(){ alert("Add font logic"); }
+function saveDraft(){ alert("Add save logic"); }
+function downloadImage(){ alert("Add download logic"); }
+
+// Make text draggable
+function makeDraggable(el){
+  let offsetX, offsetY;
+  el.onmousedown = (e)=>{
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+    document.onmousemove = (e)=>{
+      el.style.left = e.pageX - offsetX - document.getElementById('canvas').getBoundingClientRect().left + 'px';
+      el.style.top = e.pageY - offsetY - document.getElementById('canvas').getBoundingClientRect().top + 'px';
+    }
+    document.onmouseup = ()=>{document.onmousemove=null;}
+  }
+}
+
+// Initialize default category
+selectCategory('wedding');
+
 </script>
 
 </body>
