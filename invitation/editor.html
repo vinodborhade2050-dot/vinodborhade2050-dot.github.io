@@ -80,13 +80,36 @@ button{
 
 .locked{
     background:gray;
+}@media(max-width:768px){
+
+    nav{
+        flex-direction:row;
+    }
+
+    .nav-right{
+        gap:10px;
+    }
+
+    .btn{
+        padding:6px 14px;
+        font-size:14px;
+    }
+
 }
 </style>
 </head>
 <body>
 
 <div class="container">
+<nav>
+    <div class="logo">InviteCraft</div>
 
+    <div class="nav-right">
+        <a href="index.html">Home</a>
+        <a href="templates.html">Templates</a>
+        <a href="#" class="btn">Upgrade</a>
+    </div>
+</nav>
 <!-- STEP 1 -->
 <div class="card" id="formStep">
     <h2>Step 1: Fill Invitation Details</h2>
