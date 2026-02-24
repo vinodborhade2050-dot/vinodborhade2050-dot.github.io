@@ -1,60 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Loan Amortization Schedule</title>
+    <title>Loan Statement Calculator</title>
     <style>
-        body {
-            font-family: Arial;
-            background: #f4f6f9;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #ccc;
-        }
-        input {
-            padding: 8px;
-            margin: 8px 0;
-            width: 100%;
-        }
-        button {
-            padding: 10px;
-            width: 100%;
-            background: #2c7be5;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th {
-            background: #2c7be5;
-            color: white;
-            padding: 8px;
-        }
-        td {
-            padding: 6px;
-            text-align: center;
-        }
+        body { font-family: Arial; background:#f4f6f9; padding:20px; }
+        .container { max-width:1000px; background:white; padding:20px; border-radius:8px; }
+        input, button { padding:8px; margin:6px 0; width:100%; }
+        button { background:#2c7be5; color:white; border:none; cursor:pointer; }
+        table { width:100%; border-collapse:collapse; margin-top:20px; }
+        th, td { border:1px solid #ccc; padding:6px; text-align:center; }
+        th { background:#2c7be5; color:white; }
+        .summary { margin-top:20px; padding:15px; background:#e9f2ff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Loan Amortization Schedule</h2>
+    <h2>Loan Statement Generator</h2>
 
-    <label>Current Outstanding (₹)</label>
-    <input type="number" id="outstanding">
+    <label>Loan Amount (₹)</label>
+    <input type="number" id="loanAmount">
 
     <label>Interest Rate (% per year)</label>
     <input type="number" id="interestRate" step="0.01">
@@ -62,18 +27,27 @@
     <label>EMI (₹)</label>
     <input type="number" id="emi">
 
-    <label>EMI Deduction Start Date</label>
+    <label>EMI Start Date</label>
     <input type="date" id="startDate">
 
     <button onclick="generateSchedule()">Generate Schedule</button>
+
+    <label>Select EMI Date to Check Outstanding</label>
+    <input type="date" id="checkDate" onchange="calculateOutstanding()">
+
+    <div id="summary" class="summary" style="display:none;"></div>
 
     <div id="tableContainer"></div>
 </div>
 
 <script>
+let schedule = [];
+
 function generateSchedule() {
 
-    let P = parseFloat(document.getElementById("outstanding").value);
+    schedule = [];
+
+    let P = parseFloat(document.getElementById("loanAmount").value);
     let annualRate = parseFloat(document.getElementById("interestRate").value);
     let EMI = parseFloat(document.getElementById("emi").value);
     let startDate = new Date(document.getElementById("startDate").value);
@@ -85,6 +59,9 @@ function generateSchedule() {
 
     let R = annualRate / 12 / 100;
     let month = 1;
+    let totalInterest = 0;
+    let totalPrincipal = 0;
+
     let tableHTML = `
         <table>
         <tr>
@@ -107,10 +84,23 @@ function generateSchedule() {
             EMI = principal + interest;
         }
 
-        P = P - principal;
+        P -= principal;
+        totalInterest += interest;
+        totalPrincipal += principal;
 
         let emiDate = new Date(startDate);
         emiDate.setMonth(emiDate.getMonth() + month - 1);
+
+        schedule.push({
+            month,
+            emiDate: new Date(emiDate),
+            emi: EMI,
+            interest,
+            principal,
+            outstanding: P,
+            totalInterest,
+            totalPrincipal
+        });
 
         tableHTML += `
             <tr>
@@ -124,13 +114,34 @@ function generateSchedule() {
         `;
 
         month++;
-
-        if (month > 600) break; // safety break (50 years)
+        if (month > 600) break;
     }
 
     tableHTML += "</table>";
-
     document.getElementById("tableContainer").innerHTML = tableHTML;
+}
+
+function calculateOutstanding() {
+
+    let selectedDate = new Date(document.getElementById("checkDate").value);
+    if (!selectedDate || schedule.length === 0) return;
+
+    let record = schedule.find(s =>
+        s.emiDate.getFullYear() === selectedDate.getFullYear() &&
+        s.emiDate.getMonth() === selectedDate.getMonth()
+    );
+
+    if (!record) {
+        alert("No EMI found for selected date.");
+        return;
+    }
+
+    document.getElementById("summary").style.display = "block";
+    document.getElementById("summary").innerHTML = `
+        <b>Outstanding on ${record.emiDate.toLocaleDateString()}:</b> ₹ ${record.outstanding.toFixed(2)}<br><br>
+        <b>Total Principal Paid Till Date:</b> ₹ ${record.totalPrincipal.toFixed(2)}<br><br>
+        <b>Total Interest Paid Till Date:</b> ₹ ${record.totalInterest.toFixed(2)}
+    `;
 }
 </script>
 
