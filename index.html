@@ -1,213 +1,137 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Day Counter</title>
-
-<style>
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 16px;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-}
-
-/* Title */
-h2 {
-  text-align: center;
-  margin-bottom: 16px;
-}
-
-/* Input */
-.input-box {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.input-box input,
-.input-box button {
-  flex: 1;
-  padding: 12px;
-  font-size: 16px;
-  border-radius: 10px;
-}
-
-.input-box button {
-  background: #007bff;
-  color: white;
-  border: none;
-}
-
-/* Top counter */
-.top-card {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  text-align: center;
-}
-
-.circle {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: #007bff;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 52px;
-  font-weight: bold;
-  margin: auto;
-}
-
-.last-date {
-  margin-top: 12px;
-  font-size: 15px;
-}
-
-/* History */
-.history h3 {
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-.item {
-  background: white;
-  padding: 16px;
-  border-radius: 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.item-date {
-  font-weight: bold;
-  font-size: 16px;
-}
-
-.item-days {
-  font-size: 14px;
-  color: #555;
-  margin-bottom: 10px;
-}
-
-/* Delete button */
-.delete-btn {
-  width: 100%;
-  padding: 12px;
-  background: #e53935;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-}
-
-/* Desktop tweak */
-@media (min-width: 768px) {
-  body {
-    max-width: 480px;
-    margin: auto;
-  }
-}
-</style>
+    <title>Loan Amortization Schedule</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #ccc;
+        }
+        input {
+            padding: 8px;
+            margin: 8px 0;
+            width: 100%;
+        }
+        button {
+            padding: 10px;
+            width: 100%;
+            background: #2c7be5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th {
+            background: #2c7be5;
+            color: white;
+            padding: 8px;
+        }
+        td {
+            padding: 6px;
+            text-align: center;
+        }
+    </style>
 </head>
-
 <body>
 
-<h2>📅 Day Counter</h2>
+<div class="container">
+    <h2>Loan Amortization Schedule</h2>
 
-<div class="input-box">
-  <input type="date" id="dateInput">
-  <button id="saveBtn">Save</button>
-</div>
+    <label>Current Outstanding (₹)</label>
+    <input type="number" id="outstanding">
 
-<div class="top-card" id="topCard" style="display:none;">
-  <div class="circle" id="dayCount">1</div>
-  <div class="last-date" id="lastDateText"></div>
-</div>
+    <label>Interest Rate (% per year)</label>
+    <input type="number" id="interestRate" step="0.01">
 
-<div class="history">
-  <h3>History (Latest First)</h3>
-  <div id="historyList"></div>
+    <label>EMI (₹)</label>
+    <input type="number" id="emi">
+
+    <label>EMI Deduction Start Date</label>
+    <input type="date" id="startDate">
+
+    <button onclick="generateSchedule()">Generate Schedule</button>
+
+    <div id="tableContainer"></div>
 </div>
 
 <script>
-const STORAGE_KEY = "importantDates";
+function generateSchedule() {
 
-function getDates() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-}
+    let P = parseFloat(document.getElementById("outstanding").value);
+    let annualRate = parseFloat(document.getElementById("interestRate").value);
+    let EMI = parseFloat(document.getElementById("emi").value);
+    let startDate = new Date(document.getElementById("startDate").value);
 
-function setDates(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+    if (!P || !annualRate || !EMI || !startDate) {
+        alert("Please fill all fields.");
+        return;
+    }
 
-document.getElementById("saveBtn").addEventListener("click", () => {
-  const val = document.getElementById("dateInput").value;
-  if (!val) return alert("Select a date");
-
-  const dates = getDates();
-  dates.push({ id: crypto.randomUUID(), date: val });
-  setDates(dates);
-
-  document.getElementById("dateInput").value = "";
-  render();
-});
-
-function calculateDays(d) {
-  const start = new Date(d);
-  const today = new Date();
-  start.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-  return Math.floor((today - start) / 86400000) + 1;
-}
-
-function render() {
-  const dates = getDates();
-  const history = document.getElementById("historyList");
-  history.innerHTML = "";
-
-  if (dates.length === 0) {
-    document.getElementById("topCard").style.display = "none";
-    return;
-  }
-
-  const latest = dates[dates.length - 1];
-  document.getElementById("topCard").style.display = "block";
-  document.getElementById("dayCount").innerText = calculateDays(latest.date);
-  document.getElementById("lastDateText").innerText =
-    "Started on: " + latest.date;
-
-  [...dates].reverse().forEach(item => {
-    const div = document.createElement("div");
-    div.className = "item";
-
-    div.innerHTML = `
-      <div class="item-date">${item.date}</div>
-      <div class="item-days">${calculateDays(item.date)} days</div>
+    let R = annualRate / 12 / 100;
+    let month = 1;
+    let tableHTML = `
+        <table>
+        <tr>
+            <th>Month</th>
+            <th>EMI Date</th>
+            <th>EMI</th>
+            <th>Interest</th>
+            <th>Principal</th>
+            <th>Outstanding</th>
+        </tr>
     `;
 
-    const btn = document.createElement("button");
-    btn.className = "delete-btn";
-    btn.textContent = "❌ Delete";
-    btn.onclick = () => {
-      setDates(getDates().filter(d => d.id !== item.id));
-      render();
-    };
+    while (P > 0) {
 
-    div.appendChild(btn);
-    history.appendChild(div);
-  });
+        let interest = P * R;
+        let principal = EMI - interest;
+
+        if (principal > P) {
+            principal = P;
+            EMI = principal + interest;
+        }
+
+        P = P - principal;
+
+        let emiDate = new Date(startDate);
+        emiDate.setMonth(emiDate.getMonth() + month - 1);
+
+        tableHTML += `
+            <tr>
+                <td>${month}</td>
+                <td>${emiDate.toLocaleDateString()}</td>
+                <td>${EMI.toFixed(2)}</td>
+                <td>${interest.toFixed(2)}</td>
+                <td>${principal.toFixed(2)}</td>
+                <td>${P.toFixed(2)}</td>
+            </tr>
+        `;
+
+        month++;
+
+        if (month > 600) break; // safety break (50 years)
+    }
+
+    tableHTML += "</table>";
+
+    document.getElementById("tableContainer").innerHTML = tableHTML;
 }
-
-render();
 </script>
 
 </body>
