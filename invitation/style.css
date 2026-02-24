@@ -77,14 +77,7 @@ nav{
     display:inline-block;
     white-space:nowrap;
 }
-.btn{
-    background:#e91e63;
-    color:white;
-    padding:10px 18px;
-    border-radius:25px;
-    text-decoration:none;
-    display:inline-block;
-}
+
 
 /* HERO */
 .hero{
