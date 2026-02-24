@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<nav>
+    <div class="logo">InviteCraft</div>
+    <div>
+        <a href="templates.html">Back</a>
+    </div>
+</nav>
+
+<div class="editor">
+
+<div class="sidebar">
+    <h3>Edit Details</h3>
+    <input type="text" id="bride" placeholder="Bride Name" oninput="update()">
+    <input type="text" id="groom" placeholder="Groom Name" oninput="update()">
+    <input type="text" id="date" placeholder="Date" oninput="update()">
+    <input type="text" id="venue" placeholder="Venue" oninput="update()">
+</div>
+
+<div class="preview">
+    <div class="invitation">
+        <h2 id="names" style="font-family:'Great Vibes';font-size:28px;">Bride & Groom</h2>
+        <p id="dateText">Wedding Date</p>
+        <p id="venueText">Venue</p>
+    </div>
+</div>
+
+</div>
+
+<script>
+function update(){
+    document.getElementById("names").innerText =
+        document.getElementById("bride").value + " & " +
+        document.getElementById("groom").value;
+
+    document.getElementById("dateText").innerText =
+        document.getElementById("date").value;
+
+    document.getElementById("venueText").innerText =
+        document.getElementById("venue").value;
+}
+</script>
+
+</body>
+</html>
