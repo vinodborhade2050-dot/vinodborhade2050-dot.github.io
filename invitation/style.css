@@ -4,7 +4,33 @@
     box-sizing:border-box;
     font-family:'Poppins',sans-serif;
 }
+.invitation{
+    width:100%;
+    max-width:350px;
+    margin:auto;
+    padding:30px;
+    border-radius:20px;
+    background:linear-gradient(135deg,#ffdde1,#ee9ca7);
+    box-shadow:0 20px 40px rgba(0,0,0,0.15);
+    position:relative;
+    overflow:hidden;
+}
 
+/* WATERMARK */
+.invitation::before{
+    content:"INVITEKARO.IN  INVITEKARO.IN  INVITEKARO.IN  INVITEKARO.IN  INVITEKARO.IN";
+    position:absolute;
+    top:0;
+    left:0;
+    width:200%;
+    height:200%;
+    font-size:20px;
+    color:rgba(255,255,255,0.25);
+    transform:rotate(-30deg);
+    white-space:pre-wrap;
+    line-height:40px;
+    pointer-events:none;
+}
 body{
     background:#f5f7fb;
     color:#333;
