@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marathi Digital Invitation</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Playfair+Display:wght@600&family=Noto+Sans+Devanagari:wght@500&display=swap" rel="stylesheet">
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins;}
+body{
+background:linear-gradient(135deg,#667eea,#764ba2);
+min-height:100vh;
+color:#fff;
+}
+
+header{
+padding:20px;
+text-align:center;
+font-size:22px;
+font-weight:600;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+
+.templates{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:20px;
+}
+
+.card{
+background:#fff;
+border-radius:15px;
+overflow:hidden;
+cursor:pointer;
+transition:0.3s;
+color:#000;
+}
+.card:hover{transform:scale(1.05);}
+.card img{width:100%;height:200px;object-fit:cover;}
+.card div{text-align:center;padding:10px;font-weight:500;}
+
+.editor{
+display:none;
+margin-top:30px;
+background:#ffffff20;
+backdrop-filter:blur(10px);
+padding:20px;
+border-radius:15px;
+}
+
+.canvas-area{
+width:100%;
+max-width:500px;
+aspect-ratio:1/1;
+background-size:cover;
+background-position:center;
+margin:auto;
+position:relative;
+border-radius:10px;
+overflow:hidden;
+}
+
+.draggable{
+position:absolute;
+top:40%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:24px;
+font-weight:600;
+cursor:move;
+color:#000;
+}
+
+.watermark{
+position:absolute;
+bottom:10px;
+right:10px;
+font-size:14px;
+opacity:0.6;
+}
+
+.controls{
+margin-top:20px;
+display:grid;
+gap:10px;
+}
+
+.controls input, .controls select, .controls button{
+padding:10px;
+border:none;
+border-radius:8px;
+}
+
+.controls button{
+background:#ffcc00;
+cursor:pointer;
+font-weight:600;
+}
+
+.premium-btn{
+background:#00e676 !important;
+}
+
+@media(max-width:600px){
+.draggable{font-size:18px;}
+}
+</style>
+</head>
+
+<body>
+
+<header>मराठी Digital Invitation Builder</header>
+
+<div class="container">
+
+<div class="templates">
+<div class="card" onclick="openEditor('https://images.unsplash.com/photo-1522673607200-164d1b6ce486')">
+<img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486">
+<div>Royal Marathi</div>
+</div>
+
+<div class="card" onclick="openEditor('https://images.unsplash.com/photo-1519741497674-611481863552')">
+<img src="https://images.unsplash.com/photo-1519741497674-611481863552">
+<div>Modern English</div>
+</div>
+</div>
+
+<div class="editor" id="editor">
+
+<div class="canvas-area" id="canvas">
+<div class="draggable" id="textElement">|| श्री गणेशाय नमः ||</div>
+<div class="watermark" id="watermark">Free Version</div>
+</div>
+
+<div class="controls">
+<input type="text" id="textInput" placeholder="Edit text">
+<select id="fontSelect">
+<option value="Poppins">Poppins</option>
+<option value="Playfair Display">Playfair</option>
+<option value="Noto Sans Devanagari">Marathi</option>
+</select>
+
+<input type="color" id="colorPicker">
+
+<input type="range" id="fontSize" min="16" max="60" value="24">
+
+<input type="file" id="imageUpload">
+
+<button onclick="downloadImage()">Download JPG</button>
+<button class="premium-btn" onclick="unlockPremium()">Unlock Premium ₹49</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+let premiumUnlocked=false;
+
+function openEditor(image){
+document.getElementById("editor").style.display="block";
+document.getElementById("canvas").style.backgroundImage="url("+image+")";
+}
+
+let textElement=document.getElementById("textElement");
+
+textElement.onmousedown=function(e){
+let shiftX=e.clientX-textElement.getBoundingClientRect().left;
+let shiftY=e.clientY-textElement.getBoundingClientRect().top;
+
+function moveAt(pageX,pageY){
+textElement.style.left=pageX-shiftX+"px";
+textElement.style.top=pageY-shiftY+"px";
+}
+
+function onMouseMove(e){moveAt(e.pageX,e.pageY);}
+document.addEventListener("mousemove",onMouseMove);
+
+textElement.onmouseup=function(){
+document.removeEventListener("mousemove",onMouseMove);
+textElement.onmouseup=null;
+};
+};
+
+document.getElementById("textInput").oninput=function(){
+textElement.innerText=this.value;
+};
+
+document.getElementById("fontSelect").onchange=function(){
+textElement.style.fontFamily=this.value;
+};
+
+document.getElementById("colorPicker").oninput=function(){
+textElement.style.color=this.value;
+};
+
+document.getElementById("fontSize").oninput=function(){
+textElement.style.fontSize=this.value+"px";
+};
+
+document.getElementById("imageUpload").onchange=function(e){
+let reader=new FileReader();
+reader.onload=function(event){
+document.getElementById("canvas").style.backgroundImage="url("+event.target.result+")";
+}
+reader.readAsDataURL(e.target.files[0]);
+};
+
+function unlockPremium(){
+premiumUnlocked=true;
+document.getElementById("watermark").style.display="none";
+alert("Premium Unlocked (Demo). Connect Razorpay here.");
+}
+
+function downloadImage(){
+if(!premiumUnlocked){
+alert("Unlock Premium to remove watermark.");
+}
+html2canvas(document.getElementById("canvas")).then(canvas=>{
+let link=document.createElement("a");
+link.download="invitation.jpg";
+link.href=canvas.toDataURL("image/jpeg",0.9);
+link.click();
+});
+}
+</script>
+
+</body>
+</html>
