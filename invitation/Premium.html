@@ -3,156 +3,204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal Wedding Invitation</title>
+<title>Smart Wedding Editor 2026</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
 body{
+    margin:0;
     font-family:'Poppins',sans-serif;
-    background:#000;
+    background:#f3f4f6;
     overflow:hidden;
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar{
+    position:fixed;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    padding:10px 15px;
+    border-radius:40px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.1);
+    display:flex;
+    gap:10px;
+    z-index:1000;
+}
+
+.toolbar select, .toolbar button{
+    padding:6px 12px;
+    border-radius:20px;
+    border:1px solid #ddd;
+}
+
+.toolbar button{
+    background:#8b5cf6;
+    color:white;
+    border:none;
+}
+
+/* ===== PREVIEW ===== */
+.preview{
+    width:100%;
+    height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
+    background:linear-gradient(135deg,#ede9fe,#fbcfe8);
 }
 
-/* MAIN CARD */
-.invitation{
+.card{
     width:90%;
-    max-width:400px;
+    max-width:420px;
     aspect-ratio:9/16;
-    background:#111;
-    border-radius:20px;
+    background:linear-gradient(135deg,#1e1b4b,#312e81);
+    border-radius:25px;
     position:relative;
     overflow:hidden;
-    box-shadow:0 0 40px rgba(255,215,0,0.3);
-}
-
-/* GOLD BORDER */
-.invitation::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    border-radius:20px;
-    padding:2px;
-    background:linear-gradient(45deg,gold,#ffcc70,#ffd700);
-    -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite:xor;
-    mask-composite:exclude;
-}
-
-/* CURTAIN */
-.curtain{
-    position:absolute;
-    width:50%;
-    height:100%;
-    background:linear-gradient(135deg,#3a0d0d,#6e0e0a);
-    z-index:5;
-    transition:2s ease;
-}
-
-.left{left:0;}
-.right{right:0;}
-
-.open .left{transform:translateX(-100%);}
-.open .right{transform:translateX(100%);}
-
-/* CONTENT */
-.content{
-    position:absolute;
-    width:100%;
-    height:100%;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
     color:white;
-    padding:20px;
-    opacity:0;
-    transition:2s ease 1.5s;
 }
 
-.open .content{
-    opacity:1;
-}
-
-/* TEXT STYLE */
-.title{
-    font-family:'Cinzel',serif;
-    font-size:22px;
-    letter-spacing:3px;
-    margin-bottom:15px;
-}
-
-.names{
-    font-family:'Cinzel',serif;
-    font-size:32px;
-    color:gold;
-    margin-bottom:15px;
-    animation:zoomName 3s ease forwards;
-}
-
-.details{
-    font-size:16px;
-    margin:5px 0;
-}
-
-@keyframes zoomName{
-    from{transform:scale(0.5);opacity:0;}
-    to{transform:scale(1);opacity:1;}
-}
-
-/* BUTTON */
-.controls{
+/* TEXT ELEMENT */
+.text-element{
     position:absolute;
-    bottom:10px;
-    width:100%;
-    text-align:center;
-    z-index:10;
+    cursor:move;
+    user-select:none;
 }
 
-button{
-    padding:8px 15px;
-    border:none;
-    background:gold;
-    border-radius:20px;
-    font-weight:bold;
-}
+/* ANIMATIONS */
+.fade{animation:fadeIn 1s forwards;}
+.zoom{animation:zoomIn 1s forwards;}
+.slide{animation:slideUp 1s forwards;}
 
+@keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
+}
+@keyframes zoomIn{
+    from{opacity:0;transform:scale(0.6);}
+    to{opacity:1;transform:scale(1);}
+}
+@keyframes slideUp{
+    from{opacity:0;transform:translateY(50px);}
+    to{opacity:1;transform:translateY(0);}
+}
 </style>
 </head>
-
 <body>
 
-<div class="invitation" id="invite">
+<div class="toolbar">
+    <select id="animationSelect">
+        <option value="fade">Fade</option>
+        <option value="zoom">Zoom</option>
+        <option value="slide">Slide</option>
+    </select>
 
-    <div class="curtain left"></div>
-    <div class="curtain right"></div>
+    <button onclick="addText()">Add Text</button>
+    <button onclick="startRec()">Record</button>
+    <button onclick="stopRec()">Stop</button>
+</div>
 
-    <div class="content">
-        <div class="title">You're Invited</div>
-        <div class="names">Rahul ❤️ Sneha</div>
-        <div class="details">Together with our families</div>
-        <div class="details">20 April 2026</div>
-        <div class="details">Mumbai</div>
-    </div>
-
-    <div class="controls">
-        <button onclick="openInvite()">Open Invitation</button>
-    </div>
-
+<div class="preview" id="recordArea">
+    <div class="card" id="card"></div>
 </div>
 
 <script>
-function openInvite(){
-    document.getElementById("invite").classList.add("open");
+
+/* ===== DATA MODEL ===== */
+let elements = [];
+let selectedElement = null;
+
+/* ===== ADD TEXT ===== */
+function addText(){
+    const id = "el" + Date.now();
+    const element = {
+        id:id,
+        text:"Edit Text",
+        x:100,
+        y:100,
+        animation:"fade"
+    };
+
+    elements.push(element);
+    renderElement(element);
 }
+
+/* ===== RENDER ELEMENT ===== */
+function renderElement(data){
+    const div = document.createElement("div");
+    div.className = "text-element " + data.animation;
+    div.innerText = data.text;
+    div.style.left = data.x + "px";
+    div.style.top = data.y + "px";
+    div.id = data.id;
+
+    div.onclick = function(){
+        selectedElement = data;
+        document.getElementById("animationSelect").value = data.animation;
+    };
+
+    enableDrag(div, data);
+    document.getElementById("card").appendChild(div);
+}
+
+/* ===== DRAG SYSTEM ===== */
+function enableDrag(el, data){
+    let offsetX, offsetY;
+
+    el.onmousedown = function(e){
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+
+        document.onmousemove = function(e){
+            data.x = e.clientX - el.parentElement.getBoundingClientRect().left - offsetX;
+            data.y = e.clientY - el.parentElement.getBoundingClientRect().top - offsetY;
+
+            el.style.left = data.x + "px";
+            el.style.top = data.y + "px";
+        };
+
+        document.onmouseup = function(){
+            document.onmousemove = null;
+        };
+    };
+}
+
+/* ===== ANIMATION CHANGE ===== */
+document.getElementById("animationSelect").addEventListener("change", function(){
+    if(!selectedElement) return;
+
+    selectedElement.animation = this.value;
+
+    const el = document.getElementById(selectedElement.id);
+    el.className = "text-element " + this.value;
+});
+
+/* ===== RECORD ===== */
+let recorder, chunks=[];
+
+async function startRec(){
+    const stream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = ()=>{
+        const blob = new Blob(chunks,{type:"video/webm"});
+        const url = URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url;
+        a.download="smart_invitation.webm";
+        a.click();
+        chunks=[];
+    }
+    recorder.start();
+}
+
+function stopRec(){
+    if(recorder) recorder.stop();
+}
+
 </script>
 
 </body>
