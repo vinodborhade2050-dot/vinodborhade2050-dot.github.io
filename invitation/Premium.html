@@ -3,243 +3,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wedding Invitation Maker 2026</title>
+<title>Royal Wedding Invitation</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-
 body{
     font-family:'Poppins',sans-serif;
-    background:#f3f4f6;
+    background:#000;
     overflow:hidden;
-}
-
-/* TOP BAR */
-.topbar{
-    height:60px;
-    background:white;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 15px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.05);
-}
-
-.topbar h2{
-    font-size:18px;
-    font-weight:600;
-}
-
-.topbar button{
-    background:#8b5cf6;
-    color:white;
-    border:none;
-    padding:8px 14px;
-    border-radius:20px;
-}
-
-/* LAYOUT */
-.container{
-    display:flex;
-    height:calc(100vh - 60px);
-}
-
-/* SIDEBAR */
-.sidebar{
-    width:300px;
-    background:white;
-    padding:15px;
-    overflow-y:auto;
-    border-right:1px solid #eee;
-    transition:0.3s;
-}
-
-.sidebar input, .sidebar textarea{
-    width:100%;
-    margin-bottom:12px;
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #ddd;
-}
-
-.sidebar button{
-    width:100%;
-    padding:10px;
-    border:none;
-    background:#10b981;
-    color:white;
-    border-radius:8px;
-}
-
-/* PREVIEW AREA */
-.preview{
-    flex:1;
     display:flex;
     justify-content:center;
     align-items:center;
-    background:linear-gradient(135deg,#ede9fe,#fbcfe8);
-    position:relative;
+    height:100vh;
 }
 
-/* INVITATION CARD */
-.card{
+/* MAIN CARD */
+.invitation{
     width:90%;
     max-width:400px;
     aspect-ratio:9/16;
-    background:linear-gradient(135deg,#1e1b4b,#312e81);
-    border-radius:25px;
-    color:white;
+    background:#111;
+    border-radius:20px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 0 40px rgba(255,215,0,0.3);
+}
+
+/* GOLD BORDER */
+.invitation::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:20px;
+    padding:2px;
+    background:linear-gradient(45deg,gold,#ffcc70,#ffd700);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+}
+
+/* CURTAIN */
+.curtain{
+    position:absolute;
+    width:50%;
+    height:100%;
+    background:linear-gradient(135deg,#3a0d0d,#6e0e0a);
+    z-index:5;
+    transition:2s ease;
+}
+
+.left{left:0;}
+.right{right:0;}
+
+.open .left{transform:translateX(-100%);}
+.open .right{transform:translateX(100%);}
+
+/* CONTENT */
+.content{
+    position:absolute;
+    width:100%;
+    height:100%;
     display:flex;
     flex-direction:column;
     justify-content:center;
     align-items:center;
     text-align:center;
+    color:white;
     padding:20px;
-    position:relative;
-    overflow:hidden;
+    opacity:0;
+    transition:2s ease 1.5s;
 }
 
-/* GLOW BORDER */
-.card::before{
-    content:"";
-    position:absolute;
-    inset:-3px;
-    border-radius:25px;
-    background:linear-gradient(45deg,#facc15,#ec4899,#8b5cf6);
-    z-index:-1;
-    filter:blur(20px);
-    opacity:0.6;
+.open .content{
+    opacity:1;
 }
 
-/* TEXT */
+/* TEXT STYLE */
 .title{
-    font-family:'Playfair Display',serif;
-    font-size:32px;
-    margin-bottom:10px;
+    font-family:'Cinzel',serif;
+    font-size:22px;
+    letter-spacing:3px;
+    margin-bottom:15px;
 }
 
 .names{
-    font-family:'Playfair Display',serif;
-    font-size:36px;
-    margin:10px 0;
-    animation:fadeZoom 4s infinite alternate;
+    font-family:'Cinzel',serif;
+    font-size:32px;
+    color:gold;
+    margin-bottom:15px;
+    animation:zoomName 3s ease forwards;
 }
 
 .details{
     font-size:16px;
-    margin-top:5px;
+    margin:5px 0;
 }
 
-@keyframes fadeZoom{
-    from{transform:scale(1);opacity:0.8;}
-    to{transform:scale(1.05);opacity:1;}
+@keyframes zoomName{
+    from{transform:scale(0.5);opacity:0;}
+    to{transform:scale(1);opacity:1;}
 }
 
-/* MOBILE RESPONSIVE */
-@media(max-width:768px){
-
-    .sidebar{
-        position:absolute;
-        left:-100%;
-        top:60px;
-        height:calc(100vh - 60px);
-        z-index:5;
-    }
-
-    .sidebar.active{
-        left:0;
-    }
-
-    .preview{
-        width:100%;
-    }
-
+/* BUTTON */
+.controls{
+    position:absolute;
+    bottom:10px;
+    width:100%;
+    text-align:center;
+    z-index:10;
 }
+
+button{
+    padding:8px 15px;
+    border:none;
+    background:gold;
+    border-radius:20px;
+    font-weight:bold;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
-    <h2>Wedding Invitation Maker</h2>
-    <button onclick="toggleMenu()">Edit</button>
-</div>
+<div class="invitation" id="invite">
 
-<div class="container">
+    <div class="curtain left"></div>
+    <div class="curtain right"></div>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <h3>Edit Details</h3>
-        <input id="groom" value="Rahul">
-        <input id="bride" value="Sneha">
-        <input id="date" value="20 April 2026">
-        <input id="place" value="Mumbai">
-        <textarea id="msg">Together with our families</textarea>
-        <button onclick="updateData()">Update Preview</button>
-        <br><br>
-        <button onclick="startRec()">Record Video</button>
-        <button onclick="stopRec()">Stop & Download</button>
+    <div class="content">
+        <div class="title">You're Invited</div>
+        <div class="names">Rahul ❤️ Sneha</div>
+        <div class="details">Together with our families</div>
+        <div class="details">20 April 2026</div>
+        <div class="details">Mumbai</div>
     </div>
 
-    <!-- PREVIEW -->
-    <div class="preview" id="recordArea">
-        <div class="card">
-            <div class="title">You're Invited</div>
-            <div class="names" id="namesText">Rahul ❤️ Sneha</div>
-            <div class="details" id="msgText">Together with our families</div>
-            <div class="details" id="dateText">20 April 2026</div>
-            <div class="details" id="placeText">Mumbai</div>
-        </div>
+    <div class="controls">
+        <button onclick="openInvite()">Open Invitation</button>
     </div>
 
 </div>
 
 <script>
-
-function toggleMenu(){
-    document.getElementById("sidebar").classList.toggle("active");
+function openInvite(){
+    document.getElementById("invite").classList.add("open");
 }
-
-function updateData(){
-    document.getElementById("namesText").innerText =
-        document.getElementById("groom").value + " ❤️ " +
-        document.getElementById("bride").value;
-
-    document.getElementById("dateText").innerText =
-        document.getElementById("date").value;
-
-    document.getElementById("placeText").innerText =
-        document.getElementById("place").value;
-
-    document.getElementById("msgText").innerText =
-        document.getElementById("msg").value;
-}
-
-/* RECORDING */
-let recorder, chunks=[];
-
-async function startRec(){
-    const stream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-    recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = e => chunks.push(e.data);
-    recorder.onstop = ()=>{
-        const blob = new Blob(chunks,{type:"video/webm"});
-        const url = URL.createObjectURL(blob);
-        const a=document.createElement("a");
-        a.href=url;
-        a.download="invitation2026.webm";
-        a.click();
-        chunks=[];
-    }
-    recorder.start();
-}
-
-function stopRec(){
-    recorder.stop();
-}
-
 </script>
 
 </body>
