@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Wedding Invitation Video Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+body{
+    margin:0;
+    display:flex;
+    font-family:'Poppins',sans-serif;
+    background:#f5f5f5;
+}
+
+/* LEFT EDIT PANEL */
+.editor{
+    width:30%;
+    padding:20px;
+    background:white;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.editor input, .editor textarea{
+    width:100%;
+    padding:8px;
+    margin-bottom:10px;
+}
+
+.editor button{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border:none;
+    cursor:pointer;
+    background:#ff4d6d;
+    color:white;
+}
+
+/* RIGHT PREVIEW */
+.preview{
+    width:70%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:linear-gradient(135deg,#ff9a9e,#fad0c4);
+    overflow:hidden;
+}
+
+.card{
+    text-align:center;
+    color:white;
+    animation:fadeIn 3s ease-in-out;
+}
+
+.names{
+    font-family:'Great Vibes',cursive;
+    font-size:60px;
+    animation:zoomIn 2s ease-in-out;
+}
+
+.details{
+    font-size:22px;
+    margin-top:15px;
+}
+
+@keyframes fadeIn{
+    from{opacity:0;}
+    to{opacity:1;}
+}
+
+@keyframes zoomIn{
+    from{transform:scale(0);}
+    to{transform:scale(1);}
+}
+</style>
+</head>
+
+<body>
+
+<!-- EDITOR -->
+<div class="editor">
+    <h2>Edit Invitation</h2>
+
+    <input type="text" id="groom" placeholder="Groom Name" value="Rahul">
+    <input type="text" id="bride" placeholder="Bride Name" value="Sneha">
+    <input type="text" id="date" placeholder="Wedding Date" value="20 April 2026">
+    <input type="text" id="place" placeholder="Wedding Place" value="Mumbai">
+    <textarea id="message" placeholder="Invitation Message">With the blessings of our parents</textarea>
+
+    <button onclick="updateCard()">Update Preview</button>
+    <button onclick="startRecording()">Start Recording</button>
+    <button onclick="stopRecording()">Stop & Download Video</button>
+</div>
+
+<!-- PREVIEW -->
+<div class="preview" id="recordArea">
+    <div class="card">
+        <div class="names" id="namesText">Rahul ❤️ Sneha</div>
+        <div class="details" id="messageText">With the blessings of our parents</div>
+        <div class="details" id="dateText">📅 20 April 2026</div>
+        <div class="details" id="placeText">📍 Mumbai</div>
+    </div>
+</div>
+
+<script>
+function updateCard(){
+    let groom = document.getElementById("groom").value;
+    let bride = document.getElementById("bride").value;
+    let date = document.getElementById("date").value;
+    let place = document.getElementById("place").value;
+    let message = document.getElementById("message").value;
+
+    document.getElementById("namesText").innerText = groom + " ❤️ " + bride;
+    document.getElementById("dateText").innerText = "📅 " + date;
+    document.getElementById("placeText").innerText = "📍 " + place;
+    document.getElementById("messageText").innerText = message;
+}
+
+/* VIDEO RECORDING */
+let mediaRecorder;
+let recordedChunks = [];
+
+async function startRecording(){
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true
+    });
+
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = function(event){
+        if(event.data.size > 0){
+            recordedChunks.push(event.data);
+        }
+    };
+
+    mediaRecorder.onstop = function(){
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "wedding_invitation.webm";
+        a.click();
+        recordedChunks = [];
+    };
+
+    mediaRecorder.start();
+    alert("Recording Started! Click Stop after animation finishes.");
+}
+
+function stopRecording(){
+    mediaRecorder.stop();
+}
+</script>
+
+</body>
+</html>
