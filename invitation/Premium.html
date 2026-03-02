@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mobile Wedding Editor 2026</title>
+<title>Timeline Wedding Editor 2026</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 
@@ -11,86 +11,61 @@
 body{
     margin:0;
     font-family:'Poppins',sans-serif;
-    background:#f3f4f6;
-    overflow:hidden;
-}
-
-/* ===== TOOLBAR ===== */
-.toolbar{
-    position:fixed;
-    bottom:15px;
-    left:50%;
-    transform:translateX(-50%);
-    background:white;
-    padding:10px 15px;
-    border-radius:40px;
-    box-shadow:0 5px 20px rgba(0,0,0,0.1);
-    display:flex;
-    gap:10px;
-    z-index:1000;
-}
-
-.toolbar select, .toolbar button{
-    padding:6px 12px;
-    border-radius:20px;
-    border:1px solid #ddd;
-}
-
-.toolbar button{
-    background:#8b5cf6;
+    background:#111;
     color:white;
-    border:none;
 }
 
-/* ===== PREVIEW ===== */
-.preview{
-    width:100%;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:linear-gradient(135deg,#ede9fe,#fbcfe8);
-}
-
-.card{
-    width:90%;
-    max-width:420px;
-    aspect-ratio:9/16;
-    background:linear-gradient(135deg,#1e1b4b,#312e81);
-    border-radius:25px;
+/* VIDEO AREA */
+.video-container{
     position:relative;
+    width:100%;
+    max-width:420px;
+    margin:auto;
+    aspect-ratio:9/16;
     overflow:hidden;
-    color:white;
+    background:black;
+}
+
+video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
 }
 
 /* TEXT ELEMENT */
 .text-element{
     position:absolute;
-    padding:4px 8px;
+    padding:5px 10px;
     cursor:move;
-    user-select:none;
 }
 
 .selected{
     border:2px dashed red;
 }
 
-/* ANIMATIONS */
-.fade{animation:fadeIn 1s;}
-.zoom{animation:zoomIn 1s;}
-.slide{animation:slideUp 1s;}
+/* TOOLBAR */
+.toolbar{
+    display:flex;
+    gap:10px;
+    padding:10px;
+    background:#222;
+    position:sticky;
+    top:0;
+    z-index:10;
+}
 
-@keyframes fadeIn{
-    from{opacity:0;}
-    to{opacity:1;}
+.toolbar button, .toolbar select{
+    padding:6px 10px;
 }
-@keyframes zoomIn{
-    from{opacity:0;transform:scale(0.6);}
-    to{opacity:1;transform:scale(1);}
+
+/* TIMELINE */
+.timeline{
+    padding:10px;
+    background:#1a1a1a;
 }
-@keyframes slideUp{
-    from{opacity:0;transform:translateY(50px);}
-    to{opacity:1;transform:translateY(0);}
+
+.timeline input{
+    width:100%;
 }
 </style>
 </head>
@@ -102,13 +77,19 @@ body{
         <option value="zoom">Zoom</option>
         <option value="slide">Slide</option>
     </select>
-    <button onclick="addText()">Add Text</button>
-    <button onclick="startRec()">Record</button>
-    <button onclick="stopRec()">Stop</button>
+
+    <button onclick="addText()">Add Text At Current Time</button>
 </div>
 
-<div class="preview" id="recordArea">
-    <div class="card" id="card"></div>
+<div class="video-container" id="videoContainer">
+    <video id="bgVideo" controls>
+        <!-- Replace with your wedding background video -->
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+</div>
+
+<div class="timeline">
+    <input type="range" id="timeSlider" min="0" value="0" step="0.1">
 </div>
 
 <script>
@@ -116,15 +97,37 @@ body{
 let elements = [];
 let selectedElement = null;
 
+const video = document.getElementById("bgVideo");
+const slider = document.getElementById("timeSlider");
+const container = document.getElementById("videoContainer");
+
+/* ===== Sync Slider With Video ===== */
+video.addEventListener("loadedmetadata", function(){
+    slider.max = video.duration;
+});
+
+video.addEventListener("timeupdate", function(){
+    slider.value = video.currentTime;
+    updateVisibility();
+});
+
+slider.addEventListener("input", function(){
+    video.currentTime = slider.value;
+});
+
 /* ===== ADD TEXT ===== */
 function addText(){
     const id = "el" + Date.now();
+    const start = video.currentTime;
+    const end = start + 3; // default 3 seconds
 
     const data = {
-        id:id,
-        text:"Double tap to edit",
-        x:120,
+        id,
+        text:"Edit me",
+        x:100,
         y:200,
+        startTime:start,
+        endTime:end,
         animation:"fade"
     };
 
@@ -135,34 +138,51 @@ function addText(){
 /* ===== CREATE ELEMENT ===== */
 function createElement(data){
     const div = document.createElement("div");
-    div.className = "text-element " + data.animation;
+    div.className = "text-element";
     div.innerText = data.text;
-    div.style.left = data.x + "px";
-    div.style.top = data.y + "px";
+    div.style.left = data.x+"px";
+    div.style.top = data.y+"px";
     div.id = data.id;
 
-    /* SELECT */
-    div.addEventListener("click", function(e){
+    div.onclick = function(e){
         e.stopPropagation();
         selectElement(div, data);
-    });
+    };
 
-    /* DOUBLE TAP TO EDIT */
-    div.addEventListener("dblclick", function(e){
-        e.stopPropagation();
+    div.ondblclick = function(){
         let newText = prompt("Edit Text", data.text);
         if(newText){
             data.text = newText;
             div.innerText = newText;
         }
-    });
+    };
 
     enableDrag(div, data);
-
-    document.getElementById("card").appendChild(div);
+    container.appendChild(div);
 }
 
-/* ===== SELECT ELEMENT ===== */
+/* ===== DRAG ===== */
+function enableDrag(el, data){
+    el.onmousedown = function(e){
+        selectElement(el, data);
+
+        let offsetX = e.offsetX;
+        let offsetY = e.offsetY;
+
+        document.onmousemove = function(e){
+            data.x = e.offsetX;
+            data.y = e.offsetY;
+            el.style.left = data.x+"px";
+            el.style.top = data.y+"px";
+        };
+
+        document.onmouseup = function(){
+            document.onmousemove=null;
+        };
+    };
+}
+
+/* ===== SELECT ===== */
 function selectElement(div, data){
     document.querySelectorAll(".text-element").forEach(el=>{
         el.classList.remove("selected");
@@ -170,86 +190,21 @@ function selectElement(div, data){
 
     div.classList.add("selected");
     selectedElement = data;
-    document.getElementById("animationSelect").value = data.animation;
 }
 
-/* ===== DRAG (MOUSE + TOUCH) ===== */
-function enableDrag(el, data){
+/* ===== SHOW/HIDE BASED ON TIME ===== */
+function updateVisibility(){
+    const current = video.currentTime;
 
-    function startMove(e){
-        e.preventDefault();
-        selectElement(el, data);
+    elements.forEach(el=>{
+        const div = document.getElementById(el.id);
 
-        let rect = el.parentElement.getBoundingClientRect();
-        let offsetX = (e.touches ? e.touches[0].clientX : e.clientX) - el.offsetLeft;
-        let offsetY = (e.touches ? e.touches[0].clientY : e.clientY) - el.offsetTop;
-
-        function move(e){
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-            data.x = clientX - rect.left - offsetX;
-            data.y = clientY - rect.top - offsetY;
-
-            el.style.left = data.x + "px";
-            el.style.top = data.y + "px";
+        if(current >= el.startTime && current <= el.endTime){
+            div.style.display="block";
+        }else{
+            div.style.display="none";
         }
-
-        function stop(){
-            document.removeEventListener("mousemove", move);
-            document.removeEventListener("mouseup", stop);
-            document.removeEventListener("touchmove", move);
-            document.removeEventListener("touchend", stop);
-        }
-
-        document.addEventListener("mousemove", move);
-        document.addEventListener("mouseup", stop);
-        document.addEventListener("touchmove", move);
-        document.addEventListener("touchend", stop);
-    }
-
-    el.addEventListener("mousedown", startMove);
-    el.addEventListener("touchstart", startMove);
-}
-
-/* ===== CHANGE ANIMATION ===== */
-document.getElementById("animationSelect").addEventListener("change", function(){
-    if(!selectedElement) return;
-
-    selectedElement.animation = this.value;
-    const el = document.getElementById(selectedElement.id);
-    el.className = "text-element selected " + this.value;
-});
-
-/* ===== CLICK OUTSIDE TO UNSELECT ===== */
-document.getElementById("card").addEventListener("click", function(){
-    document.querySelectorAll(".text-element").forEach(el=>{
-        el.classList.remove("selected");
     });
-    selectedElement = null;
-});
-
-/* ===== RECORD ===== */
-let recorder, chunks=[];
-
-async function startRec(){
-    const stream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-    recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = e => chunks.push(e.data);
-    recorder.onstop = ()=>{
-        const blob = new Blob(chunks,{type:"video/webm"});
-        const url = URL.createObjectURL(blob);
-        const a=document.createElement("a");
-        a.href=url;
-        a.download="mobile_invitation.webm";
-        a.click();
-        chunks=[];
-    }
-    recorder.start();
-}
-
-function stopRec(){
-    if(recorder) recorder.stop();
 }
 
 </script>
