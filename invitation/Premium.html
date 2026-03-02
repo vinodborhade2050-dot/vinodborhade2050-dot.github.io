@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Wedding Editor 2026</title>
+<title>Mobile Wedding Editor 2026</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 
@@ -18,7 +18,7 @@ body{
 /* ===== TOOLBAR ===== */
 .toolbar{
     position:fixed;
-    top:10px;
+    bottom:15px;
     left:50%;
     transform:translateX(-50%);
     background:white;
@@ -66,14 +66,19 @@ body{
 /* TEXT ELEMENT */
 .text-element{
     position:absolute;
+    padding:4px 8px;
     cursor:move;
     user-select:none;
 }
 
+.selected{
+    border:2px dashed red;
+}
+
 /* ANIMATIONS */
-.fade{animation:fadeIn 1s forwards;}
-.zoom{animation:zoomIn 1s forwards;}
-.slide{animation:slideUp 1s forwards;}
+.fade{animation:fadeIn 1s;}
+.zoom{animation:zoomIn 1s;}
+.slide{animation:slideUp 1s;}
 
 @keyframes fadeIn{
     from{opacity:0;}
@@ -97,7 +102,6 @@ body{
         <option value="zoom">Zoom</option>
         <option value="slide">Slide</option>
     </select>
-
     <button onclick="addText()">Add Text</button>
     <button onclick="startRec()">Record</button>
     <button onclick="stopRec()">Stop</button>
@@ -109,27 +113,27 @@ body{
 
 <script>
 
-/* ===== DATA MODEL ===== */
 let elements = [];
 let selectedElement = null;
 
 /* ===== ADD TEXT ===== */
 function addText(){
     const id = "el" + Date.now();
-    const element = {
+
+    const data = {
         id:id,
-        text:"Edit Text",
-        x:100,
-        y:100,
+        text:"Double tap to edit",
+        x:120,
+        y:200,
         animation:"fade"
     };
 
-    elements.push(element);
-    renderElement(element);
+    elements.push(data);
+    createElement(data);
 }
 
-/* ===== RENDER ELEMENT ===== */
-function renderElement(data){
+/* ===== CREATE ELEMENT ===== */
+function createElement(data){
     const div = document.createElement("div");
     div.className = "text-element " + data.animation;
     div.innerText = data.text;
@@ -137,45 +141,92 @@ function renderElement(data){
     div.style.top = data.y + "px";
     div.id = data.id;
 
-    div.onclick = function(){
-        selectedElement = data;
-        document.getElementById("animationSelect").value = data.animation;
-    };
+    /* SELECT */
+    div.addEventListener("click", function(e){
+        e.stopPropagation();
+        selectElement(div, data);
+    });
+
+    /* DOUBLE TAP TO EDIT */
+    div.addEventListener("dblclick", function(e){
+        e.stopPropagation();
+        let newText = prompt("Edit Text", data.text);
+        if(newText){
+            data.text = newText;
+            div.innerText = newText;
+        }
+    });
 
     enableDrag(div, data);
+
     document.getElementById("card").appendChild(div);
 }
 
-/* ===== DRAG SYSTEM ===== */
+/* ===== SELECT ELEMENT ===== */
+function selectElement(div, data){
+    document.querySelectorAll(".text-element").forEach(el=>{
+        el.classList.remove("selected");
+    });
+
+    div.classList.add("selected");
+    selectedElement = data;
+    document.getElementById("animationSelect").value = data.animation;
+}
+
+/* ===== DRAG (MOUSE + TOUCH) ===== */
 function enableDrag(el, data){
-    let offsetX, offsetY;
 
-    el.onmousedown = function(e){
-        offsetX = e.offsetX;
-        offsetY = e.offsetY;
+    function startMove(e){
+        e.preventDefault();
+        selectElement(el, data);
 
-        document.onmousemove = function(e){
-            data.x = e.clientX - el.parentElement.getBoundingClientRect().left - offsetX;
-            data.y = e.clientY - el.parentElement.getBoundingClientRect().top - offsetY;
+        let rect = el.parentElement.getBoundingClientRect();
+        let offsetX = (e.touches ? e.touches[0].clientX : e.clientX) - el.offsetLeft;
+        let offsetY = (e.touches ? e.touches[0].clientY : e.clientY) - el.offsetTop;
+
+        function move(e){
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            data.x = clientX - rect.left - offsetX;
+            data.y = clientY - rect.top - offsetY;
 
             el.style.left = data.x + "px";
             el.style.top = data.y + "px";
-        };
+        }
 
-        document.onmouseup = function(){
-            document.onmousemove = null;
-        };
-    };
+        function stop(){
+            document.removeEventListener("mousemove", move);
+            document.removeEventListener("mouseup", stop);
+            document.removeEventListener("touchmove", move);
+            document.removeEventListener("touchend", stop);
+        }
+
+        document.addEventListener("mousemove", move);
+        document.addEventListener("mouseup", stop);
+        document.addEventListener("touchmove", move);
+        document.addEventListener("touchend", stop);
+    }
+
+    el.addEventListener("mousedown", startMove);
+    el.addEventListener("touchstart", startMove);
 }
 
-/* ===== ANIMATION CHANGE ===== */
+/* ===== CHANGE ANIMATION ===== */
 document.getElementById("animationSelect").addEventListener("change", function(){
     if(!selectedElement) return;
 
     selectedElement.animation = this.value;
-
     const el = document.getElementById(selectedElement.id);
-    el.className = "text-element " + this.value;
+    el.className = "text-element selected " + this.value;
+});
+
+/* ===== CLICK OUTSIDE TO UNSELECT ===== */
+document.getElementById("card").addEventListener("click", function(){
+    document.querySelectorAll(".text-element").forEach(el=>{
+        el.classList.remove("selected");
+    });
+    selectedElement = null;
 });
 
 /* ===== RECORD ===== */
@@ -190,7 +241,7 @@ async function startRec(){
         const url = URL.createObjectURL(blob);
         const a=document.createElement("a");
         a.href=url;
-        a.download="smart_invitation.webm";
+        a.download="mobile_invitation.webm";
         a.click();
         chunks=[];
     }
