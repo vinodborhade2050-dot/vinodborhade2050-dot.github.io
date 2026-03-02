@@ -1,212 +1,316 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Timeline Wedding Editor 2026</title>
+<title>Wedding Invitation Editor Pro</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
 body{
-    margin:0;
-    font-family:'Poppins',sans-serif;
-    background:#111;
-    color:white;
+  background:#0f0f14;
+  color:white;
+  overflow:hidden;
 }
 
-/* VIDEO AREA */
-.video-container{
-    position:relative;
-    width:100%;
-    max-width:420px;
-    margin:auto;
-    aspect-ratio:9/16;
-    overflow:hidden;
-    background:black;
+/* TOP BAR */
+.topbar{
+  height:55px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 15px;
+  background:#15151d;
+  font-weight:600;
 }
 
-video{
-    width:100%;
-    height:100%;
-    object-fit:cover;
+/* PREVIEW AREA */
+.preview-wrapper{
+  height:58vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:black;
+  position:relative;
 }
 
-/* TEXT ELEMENT */
-.text-element{
-    position:absolute;
-    padding:5px 10px;
-    cursor:move;
+.preview{
+  width:92%;
+  max-width:380px;
+  height:100%;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+  background:url('https://images.unsplash.com/photo-1519741497674-611481863552') center/cover;
+}
+
+.layer{
+  position:absolute;
+  padding:6px 10px;
+  border-radius:8px;
+  font-weight:600;
+  user-select:none;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.layer img{
+  width:120px;
 }
 
 .selected{
-    border:2px dashed red;
-}
-
-/* TOOLBAR */
-.toolbar{
-    display:flex;
-    gap:10px;
-    padding:10px;
-    background:#222;
-    position:sticky;
-    top:0;
-    z-index:10;
-}
-
-.toolbar button, .toolbar select{
-    padding:6px 10px;
+  border:2px dashed red;
 }
 
 /* TIMELINE */
 .timeline{
-    padding:10px;
-    background:#1a1a1a;
+  height:80px;
+  background:#181822;
+  overflow-x:auto;
+  white-space:nowrap;
+  padding:10px;
 }
 
-.timeline input{
-    width:100%;
+.time-block{
+  display:inline-block;
+  width:80px;
+  height:40px;
+  background:#ff4d6d;
+  border-radius:8px;
+  margin-right:8px;
+  text-align:center;
+  line-height:40px;
+  font-size:12px;
+}
+
+/* TOOLBAR */
+.toolbar{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:90px;
+  background:#15151d;
+  display:flex;
+  justify-content:space-around;
+  align-items:center;
+  border-top:1px solid #333;
+}
+
+.tool-btn{
+  text-align:center;
+  font-size:11px;
+  cursor:pointer;
+}
+
+.tool-btn span{
+  display:block;
+  font-size:20px;
+}
+
+/* FLOAT RECORD */
+.recordBtn{
+  position:absolute;
+  bottom:120px;
+  right:20px;
+  width:65px;
+  height:65px;
+  background:red;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:bold;
+  box-shadow:0 0 20px red;
+  cursor:pointer;
 }
 </style>
 </head>
+
 <body>
 
+<div class="topbar">
+  <div>Back</div>
+  Wedding Editor
+  <div>Export</div>
+</div>
+
+<div class="preview-wrapper">
+  <div class="preview" id="preview"></div>
+</div>
+
+<div class="timeline" id="timeline"></div>
+
 <div class="toolbar">
-    <select id="animationSelect">
-        <option value="fade">Fade</option>
-        <option value="zoom">Zoom</option>
-        <option value="slide">Slide</option>
-    </select>
-
-    <button onclick="addText()">Add Text At Current Time</button>
+  <div class="tool-btn" onclick="addText()"><span>＋</span>Text</div>
+  <div class="tool-btn" onclick="addImage()"><span>🖼</span>Image</div>
+  <div class="tool-btn" onclick="changeColor()"><span>🎨</span>Color</div>
+  <div class="tool-btn" onclick="animateLayer()"><span>✨</span>Anim</div>
+  <div class="tool-btn" onclick="removeGreen()"><span>🟢</span>Chroma</div>
 </div>
 
-<div class="video-container" id="videoContainer">
-    <video id="bgVideo" controls>
-        <!-- Replace with your wedding background video -->
-        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-    </video>
-</div>
+<div class="recordBtn" onclick="startRecording()">REC</div>
 
-<div class="timeline">
-    <input type="range" id="timeSlider" min="0" value="0" step="0.1">
-</div>
+<input type="file" id="imgUpload" accept="image/*" style="display:none">
 
 <script>
+let selected = null;
+let layers = [];
+let sceneDuration = 5;
 
-let elements = [];
-let selectedElement = null;
+/* Initialize Timeline */
+function initTimeline(){
+  const timeline = document.getElementById("timeline");
+  for(let i=0;i<=sceneDuration;i++){
+    let block = document.createElement("div");
+    block.className="time-block";
+    block.innerText=i+"s";
+    timeline.appendChild(block);
+  }
+}
+initTimeline();
 
-const video = document.getElementById("bgVideo");
-const slider = document.getElementById("timeSlider");
-const container = document.getElementById("videoContainer");
-
-/* ===== Sync Slider With Video ===== */
-video.addEventListener("loadedmetadata", function(){
-    slider.max = video.duration;
-});
-
-video.addEventListener("timeupdate", function(){
-    slider.value = video.currentTime;
-    updateVisibility();
-});
-
-slider.addEventListener("input", function(){
-    video.currentTime = slider.value;
-});
-
-/* ===== ADD TEXT ===== */
+/* Add Text */
 function addText(){
-    const id = "el" + Date.now();
-    const start = video.currentTime;
-    const end = start + 3; // default 3 seconds
+  let text = prompt("Enter Text");
+  if(!text) return;
 
-    const data = {
-        id,
-        text:"Edit me",
-        x:100,
-        y:200,
-        startTime:start,
-        endTime:end,
-        animation:"fade"
-    };
-
-    elements.push(data);
-    createElement(data);
+  let div = document.createElement("div");
+  div.className="layer";
+  div.innerText=text;
+  div.style.top="120px";
+  div.style.left="80px";
+  div.onclick=function(){selectLayer(this)};
+  document.getElementById("preview").appendChild(div);
 }
 
-/* ===== CREATE ELEMENT ===== */
-function createElement(data){
-    const div = document.createElement("div");
-    div.className = "text-element";
-    div.innerText = data.text;
-    div.style.left = data.x+"px";
-    div.style.top = data.y+"px";
-    div.id = data.id;
-
-    div.onclick = function(e){
-        e.stopPropagation();
-        selectElement(div, data);
-    };
-
-    div.ondblclick = function(){
-        let newText = prompt("Edit Text", data.text);
-        if(newText){
-            data.text = newText;
-            div.innerText = newText;
-        }
-    };
-
-    enableDrag(div, data);
-    container.appendChild(div);
+/* Add Image */
+function addImage(){
+  document.getElementById("imgUpload").click();
 }
 
-/* ===== DRAG ===== */
-function enableDrag(el, data){
-    el.onmousedown = function(e){
-        selectElement(el, data);
+document.getElementById("imgUpload").addEventListener("change",function(e){
+  let file=e.target.files[0];
+  if(!file) return;
+  let reader=new FileReader();
+  reader.onload=function(ev){
+    let img=document.createElement("img");
+    img.src=ev.target.result;
+    img.className="layer";
+    img.style.top="150px";
+    img.style.left="100px";
+    img.onclick=function(){selectLayer(this)};
+    document.getElementById("preview").appendChild(img);
+  }
+  reader.readAsDataURL(file);
+});
 
-        let offsetX = e.offsetX;
-        let offsetY = e.offsetY;
-
-        document.onmousemove = function(e){
-            data.x = e.offsetX;
-            data.y = e.offsetY;
-            el.style.left = data.x+"px";
-            el.style.top = data.y+"px";
-        };
-
-        document.onmouseup = function(){
-            document.onmousemove=null;
-        };
-    };
+/* Select Layer */
+function selectLayer(el){
+  document.querySelectorAll(".layer").forEach(l=>l.classList.remove("selected"));
+  selected=el;
+  el.classList.add("selected");
 }
 
-/* ===== SELECT ===== */
-function selectElement(div, data){
-    document.querySelectorAll(".text-element").forEach(el=>{
-        el.classList.remove("selected");
-    });
-
-    div.classList.add("selected");
-    selectedElement = data;
+/* Change Color */
+function changeColor(){
+  if(!selected) return alert("Select layer");
+  selected.style.color="#"+Math.floor(Math.random()*16777215).toString(16);
 }
 
-/* ===== SHOW/HIDE BASED ON TIME ===== */
-function updateVisibility(){
-    const current = video.currentTime;
-
-    elements.forEach(el=>{
-        const div = document.getElementById(el.id);
-
-        if(current >= el.startTime && current <= el.endTime){
-            div.style.display="block";
-        }else{
-            div.style.display="none";
-        }
-    });
+/* Animation */
+function animateLayer(){
+  if(!selected) return;
+  selected.style.animation="pop 0.7s ease";
 }
 
+const style=document.createElement("style");
+style.innerHTML=`
+@keyframes pop{
+  0%{transform:scale(0);opacity:0;}
+  100%{transform:scale(1);opacity:1;}
+}`;
+document.head.appendChild(style);
+
+/* Touch Drag */
+let offsetX,offsetY;
+document.addEventListener("touchstart",function(e){
+  if(e.target.classList.contains("layer")){
+    selectLayer(e.target);
+    offsetX=e.touches[0].clientX-e.target.offsetLeft;
+    offsetY=e.touches[0].clientY-e.target.offsetTop;
+  }
+});
+
+document.addEventListener("touchmove",function(e){
+  if(selected){
+    selected.style.left=(e.touches[0].clientX-offsetX)+"px";
+    selected.style.top=(e.touches[0].clientY-offsetY-60)+"px";
+  }
+});
+
+document.addEventListener("touchend",function(){});
+
+/* Green Screen Remove */
+function removeGreen(){
+  if(!selected || selected.tagName!=="IMG"){
+    return alert("Select image layer");
+  }
+
+  let canvas=document.createElement("canvas");
+  let ctx=canvas.getContext("2d");
+  let img=new Image();
+  img.src=selected.src;
+
+  img.onload=function(){
+    canvas.width=img.width;
+    canvas.height=img.height;
+    ctx.drawImage(img,0,0);
+    let imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    let data=imageData.data;
+
+    for(let i=0;i<data.length;i+=4){
+      let r=data[i];
+      let g=data[i+1];
+      let b=data[i+2];
+
+      if(g>120 && r<100 && b<100){
+        data[i+3]=0;
+      }
+    }
+
+    ctx.putImageData(imageData,0,0);
+    selected.src=canvas.toDataURL("image/png");
+  }
+}
+
+/* Simple Screen Record */
+let recorder;
+let chunks=[];
+async function startRecording(){
+  const stream=await navigator.mediaDevices.getDisplayMedia({video:true});
+  recorder=new MediaRecorder(stream);
+
+  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.onstop=e=>{
+    let blob=new Blob(chunks,{type:"video/webm"});
+    let url=URL.createObjectURL(blob);
+    let a=document.createElement("a");
+    a.href=url;
+    a.download="wedding_invitation.webm";
+    a.click();
+  }
+
+  recorder.start();
+  alert("Recording Started. Use browser stop to finish.");
+}
 </script>
 
 </body>
