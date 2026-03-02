@@ -2,195 +2,244 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Premium Wedding Invitation 2026</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Invitation Maker 2026</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
 body{
-    margin:0;
-    overflow:hidden;
     font-family:'Poppins',sans-serif;
-    background:black;
+    background:#f3f4f6;
+    overflow:hidden;
+}
+
+/* TOP BAR */
+.topbar{
+    height:60px;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 15px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.topbar h2{
+    font-size:18px;
+    font-weight:600;
+}
+
+.topbar button{
+    background:#8b5cf6;
     color:white;
-}
-
-/* EDIT PANEL */
-.editor{
-    position:fixed;
-    left:0;
-    top:0;
-    width:300px;
-    height:100%;
-    background:#111;
-    padding:20px;
-    z-index:10;
-}
-
-.editor input, .editor textarea{
-    width:100%;
-    margin-bottom:10px;
-    padding:8px;
-    background:#222;
     border:none;
-    color:white;
+    padding:8px 14px;
+    border-radius:20px;
 }
 
-.editor button{
+/* LAYOUT */
+.container{
+    display:flex;
+    height:calc(100vh - 60px);
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:300px;
+    background:white;
+    padding:15px;
+    overflow-y:auto;
+    border-right:1px solid #eee;
+    transition:0.3s;
+}
+
+.sidebar input, .sidebar textarea{
+    width:100%;
+    margin-bottom:12px;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ddd;
+}
+
+.sidebar button{
     width:100%;
     padding:10px;
-    margin-top:5px;
-    background:gold;
     border:none;
-    cursor:pointer;
-    font-weight:bold;
+    background:#10b981;
+    color:white;
+    border-radius:8px;
 }
 
-/* VIDEO AREA */
-.video{
-    width:100%;
-    height:100vh;
+/* PREVIEW AREA */
+.preview{
+    flex:1;
     display:flex;
     justify-content:center;
     align-items:center;
+    background:linear-gradient(135deg,#ede9fe,#fbcfe8);
     position:relative;
-    background:radial-gradient(circle at center,#3a0ca3,#000);
 }
 
-/* PARTICLES */
-.video::before{
+/* INVITATION CARD */
+.card{
+    width:90%;
+    max-width:400px;
+    aspect-ratio:9/16;
+    background:linear-gradient(135deg,#1e1b4b,#312e81);
+    border-radius:25px;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+}
+
+/* GLOW BORDER */
+.card::before{
     content:"";
     position:absolute;
-    width:100%;
-    height:100%;
-    background:url("https://www.transparenttextures.com/patterns/stardust.png");
-    opacity:0.2;
-    animation:moveBg 20s linear infinite;
+    inset:-3px;
+    border-radius:25px;
+    background:linear-gradient(45deg,#facc15,#ec4899,#8b5cf6);
+    z-index:-1;
+    filter:blur(20px);
+    opacity:0.6;
 }
 
-@keyframes moveBg{
-    from{background-position:0 0;}
-    to{background-position:1000px 1000px;}
-}
-
-/* SCENES */
-.scene{
-    position:absolute;
-    text-align:center;
-    opacity:0;
-    transition:opacity 1.5s ease;
-    width:100%;
-}
-
-.active{
-    opacity:1;
-}
-
-/* TEXT STYLES */
+/* TEXT */
 .title{
     font-family:'Playfair Display',serif;
-    font-size:60px;
-    letter-spacing:3px;
-    text-shadow:0 0 20px gold;
-}
-
-.subtitle{
-    font-size:24px;
-    margin-top:20px;
+    font-size:32px;
+    margin-bottom:10px;
 }
 
 .names{
     font-family:'Playfair Display',serif;
-    font-size:70px;
-    text-shadow:0 0 25px pink;
+    font-size:36px;
+    margin:10px 0;
+    animation:fadeZoom 4s infinite alternate;
 }
 
 .details{
-    font-size:28px;
-    margin-top:20px;
+    font-size:16px;
+    margin-top:5px;
+}
+
+@keyframes fadeZoom{
+    from{transform:scale(1);opacity:0.8;}
+    to{transform:scale(1.05);opacity:1;}
+}
+
+/* MOBILE RESPONSIVE */
+@media(max-width:768px){
+
+    .sidebar{
+        position:absolute;
+        left:-100%;
+        top:60px;
+        height:calc(100vh - 60px);
+        z-index:5;
+    }
+
+    .sidebar.active{
+        left:0;
+    }
+
+    .preview{
+        width:100%;
+    }
+
 }
 </style>
 </head>
 
 <body>
 
-<div class="editor">
-    <h3>Edit Invitation</h3>
-    <input id="groom" value="Rahul">
-    <input id="bride" value="Sneha">
-    <input id="date" value="20 April 2026">
-    <input id="place" value="Mumbai">
-    <textarea id="msg">Together with our families</textarea>
-    <button onclick="updateData()">Update</button>
-    <button onclick="startRec()">Record Video</button>
-    <button onclick="stopRec()">Stop & Download</button>
+<div class="topbar">
+    <h2>Wedding Invitation Maker</h2>
+    <button onclick="toggleMenu()">Edit</button>
 </div>
 
-<div class="video" id="recordArea">
+<div class="container">
 
-    <div class="scene active" id="scene1">
-        <div class="title">You're Invited</div>
-        <div class="subtitle" id="msgText">Together with our families</div>
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <h3>Edit Details</h3>
+        <input id="groom" value="Rahul">
+        <input id="bride" value="Sneha">
+        <input id="date" value="20 April 2026">
+        <input id="place" value="Mumbai">
+        <textarea id="msg">Together with our families</textarea>
+        <button onclick="updateData()">Update Preview</button>
+        <br><br>
+        <button onclick="startRec()">Record Video</button>
+        <button onclick="stopRec()">Stop & Download</button>
     </div>
 
-    <div class="scene" id="scene2">
-        <div class="names" id="namesText">Rahul ❤️ Sneha</div>
-    </div>
-
-    <div class="scene" id="scene3">
-        <div class="details" id="dateText">20 April 2026</div>
-        <div class="details" id="placeText">Mumbai</div>
+    <!-- PREVIEW -->
+    <div class="preview" id="recordArea">
+        <div class="card">
+            <div class="title">You're Invited</div>
+            <div class="names" id="namesText">Rahul ❤️ Sneha</div>
+            <div class="details" id="msgText">Together with our families</div>
+            <div class="details" id="dateText">20 April 2026</div>
+            <div class="details" id="placeText">Mumbai</div>
+        </div>
     </div>
 
 </div>
 
 <script>
-function updateData(){
-    let groom=document.getElementById("groom").value;
-    let bride=document.getElementById("bride").value;
-    let date=document.getElementById("date").value;
-    let place=document.getElementById("place").value;
-    let msg=document.getElementById("msg").value;
 
-    document.getElementById("namesText").innerText=groom+" ❤️ "+bride;
-    document.getElementById("dateText").innerText=date;
-    document.getElementById("placeText").innerText=place;
-    document.getElementById("msgText").innerText=msg;
+function toggleMenu(){
+    document.getElementById("sidebar").classList.toggle("active");
 }
 
-/* SCENE ANIMATION LOOP */
-let current=1;
-setInterval(()=>{
-    document.getElementById("scene"+current).classList.remove("active");
-    current++;
-    if(current>3) current=1;
-    document.getElementById("scene"+current).classList.add("active");
-},4000);
+function updateData(){
+    document.getElementById("namesText").innerText =
+        document.getElementById("groom").value + " ❤️ " +
+        document.getElementById("bride").value;
+
+    document.getElementById("dateText").innerText =
+        document.getElementById("date").value;
+
+    document.getElementById("placeText").innerText =
+        document.getElementById("place").value;
+
+    document.getElementById("msgText").innerText =
+        document.getElementById("msg").value;
+}
 
 /* RECORDING */
 let recorder, chunks=[];
 
 async function startRec(){
-    const stream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
-    recorder=new MediaRecorder(stream);
-
-    recorder.ondataavailable=e=>chunks.push(e.data);
-
-    recorder.onstop=()=>{
-        const blob=new Blob(chunks,{type:"video/webm"});
-        const url=URL.createObjectURL(blob);
+    const stream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = ()=>{
+        const blob = new Blob(chunks,{type:"video/webm"});
+        const url = URL.createObjectURL(blob);
         const a=document.createElement("a");
         a.href=url;
-        a.download="premium_invitation.webm";
+        a.download="invitation2026.webm";
         a.click();
         chunks=[];
     }
-
     recorder.start();
 }
 
 function stopRec(){
     recorder.stop();
 }
+
 </script>
 
 </body>
