@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Invitation Maker</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+
+body{
+font-family:'Poppins',sans-serif;
+margin:0;
+background:#f6f6f6;
+}
+
+/* HEADER */
+
+header{
+background:#c59d5f;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+font-weight:600;
+}
+
+/* MAIN CONTAINER */
+
+.container{
+padding:15px;
+max-width:900px;
+margin:auto;
+}
+
+/* TEMPLATE GRID */
+
+.templates{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+}
+
+.templates img{
+width:100%;
+border-radius:10px;
+cursor:pointer;
+border:3px solid transparent;
+}
+
+.templates img:hover{
+border:3px solid #c59d5f;
+}
+
+/* FORM */
+
+.form{
+margin-top:20px;
+background:white;
+padding:15px;
+border-radius:10px;
+}
+
+.form input{
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+/* BUTTON */
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+background:#c59d5f;
+color:white;
+font-size:16px;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* PREVIEW CARD */
+
+.preview{
+margin-top:20px;
+}
+
+.card{
+width:100%;
+max-width:400px;
+margin:auto;
+padding:30px;
+background-size:cover;
+background-position:center;
+border-radius:15px;
+text-align:center;
+color:#4a3b2a;
+}
+
+.card h2{
+margin:10px 0;
+font-weight:600;
+}
+
+.card p{
+margin:5px 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+Wedding Invitation Maker
+</header>
+
+<div class="container">
+
+<h3>Select Template</h3>
+
+<div class="templates">
+
+<img src="template1.jpg" onclick="selectTemplate('template1.jpg')">
+
+<img src="template2.jpg" onclick="selectTemplate('template2.jpg')">
+
+</div>
+
+<div class="form">
+
+<h3>Fill Wedding Details</h3>
+
+<input id="bride" placeholder="Bride Name">
+
+<input id="groom" placeholder="Groom Name">
+
+<input id="date" placeholder="Wedding Date">
+
+<input id="time" placeholder="Wedding Time">
+
+<input id="venue" placeholder="Venue">
+
+<button onclick="generateCard()">Preview Invitation</button>
+
+</div>
+
+<div class="preview">
+
+<div id="card" class="card">
+
+<h2 id="couple"></h2>
+
+<p id="wdate"></p>
+
+<p id="wtime"></p>
+
+<p id="wvenue"></p>
+
+</div>
+
+<button onclick="downloadCard()">Download Invitation</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+let selectedTemplate="";
+
+function selectTemplate(img){
+
+selectedTemplate=img;
+
+document.getElementById("card").style.backgroundImage="url("+img+")";
+
+}
+
+function generateCard(){
+
+let bride=document.getElementById("bride").value;
+let groom=document.getElementById("groom").value;
+let date=document.getElementById("date").value;
+let time=document.getElementById("time").value;
+let venue=document.getElementById("venue").value;
+
+document.getElementById("couple").innerHTML=bride+" ❤ "+groom;
+document.getElementById("wdate").innerHTML="Date : "+date;
+document.getElementById("wtime").innerHTML="Time : "+time;
+document.getElementById("wvenue").innerHTML="Venue : "+venue;
+
+}
+
+function downloadCard(){
+
+html2canvas(document.getElementById("card")).then(canvas=>{
+
+let link=document.createElement("a");
+link.download="invitation.png";
+link.href=canvas.toDataURL();
+link.click();
+
+})
+
+}
+
+</script>
+
+</body>
+</html>
